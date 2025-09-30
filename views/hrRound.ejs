@@ -1,0 +1,411 @@
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Speech to Text - Technical Interview</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+        <!-- Link to a CSS file here that contains the same code as on the CSS tab above -->    
+        <script src="https://cdn.autoproctor.co/ap-entry.js"></script>
+        <style>
+            body {
+                background-color: #f3f4f6;
+                font-family: 'Inter', sans-serif;
+            }
+
+            /* Main Content Container */
+            .main-container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 2rem;
+            }
+
+            .header {
+                text-align: center;
+                margin-bottom: 2rem;
+            }
+
+            .video-container {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                border-radius: 8px;
+                overflow: hidden;
+                background-color: #000;
+            }
+
+            .video-container video {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .transcription-box {
+                border: 1px solid #e5e7eb;
+                background-color: #f9fafb;
+                padding: 20px;
+                min-height: 150px;
+                max-height: 350px;
+                overflow-y: auto;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .transcription-box pre {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+
+            .button {
+                transition: background-color 0.2s ease;
+            }
+
+            .button:hover {
+                background-color: #4CAF50;
+            }
+
+            .webcam-overlay {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                color: white;
+                font-size: 16px;
+                background-color: rgba(0, 0, 0, 0.5);
+                padding: 5px;
+                border-radius: 5px;
+            }
+
+            .card {
+                background-color: #fff;
+                border-radius: 10px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+
+            .card h2 {
+                font-size: 1.5rem;
+                color: #333;
+            }
+
+            .card p {
+                font-size: 1rem;
+                color: #555;
+            }
+
+            .results-title {
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: #333;
+            }
+
+            .result-item {
+                padding: 1rem;
+                background-color: #f9fafb;
+                border-radius: 8px;
+                margin-bottom: 1rem;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+
+            .result-item h3 {
+                font-size: 1.2rem;
+                font-weight: 600;
+                color: #333;
+            }
+
+            .result-item p {
+                margin-top: 0.5rem;
+                color: #555;
+            }
+
+            .start-btn:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
+            }
+
+            /* Improve the layout of the results section */
+            .results-section {
+                margin-top: 3rem;
+                margin-bottom: 2rem;
+            }
+        </style>
+    </head>
+
+    <body>
+
+        <!-- Main Container -->
+        <div class="main-container">
+            <!-- Header -->
+            <div class="header">
+                <h1 class="text-3xl font-semibold text-gray-800">HR Interview Round  </h1>
+                <p class="text-lg text-gray-600 mt-2">Please speak your answers clearly. We'll guide you through the questions.</p>
+            </div>
+
+            <!-- Question Display -->
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-semibold text-gray-900" id="questionDisplay">Question: <%= question %></h2>
+            </div>
+
+            <!-- Webcam and Button -->
+            <div class="flex justify-center items-center mb-6 relative">
+                <div class="video-container rounded-lg shadow-lg">
+                    <!-- Webcam Video -->
+                    <video id="webcam" width="320" height="240" autoplay muted class="rounded-lg"></video>
+
+                    <!-- Webcam Overlay (Example: Display status or additional info) -->
+                    <div class="webcam-overlay" id="webcam-status">Webcam Active</div>
+                </div>
+            </div>  
+
+            <!-- Start/Stop Button -->
+            <div class="flex justify-center mb-6">
+                <button id="startStopButton"
+                    class="start-btn bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-200">
+                    Start Recording
+                </button>
+            </div>
+
+            <!-- Transcription Box -->
+            <div class="card">
+                <h2 class="text-xl font-semibold text-gray-900">Your Transcription</h2>
+                <div id="transcription" class="transcription-box"></div>
+            </div>
+
+            <!-- Interview Results -->
+            <div id="interviewResults" class="results-section"></div>
+
+        </div>
+
+        <script>
+            
+    const videoElement = document.getElementById('webcam');
+    const startStopButton = document.getElementById('startStopButton');
+    const transcriptionDiv = document.getElementById('transcription');
+    const webcamStatus = document.getElementById('webcam-status');
+    const questionDisplay = document.getElementById('questionDisplay');
+    const interviewResultsDiv = document.getElementById('interviewResults');
+    const questionDifficulty = 'easy';
+    let recognition;
+    let isRecording = false;
+    let finalTranscript = '';
+    let isTranscriptionSent = false;
+    let questionCounter = 0;
+    const maxQuestions = 9;
+    let interviewData = []; // Array to store interview data
+    let currentQuestion = "";   // Store the current question
+    
+
+    
+    async function getMedia() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: true
+            });
+            videoElement.srcObject = stream;
+            console.log('Webcam stream active');
+        } catch (err) {
+            console.error('Error accessing media devices:', err);
+            alert('Unable to access webcam and microphone. Please ensure permissions are granted.');
+            startStopButton.disabled = true;
+            webcamStatus.textContent = 'Webcam and Audio Not Accessible';
+            webcamStatus.classList.add('bg-red-500');
+        }
+    }
+
+    function startRecognition() {
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+        } else if ('SpeechRecognition' in window) {
+            recognition = new SpeechRecognition();
+        } else {
+            transcriptionDiv.textContent = 'Speech Recognition is not supported in your browser.';
+            startStopButton.disabled = true;
+            return;
+        }
+
+        recognition.continuous = true;
+        recognition.interimResults = true;
+
+        recognition.onstart = function () {
+            isRecording = true;
+            startStopButton.textContent = 'Stop Recording';
+            transcriptionDiv.textContent = '';
+            finalTranscript = '';
+        };
+
+        recognition.onerror = function (event) {
+            console.error('Speech recognition error:', event.error);
+            transcriptionDiv.textContent = 'Error during speech recognition. Please try again.';
+            stopRecognition();
+        };
+
+        recognition.onend = function () {
+            console.log('Speech recognition ended');
+
+            if (!isTranscriptionSent) {
+                stopRecognition();
+            }
+        };
+
+        recognition.onresult = function (event) {
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript + ' ';
+                }
+            }
+
+            transcriptionDiv.innerHTML = finalTranscript;
+        };
+
+        recognition.start();
+    }
+
+
+    function stopRecognition() {
+        if (recognition) {
+            recognition.stop();
+        }
+        isRecording = false;
+        startStopButton.textContent = 'Start Recording';
+
+
+        if (finalTranscript.trim() && !isTranscriptionSent) {
+            isTranscriptionSent = true;
+            sendTranscriptionToBackend(finalTranscript);
+        }
+    }
+
+
+    async function sendTranscriptionToBackend(finalTranscript) {
+        console.log("Sending transcription to backend:", finalTranscript);
+
+        try {
+            const response = await fetch('/hr-round/analyze-text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: finalTranscript,
+                    question: currentQuestion, // Use the stored currentQuestion variable
+                    questionCounter: questionCounter
+                }) // Send question too
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Analysis received from backend:", data);
+
+            interviewData.push({
+                question: currentQuestion, // Use the stored currentQuestion variable
+                answer: finalTranscript,
+                analysis: data.analysis
+            });
+
+
+            isTranscriptionSent = false;
+            finalTranscript = '';
+            // questionCounter++;
+
+
+            if (questionCounter > maxQuestions) {
+                displayInterviewResults();
+                startStopButton.disabled = true;
+                startStopButton.textContent = "Interview Complete";
+                return; 
+            }
+            if (data.followUpQuestion && data.followUpQuestion.question) {
+            questionCounter++;
+            questionDisplay.textContent = `Question: ${data.followUpQuestion.question}`;
+            currentQuestion = data.followUpQuestion.question; // Update currentQuestion
+
+        } else {
+            questionDisplay.textContent = "Question: No further questions.";
+            currentQuestion = "No further questions."; // Update currentQuestion
+        }
+
+
+        } catch (error) {
+            console.error('Error sending transcription to backend:', error);
+            transcriptionDiv.innerHTML += `<br><strong>Error:</strong> Could not get next question. Please check console.`;
+        }
+    }
+
+    function displayInterviewResults() {
+        let resultsHTML = `<h2 class="results-title">Interview Results</h2>`;
+
+        if (interviewData.length === 0) {
+            resultsHTML += "<p>No data to display.</p>";
+            interviewResultsDiv.innerHTML = resultsHTML;
+            return;
+        }
+
+        let overallScore = 0;
+        let validAnalysisCount = 0;
+
+        interviewData.forEach((item, index) => {
+            resultsHTML += `<div class="result-item">`;
+            resultsHTML += `<h3>Question ${index + 1}: ${item.question}</h3>`;
+            resultsHTML += `<p><strong>Your Answer:</strong> ${item.answer}</p>`;
+
+            if (item.analysis && item.analysis.score) {
+                resultsHTML += `<p><strong>Analysis Score:</strong> ${item.analysis.score}</p>`;
+                resultsHTML += `<p><strong>Analysis Feedback:</strong> ${item.analysis.recommendation} </p>`;
+                overallScore += item.analysis.score;
+                validAnalysisCount++;
+            } else {
+                resultsHTML += `<p><strong>Analysis:</strong> No analysis available.</p>`;
+            }
+
+            resultsHTML += `</div>`;
+        });
+
+        if (validAnalysisCount > 0) {
+            resultsHTML += `<h3>Total Combined Score: ${overallScore} out of 18</h3>`;
+        } else {
+            resultsHTML += `<h3>Overall Score: No scores available.</h3>`;
+        }
+
+        interviewResultsDiv.innerHTML = resultsHTML;
+    }
+
+    async function getInitialQuestion() {
+        try {
+            const response = await fetch('/hr-round/initial-question');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            questionDisplay.textContent = `Question: ${data.question}`;
+            currentQuestion = data.question; // Store the initial question
+        } catch (error) {
+            console.error('Error fetching initial question:', error);
+            questionDisplay.textContent = "Error: Could not load initial question.";
+        }
+    }
+
+
+    startStopButton.addEventListener('click', () => {
+        if (isRecording) {
+            stopRecognition();
+        } else {
+            startRecognition();
+        }
+    });
+
+    getMedia();
+    getInitialQuestion(); // Fetch and display the initial question
+        </script>
+
+    </body>
+
+    </html>

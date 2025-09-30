@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coding Test</title>
+    <link rel="stylesheet" href="./stylesheet/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Import Google font - Poppins */
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+        /* Custom Variables */
+        :root {
+            --primary-color: #3b141c;
+            --secondary-color: #f3961c;
+            --dark-color: #252525;
+            --white-color: #fff;
+            --light-gray-color: #f2f2f2;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif; /* Use Poppins font */
+            background-color: var(--light-gray-color);
+            color: var(--dark-color);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Main Content Area */
+        .main {
+            flex: 1; /* Take remaining space */
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .container {
+            background-color: var(--white-color);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        /* Logo Styling */
+        .logo {
+            width: 100px;
+            height: auto;
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--dark-color);
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            appearance: none; /* Remove default arrow */
+            background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 0.75rem top 50%;
+            background-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        button {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: var(--primary-color);
+            color: var(--white-color);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Main Content -->
+    <div class="main">
+        
+        <div class="container">
+            <!-- Logo -->
+            <img src="./images/WhatsApp Image 2025-03-01 at 07.23.51_0acb7dd0.jpg" alt="Prepto Logo" class="logo">
+            
+            <h1>Welcome to the Coding Test</h1>
+            <form action="/coding-test/start-test" method="post">
+                <div>
+                    <label for="language">Choose a language:</label>
+                    <select name="language" id="language">
+                        <% languages.forEach(function(language) { %>
+                            <option value="<%= language %>"><%= language %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <button type="submit">Start Test</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+
+</html>

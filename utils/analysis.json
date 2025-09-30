@@ -1,0 +1,15 @@
+[
+  {
+    "analysis": "The candidate's answer is brief and touches on some valid concepts (OOP principles, access modifiers) but lacks depth. The reference to \"Cooks principles\" is unclear and likely a misinterpretation or transcription error. The answer could benefit from more detail and clarity regarding Java's features and applications.",
+    "recommendation": "Provide more specific details about Java's object-oriented features and common use cases. Research the correct terminology for object-oriented programming principles and avoid vague statements.",
+    "scores": {
+      "technicalKnowledge": 4,
+      "problemSolving": 2,
+      "communication": 5,
+      "relevance": 7,
+      "professionalism": 6
+    },
+    "totalScore": 4,
+    "followUpQuestion": "Can you explain one of the access modifiers you mentioned and provide a simple example of how it's used?"
+  }
+]

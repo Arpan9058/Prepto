@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PREPTO - Career Guidance Results</title>
+    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Importing Google font - Poppins */
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+        /* Defining Custom Variables */
+        :root {
+            --primary-color: #3b141c;
+            --secondary-color: #f3961c;
+            --dark-color: #252525;
+            --white-color: #fff;
+            --light-gray-color: #f2f2f2;
+            --site-max-width: 1300px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+        }
+
+        body {
+            background-color: var(--light-gray-color);
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Navigation Sidebar */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100vh;
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+
+        .nav .nav_logo {
+            margin-bottom: 20px;
+        }
+
+        .nav .nav_logo a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav .nav_logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .nav .nav_logo h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--white-color);
+        }
+
+        .nav ul {
+            width: 100%;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav ul li {
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav ul li a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+            text-decoration: none;
+            color: var(--white-color);
+        }
+
+        .nav ul li a:hover {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        .nav ul li a i {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav ul li a span {
+            font-size: 16px;
+        }
+
+        /* Main Content Area */
+        .main {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* Result Container */
+        .result-container {
+            background-color: var(--white-color);
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin: 20px;
+        }
+
+        .result-title {
+            color: var(--primary-color);
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .result-content {
+            line-height: 1.8;
+            color: var(--dark-color);
+        }
+
+        .result-content h1, .result-content h2, .result-content h3 {
+            color: var(--primary-color);
+            margin: 20px 0 10px;
+        }
+
+        .result-content ul, .result-content ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .result-content li {
+            margin-bottom: 8px;
+        }
+
+        .back-button {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .back-button a {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+
+        .back-button a:hover {
+            background-color: var(--primary-color);
+            color: var(--white-color);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav {
+                width: 100%;
+                height: auto;
+                position: static;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px;
+            }
+
+            .nav .nav_logo {
+                margin-bottom: 0;
+            }
+
+            .nav ul {
+                display: flex;
+                width: auto;
+            }
+
+            .nav ul li {
+                margin: 0;
+            }
+
+            .nav ul li a {
+                padding: 5px 10px;
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .result-container {
+                margin: 10px;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Sidebar -->
+    <div class="nav">
+        <div class="nav_logo">
+            <a href="/dashboard">
+                <img src="/images/WhatsApp Image 2025-03-01 at 07.23.51_0acb7dd0.jpg" alt="Prepto Logo">
+                <h2>Prepto</h2>
+            </a>
+        </div>
+        <ul>
+            <li><a href="/analyze"><i class="fas fa-file-alt"></i><span>ATS Score</span></a></li>
+            <li><a href="/resume-builder"><i class="fas fa-file-pdf"></i><span>Resume Builder</span></a></li>
+            <li><a href="/certificates"><i class="fas fa-award"></i><span>Certificates</span></a></li>
+            <li><a href="/progress"><i class="fas fa-chart-bar"></i><span>Progress</span></a></li>
+            <li><a href="/mock-interviews"><i class="fas fa-microphone"></i><span>Mock Interviews</span></a></li>
+            <li><a href="/mocktest"><i class="fas fa-pencil-alt"></i><span>Mock Tests</span></a></li>
+            <li><a href="/profile"><i class="fas fa-user-circle"></i><span>Profile</span></a></li>
+            <li><a href="/careerguidance"><i class="fas fa-graduation-cap"></i><span>Career Guidance</span></a></li>
+            <li class="logout"><a href="/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <div class="result-container">
+            <h1 class="result-title">Career Guidance Analysis</h1>
+            <div class="result-content">
+                <%- careerGuidance %>
+            </div>
+            <div class="back-button">
+                <a href="/careerguidance"><i class="fas fa-arrow-left"></i> Back to Career Guidance</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

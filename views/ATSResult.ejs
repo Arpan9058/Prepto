@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATS Analysis Result</title>
+    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Import Google font - Poppins */
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+        /* Custom Variables */
+        :root {
+            --primary-color: #3b141c;
+            --secondary-color: #f3961c;
+            --dark-color: #252525;
+            --white-color: #fff;
+            --light-gray-color: #f2f2f2;
+        }
+
+        /* Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+        }
+
+        body {
+            background-color: var(--light-gray-color);
+            color: var(--dark-color);
+        }
+
+        /* Remove text decoration from links */
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Navigation Sidebar */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100vh;
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+
+        .nav .nav_logo {
+            margin-bottom: 20px;
+        }
+
+        .nav .nav_logo a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav .nav_logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .nav .nav_logo h2 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .nav ul {
+            width: 100%;
+        }
+
+        .nav ul li a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .nav ul li a:hover {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        .nav ul li a i {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav ul li a span {
+            font-size: 16px;
+        }
+
+        /* Logout button at the bottom */
+        .logout {
+            margin-top: auto;
+            margin-bottom: 20px;
+        }
+
+        /* Main Content Area */
+        .main {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* Section Title */
+        .section_title {
+            text-align: left;
+            padding: 20px 0;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--dark-color);
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--secondary-color);
+            margin-bottom: 20px;
+        }
+
+        /* Card Styling */
+        .card {
+            background-color: var(--white-color);
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: var(--dark-color);
+        }
+
+        .analysis-result {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .analysis-result ul,
+        .analysis-result ol {
+            margin-left: 20px;
+        }
+
+        .analysis-result h5 {
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+
+        /* Button Styling */
+        .button {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: var(--primary-color);
+            color: var(--white-color);
+        }
+
+        /* Responsiveness */
+        @media (max-width: 768px) {
+            .nav {
+                width: 100%;
+                height: auto;
+                position: static;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px;
+            }
+
+            .nav .nav_logo {
+                margin-bottom: 0;
+            }
+
+            .nav ul {
+                display: flex;
+                width: auto;
+            }
+
+            .nav ul li {
+                margin: 0;
+            }
+
+            .nav ul li a {
+                padding: 5px 10px;
+            }
+
+            .main {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav">
+        <div class="nav_logo">
+            <a href="#">
+                <img src="./images/WhatsApp Image 2025-03-01 at 07.23.51_0acb7dd0.jpg" alt="Prepto Logo">
+                <h2>Prepto</h2>
+            </a>
+        </div>
+
+        <ul>
+            <li><a href="/analyze"><i class="fas fa-file-alt"></i><span>ATS Score</span></a></li>
+            <li><a href="/resume-builder"><i class="fas fa-file-pdf"></i><span>Resume Builder</span></a></li>
+            <li><a href="/certificates"><i class="fas fa-award"></i><span>Certificates</span></a></li>
+            <li><a href="/progress"><i class="fas fa-chart-bar"></i><span>Progress</span></a></li>
+            <li><a href="/mock-interviews"><i class="fas fa-microphone"></i><span>Mock Interviews</span></a></li>
+            <li><a href="/mocktest"><i class="fas fa-pencil-alt"></i><span>Mock Tests</span></a></li>
+            <li><a href="/profile"><i class="fas fa-user-circle"></i><span>Profile</span></a></li>
+            <li><a href="/careerguidance"><i class="fas fa-graduation-cap"></i><span>Career Guidance</span></a></li>
+            <li class="logout"><a href="/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        </ul>
+
+        <div class="logout">
+            <a href="/logout"><i class="fa-solid fa-sign-out-alt"></i> <span>Logout</span></a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <h2 class="section_title"><i class="fa-solid fa-star"></i> ATS Analysis Result</h2>
+
+        <div class="card">
+            <h5 class="card-title">Analysis:</h5>
+            <div class="analysis-result">
+                <p><%- analysis %></p>
+            </div>
+        </div>
+
+        <!-- Analyze Another Button -->
+        <a href="/analyze" class="button">Analyze Another Document</a>
+    </div>
+
+</body>
+</html>

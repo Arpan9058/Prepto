@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PREPTO | Register</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="./stylesheet/styles.css" />
+
+  <!-- Icons -->
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+</head>
+
+<body>
+
+  <!-- Header -->
+  <header>
+    <nav>
+      <div class="nav_logo">
+        <a href="/">
+          <img src="./images/WhatsApp Image 2025-03-01 at 07.23.51_0acb7dd0.jpg" alt="Prepto Logo" />
+          <h2>Prepto</h2>
+        </a>
+      </div>
+
+      <input type="checkbox" id="click" />
+      <label for="click">
+        <i class="menu_btn bx bx-menu"></i>
+        <i class="close_btn bx bx-x"></i>
+      </label>
+
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#service">Services</a></li>
+        <li><a href="#why">Why Us</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="/login">Login/Signup</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Registration Form -->
+  <section class="register_section">
+    <div class="section_container">
+      <div class="register_container">
+        <div class="register_form">
+          <h2 class="section_title">Create Your Account</h2>
+          <form>
+            <div class="field">
+              <label for="fullName">Full Name</label>
+              <input type="text" id="fullName" name="fullName" required>
+            </div>
+            <div class="field">
+              <label for="email">Email Address</label>
+              <input type="email" id="email" name="email" required>
+            </div>
+            <div class="field">
+              <label for="mobile">Mobile Number</label>
+              <input type="tel" id="mobile" name="mobile" required>
+            </div>
+            <div class="field">
+              <label for="password">Password</label>
+              <input type="password" id="password" name="password" required>
+            </div>
+            <div class="field">
+              <label for="confirmPassword">Confirm Password</label>
+              <input type="password" id="confirmPassword" name="confirmPassword" required>
+            </div>
+            <button class="button" type="submit">Register</button>
+          </form>
+          <div class="login-link">
+            Already have an account? <a href="/login">Login Now</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <div class="footer-section about">
+        <h2>Prepto</h2>
+        <p>Your AI-powered mock interview and test platform. Prepare smarter, get hired faster.</p>
+        <p>Contact: support@prepto.com</p>
+      </div>
+
+      <div class="footer-section links">
+        <h3>Quick Links</h3>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="#">Mock Interviews</a></li>
+          <li><a href="#">Mock Tests</a></li>
+          <li><a href="#">Resume Scoring</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Contact Us</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section social">
+        <h3>Follow Us</h3>
+        <div class="social-icons">
+          <a href="#"><i class='bx bxl-facebook'></i></a>
+          <a href="#"><i class='bx bxl-twitter'></i></a>
+          <a href="#"><i class='bx bxl-linkedin'></i></a>
+          <a href="#"><i class='bx bxl-instagram'></i></a>
+        </div>
+      </div>
+
+      <div class="footer-section legal">
+        <h3>Legal</h3>
+        <ul>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms & Conditions</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© 2025 Prepto. All rights reserved.</p>
+    </div>
+  </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+
+  <!-- ✅ Firebase Init + Registration Logic -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLibBBUauRHYWphtEtL7Jst1J2KR4EWH4",
+      authDomain: "database-prepto.firebaseapp.com",
+      projectId: "database-prepto",
+      storageBucket: "database-prepto.appspot.com",
+      messagingSenderId: "354150833671",
+      appId: "1:354150833671:web:55ceb6758f2c060ed54a2"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    const form = document.querySelector('form');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const fullName = form.fullName.value;
+      const email = form.email.value;
+      const mobile = form.mobile.value;
+      const password = form.password.value;
+      const confirmPassword = form.confirmPassword.value;
+
+      if (password !== confirmPassword) {
+        return alert("Passwords do not match.");
+      }
+
+      try {
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const token = await userCredential.user.getIdToken();
+
+        const res = await fetch("/api/store-user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ fullName, email, mobile })
+        });
+
+        if (!res.ok) throw new Error("Failed to save user to backend");
+
+        alert("Registration successful!");
+        window.location.href = "/dashboard";
+
+      } catch (error) {
+        alert("Signup failed: " + error.message);
+      }
+    });
+  </script>
+</body>
+</html>

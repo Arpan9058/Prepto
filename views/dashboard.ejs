@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PREPTO - Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Importing Google font - Poppins */
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+        /* Defining Custome Variables */
+        :root {
+            /* Colors */
+            --primary-color: #3b141c;
+            --secondary-color: #f3961c;
+            --dark-color: #252525;
+            --white-color: #fff;
+            --light-gray-color: #f2f2f2;
+
+            /* Site Max-Width */
+            --site-max-width: 1300px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+        }
+
+        body {
+            background-color: var(--light-gray-color);
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Navigation Sidebar */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100vh;
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.2);
+            z-index: 100; /* Ensure it's above other content */
+        }
+
+        .nav .nav_logo {
+            margin-bottom: 20px;
+        }
+
+        .nav .nav_logo a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav .nav_logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%; /* Make it circular */
+            object-fit: cover; /* Prevents image distortion */
+        }
+
+        .nav .nav_logo h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--white-color); /* Ensure the title is visible */
+        }
+
+        .nav ul {
+            width: 100%;
+        }
+
+        .nav ul li a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .nav ul li a:hover {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        .nav ul li a i {
+            font-size: 20px;
+            width: 24px; /* Ensure icons align properly */
+            text-align: center;
+        }
+
+        .nav ul li a span {
+            font-size: 16px;
+        }
+
+        /* Main Content Area */
+        .main {
+            margin-left: 250px; /* Account for the sidebar width */
+            padding: 20px;
+            min-height: 100vh; /* Ensure full height */
+        }
+
+        /* Search Bar */
+        .search-container {
+            margin-bottom: 20px;
+            text-align: right; /* Align to the right */
+        }
+
+        .search-container input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 300px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        /* Section Title */
+        .section_title {
+            text-align: left; /* Align left in the main content */
+            padding: 20px 0;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--dark-color);
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--secondary-color);
+            margin-bottom: 20px;
+        }
+
+        /* Grid Container */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Adjust card width as needed */
+            gap: 20px;
+        }
+
+        /* Card Styling */
+        .card {
+            background-color: var(--white-color);
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card i {
+            font-size: 40px;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+        }
+
+        .card h3 {
+            font-size: 22px;
+            font-weight: 500;
+            color: var(--dark-color);
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 16px;
+            color: #777;
+            line-height: 1.4;
+        }
+
+        .logout {
+          margin-top: auto;
+          margin-bottom: 20px;
+        }
+
+        /* Responsiveness (Example - Adjust as needed) */
+        @media (max-width: 768px) {
+            .nav {
+                width: 100%;
+                height: auto;
+                position: static;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px;
+            }
+
+            .nav .nav_logo {
+                margin-bottom: 0;
+            }
+
+            .nav ul {
+                display: flex;
+                width: auto;
+            }
+
+            .nav ul li {
+                margin: 0;
+            }
+
+            .nav ul li a {
+                padding: 5px 10px;
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .search-container {
+                text-align: left;
+            }
+
+            .search-container input[type="text"] {
+                width: 100%;
+            }
+        }
+
+        
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Sidebar -->
+    <div class="nav">
+        <div class="nav_logo">
+            <a href="#">
+                <img src="./images/WhatsApp Image 2025-03-01 at 07.23.51_0acb7dd0.jpg" alt="Prepto Logo">
+                <h2>Prepto</h2>
+            </a>
+        </div>
+
+        <ul>
+            <li><a href="/analyze"><i class="fas fa-file-alt"></i><span>ATS Score</span></a></li>
+            <li><a href="/resume-builder"><i class="fas fa-file-pdf"></i><span>Resume Builder</span></a></li>
+            <li><a href="/certificates"><i class="fas fa-award"></i><span>Certificates</span></a></li>
+            <li><a href="/progress"><i class="fas fa-chart-bar"></i><span>Progress</span></a></li>
+            <li><a href="/mock-interviews"><i class="fas fa-microphone"></i><span>Mock Interviews</span></a></li>
+            <li><a href="/mocktest"><i class="fas fa-pencil-alt"></i><span>Mock Tests</span></a></li>
+            <li><a href="/profile"><i class="fas fa-user-circle"></i><span>Profile</span></a></li>
+            <li><a href="/careerguidance"><i class="fas fa-graduation-cap"></i><span>Career Guidance</span></a></li>
+            <li class="logout"><a href="/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        </ul>
+
+
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        
+        <h2 class="section_title">Mock Interviews</h2>
+        <div class="grid-container">
+            <div class="card">
+                <i class="fa-solid fa-code"></i>
+                <h3>Technical Rounds</h3>
+                <p>Prepare for technical interviews with coding challenges and problem-solving scenarios.</p>
+            </div>
+            <div class="card">
+                <i class="fa-solid fa-users"></i>
+                <h3>HR Rounds</h3>
+                <p>Practice behavioral questions and learn how to showcase your soft skills and experience.</p>
+            </div>
+            <div class="card">
+                <i class="fa-solid fa-network-wired"></i>
+                <h3>System Design</h3>
+                <p>Tackle system design problems and learn how to architect scalable and efficient solutions.</p>
+            </div>
+        </div>
+
+        <h2 class="section_title">Mock Tests</h2>
+        <div class="grid-container">
+            <div class="card">
+                <i class="fa-solid fa-calculator"></i>
+                <h3>Aptitude Tests</h3>
+                <p>Sharpen your quantitative skills with practice questions and time-management strategies.</p>
+            </div>
+            <div class="card">
+                <i class="fa-solid fa-brain"></i>
+                <h3>Logical & Reasoning</h3>
+                <p>Develop your critical thinking abilities with logical puzzles and reasoning questions.</p>
+            </div>
+            <div class="card">
+                <i class="fa-solid fa-terminal"></i>
+                <h3>Automata Tests</h3>
+                <p>Test your knowledge of automata theory with coding and problem-solving exercises.</p>
+            </div>
+            <div class="card">
+                <i class="fa-solid fa-laptop-code"></i>
+                <h3>Coding Tests</h3>
+                <p>Improve your coding skills in various languages with challenging programming problems.</p>
+            </div>
+        </div>
+
+        <h2 class="section_title">Resume Builder</h2>
+        <div class="grid-container">
+            <div class="card">
+                <i class="fa-solid fa-file"></i>
+                <h3>Create Resume</h3>
+                <p>Use our intuitive builder to create a professional and effective resume.</p>
+            </div>
+            <div class="card">
+                <i class="fa-solid fa-download"></i>
+                <h3>Download Resume</h3>
+                <p>Download your resume in various formats and share it with potential employers.</p>
+            </div>
+            <div class="card">
+                <i class="fa-solid fa-edit"></i>
+                <h3>Edit Resume</h3>
+                <p>Make changes and keep your resume updated to reflect your latest skills and experience.</p>
+            </div>
+            <div class="card">
+                <i class="fa-solid fa-star"></i>
+                <h3>ATS Score & Analysis</h3>
+                <p>Optimize your resume for Applicant Tracking Systems and increase your chances of getting noticed.</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PREPTO | AI-Powered Mock Interviews</title>
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="style.css" />
+    <!-- Box Icon Link for Icons -->
+    <link
+      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+    <style>
+        /* Importing Google font - Poppins */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+/* Defining Custome Variables */
+:root {
+    /* Colors */
+    --primary-color: #3b141c;
+    --secondary-color: #f3961c;
+    --dark-color: #252525;
+    --white-color: #fff;
+    --light-gray-color: #f2f2f2;
+
+    /* Site Max-Width */
+    --site-max-width: 1300px;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--white-color);
+}
+
+/* Setting for the whole website */
+a {
+    text-decoration: none;
+}
+
+ul {
+    list-style: none;
+}
+
+.section_container {
+    margin: 0 auto;
+    max-width: var(--site-max-width);
+}
+
+.section_title {
+    text-align: center;
+    padding: 60px 0 100px;
+    font-size: 32px;
+    font-family: "Righteous", sans-serif;
+    text-transform: uppercase;
+}
+
+.section_title::after {
+    content: '';
+    width: 80px;
+    background: var(--secondary-color);
+    height: 5px;
+    display: block;
+    margin: 7px auto 0;
+    border-radius: 8px;
+}
+
+/* Styling for the header section */
+header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1;
+    background: var(--primary-color);
+}
+
+nav {
+    display: flex;
+    padding: 15px 0 15px 20px;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 auto;
+    max-width: var(--site-max-width);
+}
+
+nav .nav_logo a {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+nav .nav_logo a img {
+    max-width: 55px;
+
+}
+
+nav .nav_logo h2 {
+    color: var(--white-color);
+    font-weight: 600;
+    font-size: 32px;
+}
+
+nav ul {
+    display: flex;
+    gap: 10px;
+}
+
+nav ul li a {
+    display: block;
+    padding: 10px 25px;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--white-color);
+    border-radius: 30px;
+    transition: all 0.2s ease;
+}
+
+nav ul li a:hover {
+    color: var(--primary-color);
+    background-color: var(--secondary-color);
+}
+
+nav label {
+    font-size: 32px;
+    color: var(--white-color);
+    cursor: pointer;
+}
+
+label .menu_btn,
+label .close_btn {
+    display: none;
+}
+
+#click {
+    display: none;
+}
+
+/* Hero Section */
+.hero_section {
+    min-height: 100vh;
+    background: var(--primary-color);
+}
+
+.hero_container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    align-items: center;
+    padding-top: 85px;
+    min-height: calc(100vh - 85px);
+    justify-content: space-between;
+}
+
+.hero_container .text_section h2 {
+    font-size: 40px;
+    color: var(--secondary-color);
+}
+
+.hero_container .text_section h3 {
+    font-size: 35px;
+    font-weight: 600;
+    color: var(--white-color);
+    margin-top: 8px;
+}
+
+.hero_container .text_section p {
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--white-color);
+    margin: 24px 0 40px;
+    max-width: 70%;
+}
+
+.hero_container .hero_section_button {
+    display: flex;
+    gap: 24px;
+}
+
+.hero_container .hero_section_button .button {
+    padding: 8px 28px;
+    border: 2px solid transparent;
+    outline: none;
+    cursor: pointer;
+    border-radius: 50px;
+    background: var(--secondary-color);
+    color: var(--primary-color);
+    font-size: 18px;
+    font-weight: 600;
+    transition: all 0.4s ease;
+}
+
+.hero_container .hero_section_button .button:last-child {
+    color: var(--white-color);
+    border-color: var(--white-color);
+    background: none;
+}
+
+.hero_container .hero_section_button .button:first-child:hover {
+    color: var(--white-color);
+    background: transparent;
+    border-color: var(--white-color);
+}
+
+.hero_container .hero_section_button .button:last-child:hover {
+    color: var(--primary-color);
+    background: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.hero_container .image_section {
+    max-width: 45%;
+}
+
+.hero_container .image_section img {
+    width: 100%;
+}
+
+/* About Us Section */
+.about_us {
+    padding: 60px 20px 120px;
+    background: var(--light-gray-color);
+}
+
+.about_container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    align-items: center;
+}
+
+.about_container .text_section {
+    max-width: 50%;
+}
+
+.about_container .text_section p {
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    line-height: 30px;
+    text-align: center;
+}
+
+.about_container .image_section {
+    max-width: 45%;
+}
+
+.about_container .image_section img {
+    width: 100%;
+}
+
+/* Services Section */
+.services {
+    background: var(--dark-color);
+    color: var(--white-color);
+    padding: 60px 20px 120px;
+}
+
+.services .service_container {
+    display: flex;
+    justify-content: space-between;
+    gap: 120px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.section_container .services_items img {
+    width: 100%;
+}
+
+.section_container .services_items {
+    width: calc(100% / 3 - 120px);
+}
+
+.services_items .services_text {
+    text-align: center;
+}
+
+.services_items .services_text h3 {
+    margin: 12px 0;
+    font-weight: 600;
+    font-size: 24px;
+}
+
+.services_items .services_text p {
+    font-size: 17px;
+}
+
+/* Why Us Section */
+.why_us {
+    background: var(--light-gray-color);
+    padding: 60px 20px 120px;
+}
+
+.why_us .why_container {
+    display: flex;
+    justify-content: space-between;
+    gap: 80px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.why_container .why_items img {
+    width: 30%;
+    margin-bottom: 10px;
+}
+
+.why_container .why_items {
+    width: calc(100% / 3 - 80px);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.why_items .why_us_text {
+    text-align: center;
+}
+
+.why_items .why_us_text h3 {
+    margin: 20px 0;
+    font-size: 22px;
+}
+
+.why_items .why_us_text p {
+    font-size: 17px;
+}
+
+/* Gallery Section */
+.gallery {
+    background: var(--white-color);
+    padding: 60px 20px 100px;
+}
+
+.gallery .gallery_container {
+    display: flex;
+    justify-content: space-between;
+    gap: 32px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.gallery_container .gallery_items {
+    width: calc(100% / 3 - 32px);
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+.gallery .gallery_container img {
+    width: 100%;
+    border-radius: 8px;
+    transition: transform 0.4s ease;
+}
+
+.gallery_container .gallery_items:hover img {
+    transform: scale(1.3);
+}
+
+/* Contact Section */
+.contact {
+    background: var(--light-gray-color);
+    padding: 60px 20px 100px;
+}
+
+.contact_container {
+    display: flex;
+    gap: 50px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.contact_container .contact_form {
+    max-width: 65%;
+    width: 100%;
+}
+
+.contact_container .contact_form .field {
+    margin: 20px 0;
+}
+
+.contact_container .contact_form .field label {
+    display: block;
+    font-size: 17px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.contact_container .contact_form .field input {
+    width: 100%;
+    height: 50px;
+    padding: 0 12px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.contact_container .contact_form textarea {
+    width: 100%;
+    height: 200px;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    resize: vertical;
+}
+
+.contact_container .contact_form .button {
+    padding: 8px 28px;
+    border: 2px solid transparent;
+    outline: none;
+    cursor: pointer;
+    border-radius: 50px;
+    background: var(--primary-color);
+    color: var(--white-color);
+    font-size: 17px;
+    font-weight: 600;
+    transition: all 0.4s ease;
+}
+
+.contact_container .contact_form .button:hover {
+    color: var(--primary-color);
+    background: transparent;
+    border-color: var(--primary-color);
+}
+
+.contact_text .contact_items {
+    display: flex;
+    gap: 20px;
+    margin: 80px 0;
+}
+
+.contact_text .contact_items i {
+    font-size: 32px;
+    margin-top: 5px;
+}
+
+/* Footer Section */
+footer {
+    background-color: #222;
+    color: white;
+    padding: 20px 0;
+    font-family: Arial, sans-serif;
+  }
+  
+  .footer-container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+  }
+  
+  .footer-section {
+    width: 22%;
+    min-width: 200px;
+    margin-bottom: 20px;
+  }
+  
+  .footer-section h2,
+  .footer-section h3 {
+    margin-bottom: 10px;
+    color: #f1c40f;
+  }
+  
+  .footer-section p {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  .footer-section ul {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .footer-section ul li {
+    margin-bottom: 8px;
+  }
+  
+  .footer-section ul li a {
+    text-decoration: none;
+    color: white;
+    transition: color 0.3s;
+  }
+  
+  .footer-section ul li a:hover {
+    color: #f1c40f;
+  }
+  
+  .social-icons {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .social-icons a {
+    color: white;
+    font-size: 20px;
+    transition: color 0.3s;
+  }
+  
+  .social-icons a:hover {
+    color: #f1c40f;
+  }
+  
+  .footer-bottom {
+    text-align: center;
+    padding: 10px 0;
+    font-size: 14px;
+    border-top: 1px solid #444;
+  }
+
+
+/* Responsive Media Query code for max-width: 1024px */
+
+@media screen and (max-width: 1024px) {
+    nav {
+        padding: 15px 20px;
+    }
+
+    label .menu_btn {
+        display: block;
+    }
+
+    nav ul {
+        display: block;
+        background: var(--white-color);
+        position: absolute;
+        top: 75px;
+        left: -100%;
+        overflow-y: auto;
+        width: 100%;
+        height: 100vh;
+        text-align: center;
+        transition: all 0.15s ease;
+    }
+
+    #click:checked~ul {
+        left: 0;
+    }
+
+    #click:checked~label .close_btn {
+        display: block;
+    }
+
+    #click:checked~label .menu_btn {
+        display: none;
+    }
+
+    nav ul li {
+        display: block;
+        padding: 8px 12px;
+        width: 48%;
+        margin: 24px auto;
+    }
+
+    nav ul li a {
+        color: var(--dark-color);
+    }
+
+    .hero_container {
+        flex-direction: column-reverse;
+        align-items: center;
+        padding-bottom: 32px;
+    }
+
+    .hero_container .image_section {
+        max-width: 100%;
+        text-align: center;
+    }
+
+    .hero_container .image_section img {
+        max-width: 90%;
+        align-items: center;
+    }
+
+    .hero_container .text_section {
+        max-width: 100%;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .hero_container .text_section p {
+        max-width: 100%;
+    }
+
+    .about_container {
+        flex-direction: column;
+    }
+
+    .about_container .text_section {
+        max-width: 100%;
+    }
+
+    .services .service_container {
+        gap: 50px;
+    }
+
+    .section_container .services_items {
+        width: calc(100% / 2 - 50px);
+    }
+
+    .why_us .why_container {
+        gap: 50px;
+    }
+
+    .why_container .why_items {
+        width: calc(100% / 2 - 50px);
+    }
+
+    .gallery .gallery_container {
+        justify-content: center;
+    }
+
+    .gallery_container .gallery_items {
+        width: calc(100% / 2 - 50px);
+    }
+
+    .contact_container {
+        flex-direction: column-reverse;
+    }
+
+    .contact_text .contact_items {
+        margin: 25px 0;
+    }
+
+    .contact_container .contact_form {
+        max-width: 100%;
+    }
+
+    footer {
+        background-color: #222;
+        color: white;
+        padding: 20px 0;
+        font-family: Arial, sans-serif;
+      }
+      
+      .footer-container {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+      }
+      
+      .footer-section {
+        width: 22%;
+        min-width: 200px;
+        margin-bottom: 20px;
+      }
+      
+      .footer-section h2,
+      .footer-section h3 {
+        margin-bottom: 10px;
+        color: #f1c40f;
+      }
+      
+      .footer-section p {
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      
+      .footer-section ul {
+        list-style: none;
+        padding: 0;
+      }
+      
+      .footer-section ul li {
+        margin-bottom: 8px;
+      }
+      
+      .footer-section ul li a {
+        text-decoration: none;
+        color: white;
+        transition: color 0.3s;
+      }
+      
+      .footer-section ul li a:hover {
+        color: #f1c40f;
+      }
+      
+      .social-icons {
+        display: flex;
+        gap: 10px;
+      }
+      
+      .social-icons a {
+        color: white;
+        font-size: 20px;
+        transition: color 0.3s;
+      }
+      
+      .social-icons a:hover {
+        color: #f1c40f;
+      }
+      
+      .footer-bottom {
+        text-align: center;
+        padding: 10px 0;
+        font-size: 14px;
+        border-top: 1px solid #444;
+      }
+      
+}
+
+/* Responsive Media Query code for max-width: 576px */
+@media screen and (max-width: 576px) {
+    .section_title {
+        padding: 50px 0;
+    }
+
+    nav .nav_logo a img,
+    .footer_section .footer_logo a img {
+        max-width: 45px;
+    }
+
+    nav .nav_logo h2 {
+        font-size: 30px;
+    }
+
+    .hero_container {
+        justify-content: space-evenly;
+    }
+
+    .hero_container .text_section h2 {
+        font-size: 30px;
+    }
+
+    .hero_container .text_section h3 {
+        font-size: 26px;
+    }
+
+    .hero_container .image_section img {
+        max-width: 80%;
+    }
+
+    .hero_container .text_section p {
+        font-size: 17px;
+    }
+
+    .about_container .image_section {
+        max-width: 70%;
+    }
+
+    .button {
+        padding: 10px 20px !important;
+        font-size: 15px !important;
+    }
+
+    .section_container .services_items,
+    .why_container .why_items {
+        width: 100%;
+        text-align: center;
+    }
+
+    .gallery_container .gallery_items {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .services .service_container,
+    .why_us .why_container {
+        gap: 70px;
+    }
+
+    .section_container .services_items img {
+        max-width: 80%;
+    }
+}
+    </style>
+  </head>
+  <body>
+    <!-- Header & Navbar Section -->
+    <header>
+      <nav>
+        <div class="nav_logo">
+          <a href="#">
+            <img src="./images/WhatsApp Image 2025-03-01 at 07.23.51_0acb7dd0.jpg" alt="Prepto Logo" />
+            <h2>Prepto</h2>
+          </a>
+        </div>
+
+        <input type="checkbox" id="click" />
+        <label for="click">
+          <i class="menu_btn bx bx-menu"></i>
+          <i class="close_btn bx bx-x"></i>
+        </label>
+
+        <ul>
+          <li><a href="#">Home</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#service">Services</a></li>
+          <li><a href="#why-us">Why Us</a></li>
+          <li><a href="#contact">Contact</a></li>
+          <li><a href="/login">Login/Signup</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero_section">
+      <div class="section_container">
+        <div class="hero_container">
+          <div class="text_section">
+            <h2>Prepare for Your Future</h2>
+            <h3>AI-Powered Mock Interviews & Career Coaching</h3>
+            <p>
+              Unlock your potential with AI-driven mock interviews, tailored tests, and resume optimization.
+            </p>
+
+            <div class="hero_section_button">
+              <a href = "/login"><button class="button">Start Now</button></a>
+              <a href = "#why-us"><button class="button">Learn More</button></a>
+            </div>
+          </div>
+
+          <div class="image_section">
+            <img src="./images/mock interview.png" alt="AI Mock Interviews" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- About Us Section -->
+    <section class="about_us" id="about">
+      <div class="section_container">
+        <div class="about_container">
+          <div class="text_section">
+            <h2 class="section_title">About Us</h2>
+            <p>
+              Prepto is your AI-powered career assistant, helping you excel in job interviews with interactive mock tests, real-time feedback, and advanced resume evaluation.
+            </p>
+          </div>
+
+          <div class="image_section">
+            <img src="./images/about us.jpg" alt="About Prepto" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services" id="service">
+      <h2 class="section_title">Our Services</h2>
+      <div class="section_container">
+        <div class="service_container">
+          <div class="services_items">
+            <img src="./images/ai mock int.png" alt="Mock Interviews" />
+            <div class="services_text">
+              <h3>AI Mock Interviews</h3>
+              <p>
+                Get real-time AI-driven mock interviews with instant feedback.
+              </p>
+            </div>
+          </div>
+          <div class="services_items">
+            <img src="./images/resume.png" alt="Resume Scoring" />
+            <div class="services_text">
+              <h3>Resume ATS Scoring</h3>
+              <p>
+                Optimize your resume with ATS-friendly scoring and expert tips.
+              </p>
+            </div>
+          </div>
+          <div class="services_items">
+            <img src="./images/mock tests.png" alt="Mock Tests" />
+            <div class="services_text">
+              <h3>Placement Tests</h3>
+              <p>Practice with tailored mock tests to ace your interviews.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="why-us" class="contact">
+      <div class="container">
+          <h2 class="section_title">Why Choose Prepto?</h2>
+          <div class="section_container">
+            <div class="contact_container">  
+              <div class="why-item">
+                <h3>AI-Powered Mock Interviews</h3>
+                <p>Get real-time feedback and experience AI-driven mock interviews with expert-level questions.</p>
+            </div>
+            <div class="why-item">
+                <h3>ATS Resume Analysis</h3>
+                <p>Optimize your resume with ATS-based scoring and job description matching for better job selection chances.</p>
+            </div>
+            <div class="why-item">
+                <h3>Performance Tracking</h3>
+                <p>Monitor your interview scores with visual insights and get personalized recommendations.</p>
+            </div>
+            <div class="why-item">
+                <h3>AI Career Path Guidance</h3>
+                <p>Get personalized career suggestions based on your skills, interests, and industry demand.</p>
+            </div>
+            <div class="why-item">
+                <h3>AI-Powered Mock Tests</h3>
+                <p>Practice with AI-generated mock tests tailored to your job role and skill level.</p>
+            </div>
+            <div class="why-item">
+                <h3>Resume Builder</h3>
+                <p>Create a professional ATS-friendly resume with AI-driven recommendations and templates.</p>
+            </div>
+          </div>
+      </div>
+      </div>
+  </section>
+  
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+      <h2 class="section_title">Contact Us</h2>
+      <div class="section_container">
+        <div class="contact_container">
+          <div class="contact_form">
+            <form action="#">
+              <div class="field">
+                <label for="Name">Full Name</label>
+                <input type="text" id="Name" placeholder="Your Name" required />
+              </div>
+              <div class="field">
+                <label for="email">Your Email</label>
+                <input
+                  type="text"
+                  id="email"
+                  placeholder="Your Email"
+                  required
+                />
+              </div>
+              <div class="field">
+                <label for="message">Your Message</label>
+                <textarea
+                  name="message"
+                  id="message"
+                  placeholder="Your Message"
+                ></textarea>
+              </div>
+              <button class="button" id="submit">Submit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer>
+      <div class="footer-container">
+        <div class="footer-section about">
+          <h2>Prepto</h2>
+          <p>Your AI-powered mock interview and test platform. Prepare smarter, get hired faster.</p>
+          <p>Contact: support@prepto.com</p>
+        </div>
+    
+        <div class="footer-section links">
+          <h3>Quick Links</h3>
+          <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Mock Interviews</a></li>
+            <li><a href="#">Mock Tests</a></li>
+            <li><a href="#">Resume Scoring</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Contact Us</a></li>
+          </ul>
+        </div>
+    
+        <div class="footer-section social">
+          <h3>Follow Us</h3>
+          <div class="social-icons">
+            <a href="#"><i class="fab fa-facebook"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-linkedin"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+          </div>
+        </div>
+    
+        <div class="footer-section legal">
+          <h3>Legal</h3>
+          <ul>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms & Conditions</a></li>
+          </ul>
+        </div>
+      </div>
+    
+      <div class="footer-bottom">
+        <p>© 2025 Prepto. All rights reserved.</p>
+      </div>
+    </footer>
+    
+  </body>
+</html>

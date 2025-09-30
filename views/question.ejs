@@ -1,0 +1,163 @@
+<!-- views/question.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question <%= questionNumber %></title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+    <style>
+        #editor {
+            width: 100%;
+            height: 500px;
+            border: 1px solid #ccc;
+        }
+        .timer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #2d3748;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            z-index: 1000;
+        }
+        .warning {
+            background-color: #e53e3e;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="timer" id="timer">Time Remaining: 15:00</div>
+    
+    <div class="container mx-auto p-4 flex flex-col md:flex-row min-h-screen">
+        <!-- Question Section -->
+        <div class="md:w-1/2 p-4">
+            <h1 class="text-3xl font-semibold mb-4 text-gray-800">Question <%= questionNumber %></h1>
+            <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+                <h2 class="text-xl font-bold mb-2 text-gray-700"><%= question.title %></h2>
+                <p class="text-gray-600 mb-4"><%= question.description %></p>
+                
+                <div class="mb-4">
+                    <h3 class="font-semibold mb-2">Test Cases:</h3>
+                    <ul class="list-disc pl-5">
+                        <% testCases.forEach(function(testCase) { %>
+                            <li class="text-gray-600">
+                                Input: <%= testCase.input %><br>
+                                Expected Output: <%= testCase.expectedOutput %>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Section -->
+        <div class="md:w-1/2 p-4">
+            <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+                <h2 class="text-xl font-bold mb-2 text-gray-700">Code Editor</h2>
+                <div class="mb-4">
+                    <div id="editor" class="rounded"><%= skeletonCode %></div>
+                </div>
+
+                <form action="/coding-test/submit-answer/<%= questionNumber %>" method="POST" id="codeForm">
+                    <input type="hidden" name="code" id="code">
+                    <div class="flex items-center justify-between">
+                        <button type="button" onclick="submitCode()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            Submit Answer
+                        </button>
+                        <button type="button" onclick="submitEarly()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            Submit Early
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-gray-200 text-center p-4 mt-4">
+        <p class="text-sm text-gray-500">© 2024 Coding Test</p>
+    </footer>
+
+    <script>
+        // Initialize the editor
+        var editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        
+        // Set the appropriate language mode
+        const language = '<%= language %>';
+        let mode = 'python';
+        switch(language) {
+            case 'Java':
+                mode = 'java';
+                break;
+            case 'C':
+                mode = 'c_cpp';
+                break;
+            case 'C++':
+                mode = 'c_cpp';
+                break;
+            case 'Python':
+                mode = 'python';
+                break;
+        }
+        editor.session.setMode(`ace/mode/${mode}`);
+        
+        // Configure editor options
+        editor.setOptions({
+            showPrintMargin: false,
+            showGutter: true,
+            highlightActiveLine: true,
+            wrap: true,
+            autoScrollEditorIntoView: true,
+            fontSize: "14px",
+            tabSize: 4,
+            useSoftTabs: true,
+            showInvisibles: false,
+            indentedSoftWrap: true,
+            enableAutoIndent: true,
+            enableLiveAutocompletion: true,
+            enableSnippets: true
+        });
+
+        // Timer functionality
+        let timeLeft = 900; // 15 minutes in seconds
+        const timerElement = document.getElementById('timer');
+
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            
+            timerElement.textContent = `Time Remaining: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 180) { // Warning at 3 minutes remaining
+                timerElement.classList.add('warning');
+                timerElement.style.backgroundColor = '#e53e3e';
+            }
+
+            if (timeLeft <= 0) {
+                submitCode();
+            } else {
+                timeLeft--;
+                setTimeout(updateTimer, 1000);
+            }
+        }
+
+        function submitCode() {
+            document.getElementById("code").value = editor.getValue();
+            document.getElementById("codeForm").submit();
+        }
+
+        function submitEarly() {
+            if (confirm('Are you sure you want to submit early? You will not be able to modify your answer after submission.')) {
+                submitCode();
+            }
+        }
+
+        // Start the timer
+        updateTimer();
+    </script>
+</body>
+</html>

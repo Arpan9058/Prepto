@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PREPTO | Login</title>
+
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="./stylesheet/styles.css" />
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+
+  </head>
+
+  <body>
+    <!-- Header & Navbar Section -->
+    <header>
+      <nav>
+        <div class="nav_logo">
+          <a href="/">
+            <img src="./images/WhatsApp Image 2025-03-01 at 07.23.51_0acb7dd0.jpg" alt="Prepto Logo" />
+            <h2>Prepto</h2>
+          </a>
+        </div>
+        <input type="checkbox" id="click" />
+        <label for="click">
+          <i class="menu_btn bx bx-menu"></i>
+          <i class="close_btn bx bx-x"></i>
+        </label>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#service">Services</a></li>
+          <li><a href="#why">Why Us</a></li>
+          <li><a href="#contact">Contact</a></li>
+          <li><a href="/login">Login/Signup</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <!-- Login Section -->
+    <div class="login_section">
+      <div class="login_container">
+        <h2 class="section_title">Login</h2>
+        <form class="login_form">
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required />
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required />
+          </div>
+          <div id="error-msg" style="color: red; margin-top: 10px;"></div>
+          <button type="submit" class="button">Login</button>
+        </form>
+        <p><a href="#" onclick="resetPassword()">Forgot Password?</a></p>
+        <div class="signup-link">
+          Don't have an account? <a href="/register">Sign up</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer-container">
+        <div class="footer-section about">
+          <h2>Prepto</h2>
+          <p>Your AI-powered mock interview and test platform. Prepare smarter, get hired faster.</p>
+          <p>Contact: support@prepto.com</p>
+        </div>
+        <div class="footer-section links">
+          <h3>Quick Links</h3>
+          <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="#">Mock Interviews</a></li>
+            <li><a href="#">Mock Tests</a></li>
+            <li><a href="#">Resume Scoring</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Contact Us</a></li>
+          </ul>
+        </div>
+        <div class="footer-section social">
+          <h3>Follow Us</h3>
+          <div class="social-icons">
+            <a href="#"><i class="bx bxl-facebook"></i></a>
+            <a href="#"><i class="bx bxl-twitter"></i></a>
+            <a href="#"><i class="bx bxl-linkedin"></i></a>
+            <a href="#"><i class="bx bxl-instagram"></i></a>
+          </div>
+        </div>
+        <div class="footer-section legal">
+          <h3>Legal</h3>
+          <ul>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms & Conditions</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 Prepto. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+
+  <!-- ✅ Firebase Init + Registration Logic -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDLibBBUauRHYWphtEtL7Jst1J2KR4EWH4",
+      authDomain: "database-prepto.firebaseapp.com",
+      projectId: "database-prepto",
+      storageBucket: "database-prepto.appspot.com",
+      messagingSenderId: "354150833671",
+      appId: "1:354150833671:web:55ceb6758f2c060ed54a2"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    <!-- JS Script -->
+      const form = document.querySelector('.login_form');
+      const errorMsg = document.getElementById('error-msg');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorMsg.textContent = "";
+
+        const email = form.email.value;
+        const password = form.password.value;
+
+        try {
+          const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+          const token = await userCredential.user.getIdToken();
+
+          // Send token to backend for secure cookie setting
+          const response = await fetch("/api/set-token", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`
+            }
+          });
+
+          if (!response.ok) throw new Error("Server rejected token");
+
+          // Redirect after login
+          window.location.href = "/dashboard";
+        } catch (error) {
+          errorMsg.textContent = "Login failed: " + error.message;
+        }
+      });
+
+      function resetPassword() {
+        const email = document.getElementById('email').value;
+        if (!email) return alert("Please enter your email first.");
+
+        firebase.auth().sendPasswordResetEmail(email)
+          .then(() => alert("Password reset link sent!"))
+          .catch((err) => alert("Error: " + err.message));
+      }
+    </script>
+  </body>
+</html>
