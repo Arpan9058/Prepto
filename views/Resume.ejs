@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title><%= fullName %> - Resume</title>
+
+<style>
+    body {
+        font-family: "Calibri", sans-serif;
+        /* margin: 40px 60px; */
+        color: #222;
+        line-height: 1.5;
+    }
+
+    h1 {
+        text-align: center;
+        font-size: 32px;
+        margin-bottom: 0;
+    }
+
+    .contact {
+        text-align: center;
+        font-size: 14px;
+        margin-bottom: 25px;
+        color: #444;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: bold;
+        margin-top: 35px;
+        border-bottom: 2px solid #000;
+        padding-bottom: 4px;
+    }
+
+    p, li {
+        font-size: 15px;
+        margin-top: 8px;
+    }
+</style>
+</head>
+
+<body>
+
+    <!-- NAME -->
+
+    <h1><%= fullName %></h1>
+
+    <!-- CONTACT INFO -->
+    <div class="contact">
+        <%= location %> | <%= email %> | <%= phone %> <br>
+        <%= links %>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="section-title">Professional Summary</div>
+    <p><%= objective %></p>
+
+    <!-- EDUCATION -->
+    <div class="section-title">Education</div>
+    <p><%= education %></p>
+
+    <!-- PROJECTS -->
+    <div class="section-title">Projects</div>
+    <p><%= projects %></p>
+
+    <!-- TECH SKILLS -->
+    <div class="section-title">Technical Skills</div>
+    <p><b>Programming Languages:</b> <%= skills %></p>
+    <p><b>Tools & Frameworks:</b> <%= tools %></p>
+    <p><b>Core Concepts:</b> <%= core %></p>
+
+    <!-- EXPERIENCE -->
+    <div class="section-title">Work Experience</div>
+    <p><%= experience %></p>
+
+    <!-- CERTIFICATIONS -->
+    <div class="section-title">Certifications</div>
+    <p><%= certifications %></p>
+
+    <!-- COMPETITIVE -->
+    <div class="section-title">Competitive Programming</div>
+    <p><%= competitive %></p>
+
+</body>
+</html>

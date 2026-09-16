@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Prep | Prepto</title>
+    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+        :root {
+            --primary-color: #3b141c;
+            --secondary-color: #f3961c;
+            --dark-color: #252525;
+            --white-color: #fff;
+            --light-gray-color: #f2f2f2;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Poppins", sans-serif; }
+
+        body { background-color: var(--light-gray-color); color: var(--dark-color); }
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; padding: 0; margin: 0; }
+
+        .nav {
+            position: fixed;
+            top: 0; left: 0;
+            width: 250px;
+            height: 100vh;
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 2px 0px 5px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        .nav .nav_logo { margin-bottom: 20px; }
+        .nav .nav_logo a { display: flex; align-items: center; gap: 10px; }
+        .nav .nav_logo img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .nav .nav_logo h2 { font-size: 24px; font-weight: 600; }
+        .nav ul { width: 100%; }
+
+        .nav ul li a {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 15px; border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .nav ul li a:hover { background-color: var(--secondary-color); color: var(--primary-color); }
+        .nav ul li a i { font-size: 20px; width: 24px; text-align: center; }
+        .nav ul li a span { font-size: 16px; }
+        .logout { margin-top: auto; margin-bottom: 20px; }
+
+        .main { margin-left: 250px; padding: 20px; min-height: 100vh; }
+
+        .section_title {
+            text-align: left;
+            padding: 20px 0;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--dark-color);
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--secondary-color);
+            margin-bottom: 20px;
+        }
+
+        .form-container {
+            background-color: var(--white-color);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+            max-width: 700px;
+        }
+
+        .form-container label {
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: block;
+            font-size: 15px;
+        }
+
+        .form-container input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+            background: #fafafa;
+        }
+
+        .info-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .chip {
+            background: #f2f2f2;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 12px;
+            color: #555;
+        }
+
+        .button {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            border: none;
+            padding: 12px 28px;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: var(--primary-color);
+            color: var(--white-color);
+        }
+
+        /* Loading Overlay */
+        #loadingOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.65);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 56px; height: 56px;
+            border: 5px solid rgba(255,255,255,0.2);
+            border-top: 5px solid var(--secondary-color);
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
+        .loading-text { color: white; font-size: 18px; font-weight: 600; }
+        .loading-sub { color: #ccc; font-size: 13px; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .nav { width: 100%; height: auto; position: static; flex-direction: row; }
+            .main { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nav">
+        <div class="nav_logo">
+            <a href="/dashboard">
+                <img src="/images/WhatsApp Image 2025-03-01 at 07.23.51_0acb7dd0.jpg" alt="Prepto Logo">
+                <h2>Prepto</h2>
+            </a>
+        </div>
+        <ul>
+            <li><a href="/analyze"><i class="fas fa-file-alt"></i><span>ATS Score</span></a></li>
+            <li><a href="/resume-builder"><i class="fas fa-file-pdf"></i><span>Resume Builder</span></a></li>
+            <li><a href="/reports"><i class="fas fa-file-invoice"></i><span>Reports</span></a></li>
+            <li><a href="/progress"><i class="fas fa-chart-bar"></i><span>Progress</span></a></li>
+            <li><a href="/mock-interviews"><i class="fas fa-microphone"></i><span>Mock Interviews</span></a></li>
+            <li><a href="/api/mockTest"><i class="fas fa-pencil-alt"></i><span>Mock Tests</span></a></li>
+            <li><a href="/careerguidance"><i class="fas fa-graduation-cap"></i><span>Career Guidance</span></a></li>
+            <li><a href="/resume-interview"><i class="fas fa-question-circle"></i><span>Interview Prep</span></a></li>
+            <li class="logout"><a href="/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        </ul>
+    </div>
+
+    <div class="main">
+        <h2 class="section_title">🎯 Resume Interview Prep</h2>
+
+        <div class="form-container">
+            <form action="/resume-interview" method="POST" enctype="multipart/form-data" id="analysisForm">
+
+                <label for="resumeInput">Upload Resume (PDF or DOCX):</label>
+                <input type="file" name="resume" id="resumeInput" accept=".pdf,.docx" required>
+
+                <div class="info-chips">
+                    <span class="chip">✦ Technical Questions</span>
+                    <span class="chip">✦ Project Deep-dive</span>
+                    <span class="chip">✦ HR & Behavioural</span>
+                    <span class="chip">✦ Situational</span>
+                    <span class="chip">✦ Tricky Questions</span>
+                </div>
+
+                <button type="submit" class="button">Generate Interview Questions</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <p class="loading-text">Analyzing your resume...</p>
+        <p class="loading-sub">Generating personalized questions, please wait</p>
+    </div>
+
+    <script>
+        document.getElementById('analysisForm').addEventListener('submit', function() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        });
+    </script>
+
+</body>
+</html>

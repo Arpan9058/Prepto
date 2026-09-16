@@ -20,6 +20,6 @@ router.get('/technical*', ensureAuthenticated, (req, res) => {
 });
 
 
-router.post('/analyze-text', interviewController.analyzeText); 
+router.post('/analyze-text', ensureAuthenticated, interviewController.analyzeText); 
 
 module.exports = router;

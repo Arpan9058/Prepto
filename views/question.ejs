@@ -6,26 +6,120 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Question <%= questionNumber %></title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
     <style>
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+        :root {
+            --primary-color: #3b141c;
+            --secondary-color: #f3961c;
+            --dark-color: #252525;
+            --white-color: #fff;
+            --light-gray-color: #f2f2f2;
+        }
+
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--light-gray-color);
+        }
+
         #editor {
             width: 100%;
             height: 500px;
-            border: 1px solid #ccc;
+            border: 2px solid var(--secondary-color);
+            border-radius: 8px;
         }
+
         .timer {
             position: fixed;
             top: 20px;
             right: 20px;
-            background-color: #2d3748;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #5a1f2a 100%);
             color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-weight: bold;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: 700;
             z-index: 1000;
+            box-shadow: 0 4px 15px rgba(59, 20, 28, 0.3);
+            font-size: 1.1rem;
         }
-        .warning {
-            background-color: #e53e3e;
+
+        .timer.warning {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .container {
+            padding: 30px;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bg-white {
+            background-color: var(--white-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid var(--secondary-color);
+        }
+
+        h3.text-xl {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .list-disc li {
+            color: var(--dark-color);
+            margin-bottom: 8px;
+        }
+
+        button {
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .bg-blue-500 {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+        }
+
+        .bg-blue-500:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(66, 153, 225, 0.4);
+        }
+
+        .bg-green-500 {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #e8860f 100%);
+        }
+
+        .bg-green-500:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(243, 150, 28, 0.4);
+        }
+
+        .text-gray-600 {
+            color: #666;
+        }
+
+        .feedback-section {
+            background: linear-gradient(135deg, rgba(243, 150, 28, 0.05) 0%, rgba(59, 20, 28, 0.05) 100%);
+            border-left: 4px solid var(--secondary-color);
         }
     </style>
 </head>
@@ -35,18 +129,18 @@
     <div class="container mx-auto p-4 flex flex-col md:flex-row min-h-screen">
         <!-- Question Section -->
         <div class="md:w-1/2 p-4">
-            <h1 class="text-3xl font-semibold mb-4 text-gray-800">Question <%= questionNumber %></h1>
+            <h1 class="section-title"><i class="fas fa-question-circle"></i> Question <%= questionNumber %></h1>
             <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
                 <h2 class="text-xl font-bold mb-2 text-gray-700"><%= question.title %></h2>
                 <p class="text-gray-600 mb-4"><%= question.description %></p>
                 
                 <div class="mb-4">
-                    <h3 class="font-semibold mb-2">Test Cases:</h3>
+                    <h3 class="font-semibold mb-2 text-gray-700"><i class="fas fa-flask"></i> Test Cases:</h3>
                     <ul class="list-disc pl-5">
                         <% testCases.forEach(function(testCase) { %>
                             <li class="text-gray-600">
-                                Input: <%= testCase.input %><br>
-                                Expected Output: <%= testCase.expectedOutput %>
+                                <strong>Input:</strong> <%= testCase.input %><br>
+                                <strong>Expected Output:</strong> <%= testCase.expectedOutput %>
                             </li>
                         <% }); %>
                     </ul>
@@ -57,19 +151,20 @@
         <!-- Editor Section -->
         <div class="md:w-1/2 p-4">
             <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-                <h2 class="text-xl font-bold mb-2 text-gray-700">Code Editor</h2>
+                <h2 class="section-title"><i class="fas fa-keyboard"></i> Code Editor</h2>
                 <div class="mb-4">
                     <div id="editor" class="rounded"><%= skeletonCode %></div>
                 </div>
 
                 <form action="/coding-test/submit-answer/<%= questionNumber %>" method="POST" id="codeForm">
                     <input type="hidden" name="code" id="code">
-                    <div class="flex items-center justify-between">
-                        <button type="button" onclick="submitCode()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                            Submit Answer
+                    <input type="hidden" name="earlySubmit" id="earlySubmit" value="false">
+                    <div class="flex items-center justify-between gap-4">
+                        <button type="button" onclick="submitCode()" class="flex-1 bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded focus:outline-none focus:shadow-outline">
+                            <i class="fas fa-check-circle"></i> Submit Answer
                         </button>
-                        <button type="button" onclick="submitEarly()" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                            Submit Early
+                        <button type="button" onclick="submitEarly()" class="flex-1 bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-4 rounded focus:outline-none focus:shadow-outline">
+                            <i class="fas fa-stop-circle"></i> Submit Early
                         </button>
                     </div>
                 </form>
@@ -78,11 +173,14 @@
     </div>
 
     <footer class="bg-gray-200 text-center p-4 mt-4">
-        <p class="text-sm text-gray-500">© 2024 Coding Test</p>
+        <p class="text-sm text-gray-500">© 2024 Prepto - Coding Test Platform</p>
     </footer>
 
     <script>
         // Initialize the editor
+        function showLoader() {
+    document.getElementById("loadingOverlay").style.display = "flex";
+}
         var editor = ace.edit("editor");
         editor.setTheme("ace/theme/monokai");
         
@@ -134,7 +232,6 @@
             
             if (timeLeft <= 180) { // Warning at 3 minutes remaining
                 timerElement.classList.add('warning');
-                timerElement.style.backgroundColor = '#e53e3e';
             }
 
             if (timeLeft <= 0) {
@@ -147,17 +244,48 @@
 
         function submitCode() {
             document.getElementById("code").value = editor.getValue();
+            showLoader();
+            
             document.getElementById("codeForm").submit();
         }
 
-        function submitEarly() {
-            if (confirm('Are you sure you want to submit early? You will not be able to modify your answer after submission.')) {
-                submitCode();
-            }
-        }
+       function submitEarly() {
+    if (confirm('Are you sure you want to submit early?')) {
+
+        document.getElementById("code").value = editor.getValue();
+
+        // ✅ THIS IS THE FIX
+        document.getElementById("earlySubmit").value = "true";
+        
+        showLoader();
+
+        document.getElementById("codeForm").submit();
+    }
+}
 
         // Start the timer
         updateTimer();
     </script>
+    <!-- Loading Overlay -->
+<div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; 
+     width:100%; height:100%; background:rgba(0,0,0,0.6); 
+     z-index:9999; justify-content:center; align-items:center; flex-direction:column;">
+    
+    <div style="width:60px; height:60px; border:6px solid #f3f3f3; 
+         border-top:6px solid #f5a623; border-radius:50%; 
+         animation:spin 1s linear infinite;"></div>
+    
+    <p style="color:white; margin-top:20px; font-size:18px; font-weight:600;">
+        Loading next question...
+    </p>
+    <p style="color:#ccc; font-size:14px;">Please wait</p>
+</div>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
 </body>
 </html>

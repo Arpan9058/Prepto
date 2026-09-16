@@ -5,73 +5,228 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test Results</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        pre {
-            white-space: pre-wrap; /* Since Tailwind doesn't handle this directly */
-            word-break: break-all; /* For extremely long lines */
-            background-color: #f5f5f5;
-            padding: 10px;
-            border-radius: 5px;
-            overflow: auto; /* Add scrollbars if code overflows */
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+        :root {
+            --primary-color: #3b141c;
+            --secondary-color: #f3961c;
+            --dark-color: #252525;
+            --white-color: #fff;
+            --light-gray-color: #f2f2f2;
         }
 
-        /* Custom logo styling */
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--light-gray-color) 0%, #e8e8e8 100%);
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            overflow: auto;
+            border-left: 4px solid var(--secondary-color);
+            font-size: 0.9rem;
+        }
+
         .logo {
             width: 120px;
             height: auto;
-            
             margin-bottom: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(59, 20, 28, 0.15);
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .score-display {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--white-color);
+            text-align: center;
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #e8860f 100%);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 6px 20px rgba(243, 150, 28, 0.3);
+        }
+
+        .question-card {
+            background-color: var(--white-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid var(--secondary-color);
+            transition: all 0.3s ease;
+        }
+
+        .question-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .question-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .score-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #e8860f 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
         }
 
         .feedback-section {
-            margin-top: 1rem;
-            padding: 1rem;
-            background-color: #f8f9fa;
-            border-radius: 5px;
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(243, 150, 28, 0.08) 0%, rgba(59, 20, 28, 0.05) 100%);
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary-color);
         }
+
         .feedback-item {
-            margin-bottom: 0.5rem;
+            margin-bottom: 1rem;
         }
+
         .feedback-title {
-            font-weight: 600;
-            color: #2d3748;
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+
         .suggestion-list {
-            list-style-type: disc;
-            margin-left: 1.5rem;
+            list-style-type: none;
+            margin-left: 0;
+            padding-left: 0;
+            margin-top: 0.5rem;
+        }
+
+        .suggestion-list li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--dark-color);
+        }
+
+        .suggestion-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--secondary-color);
+            font-weight: 700;
+        }
+
+        .dashboard-btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #5a1f2a 100%);
+            color: var(--white-color);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .dashboard-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 20, 28, 0.4);
+        }
+
+        .no-answer {
+            color: #999;
+            font-style: italic;
+            padding: 1rem;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        footer {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #5a1f2a 100%);
+            color: var(--white-color);
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 2rem;
         }
     </style>
 </head>
 <body class="bg-gray-100 flex flex-col min-h-screen">
 
     
-    <div class="container mx-auto p-4 flex-grow">
-        <h1 class="text-3xl font-semibold mb-4 text-gray-800 text-center">Test Results</h1>
-        <h2 class="text-2xl font-semibold mb-6 text-blue-600 text-center">Final Score: <%= score %></h2>
+    <div class="container mx-auto p-4 flex-grow max-w-4xl">
+        <h1 class="page-title"><i class="fas fa-trophy"></i> Test Results</h1>
+        
+        <div class="score-display">
+            <div>Your Final Score</div>
+            <div style="font-size: 3.5rem; margin-top: 0.5rem;"><%= score %>/300</div>
+        </div>
 
         <% for (let i = 1; i <= 3; i++) { %>
-            <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-                <h3 class="text-xl font-bold mb-2 text-gray-700">Question <%= i %></h3>
+            <div class="question-card">
+                <h3 class="question-title"><i class="fas fa-code"></i> Question <%= i %></h3>
                 <% if (answers[i]) { %>
-                    <p class="text-gray-600 font-semibold mb-1">Your Code:</p>
-                    <pre class="mb-2"><%= answers[i].code %></pre>
-                    <p class="text-gray-600">Score: <span class="font-medium"><%= answers[i].evaluation.score %></span></p>
+                    <p class="text-gray-700 font-semibold mb-2"><%= answers[i].question.title %></p>
+                    
+                    <div class="mb-3">
+                        <p class="text-gray-600 font-semibold mb-2"><i class="fas fa-file-code"></i> Your Code:</p>
+                        <pre class="mb-2"><%= answers[i].code %></pre>
+                    </div>
+                    
+                    <div class="score-badge">
+                        <i class="fas fa-star"></i> Score: <%= answers[i].evaluation.score %>/100
+                    </div>
                     
                     <div class="feedback-section">
                         <div class="feedback-item">
-                            <p class="feedback-title">Code Structure:</p>
-                            <p><%= answers[i].evaluation.feedback.codeStructure %></p>
+                            <p class="feedback-title"><i class="fas fa-cube"></i> Code Structure:</p>
+                            <p class="text-gray-700"><%= answers[i].evaluation.feedback.codeStructure %></p>
                         </div>
                         <div class="feedback-item">
-                            <p class="feedback-title">Implementation:</p>
-                            <p><%= answers[i].evaluation.feedback.implementation %></p>
+                            <p class="feedback-title"><i class="fas fa-wrench"></i> Implementation:</p>
+                            <p class="text-gray-700"><%= answers[i].evaluation.feedback.implementation %></p>
                         </div>
                         <div class="feedback-item">
-                            <p class="feedback-title">Edge Cases:</p>
-                            <p><%= answers[i].evaluation.feedback.edgeCases %></p>
+                            <p class="feedback-title"><i class="fas fa-flask"></i> Edge Cases:</p>
+                            <p class="text-gray-700"><%= answers[i].evaluation.feedback.edgeCases %></p>
                         </div>
                         <div class="feedback-item">
-                            <p class="feedback-title">Suggestions:</p>
+                            <p class="feedback-title"><i class="fas fa-lightbulb"></i> Suggestions:</p>
                             <ul class="suggestion-list">
                                 <% answers[i].evaluation.feedback.suggestions.forEach(function(suggestion) { %>
                                     <li><%= suggestion %></li>
@@ -80,17 +235,21 @@
                         </div>
                     </div>
                 <% } else { %>
-                    <p class="text-gray-500">No answer submitted for this question.</p>
+                    <p class="no-answer"><i class="fas fa-info-circle"></i> No answer submitted for this question.</p>
                 <% } %>
             </div>
         <% } %>
     </div>
-    <button type="button"  onclick="window.location.href='/dashboard'" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-        Go To Dashboard
-    </button>
+
+    <div class="container mx-auto p-4 max-w-4xl">
+        <button type="button" onclick="window.location.href='/dashboard'" class="dashboard-btn w-full">
+            <i class="fas fa-arrow-left"></i> Return to Dashboard
+        </button>
+    </div>
+
     <!-- Footer Section -->
-    <footer class="bg-gray-200 text-center p-4 mt-4">
-        <p class="text-sm text-gray-500">© 2024 Coding Test</p>
+    <footer>
+        <p class="text-sm"><i class="fas fa-code"></i> © 2024 Prepto - Coding Test Platform</p>
     </footer>
 
 </body>

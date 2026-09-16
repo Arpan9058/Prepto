@@ -5,7 +5,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function generateResume(resumeData) {
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
         
         const prompt = `Create an ATS-friendly resume in HTML format using the following information. Format it professionally with proper HTML tags and styling. Do not include any markdown or asterisks. Use semantic HTML elements and clean formatting:
 
