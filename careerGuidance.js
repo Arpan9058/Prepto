@@ -1,12 +1,11 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
-// Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function analyzeWithGemini(skills) {
     try {
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
         
         const prompt = `As a career guidance expert, analyze the following skills and provide focused career guidance:
         Skills: ${skills}

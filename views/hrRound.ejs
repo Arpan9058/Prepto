@@ -1,411 +1,457 @@
-    <!DOCTYPE html>
-    <html lang="en">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PREPTO | HR Interview Round</title>
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Speech to Text - Technical Interview</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-        <!-- Link to a CSS file here that contains the same code as on the CSS tab above -->    
-        <script src="https://cdn.autoproctor.co/ap-entry.js"></script>
-        <style>
-            body {
-                background-color: #f3f4f6;
-                font-family: 'Inter', sans-serif;
-            }
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdn.autoproctor.co/ap-entry.js"></script>
 
-            /* Main Content Container */
-            .main-container {
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 2rem;
-            }
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-            .header {
-                text-align: center;
-                margin-bottom: 2rem;
-            }
+    <style>
+        body {
+            background: #f2f2f2;
+            font-family: "Poppins", sans-serif;
+        }
 
-            .video-container {
-                position: relative;
-                width: 100%;
-                height: 100%;
-                border-radius: 8px;
-                overflow: hidden;
-                background-color: #000;
-            }
+        .prepto-header {
+            background: #3b141c;
+            padding: 25px 0;
+            text-align: center;
+            color: #fff;
+        }
 
-            .video-container video {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
+        .prepto-section {
+            max-width: 950px;
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
 
-            .transcription-box {
-                border: 1px solid #e5e7eb;
-                background-color: #f9fafb;
-                padding: 20px;
-                min-height: 150px;
-                max-height: 350px;
-                overflow-y: auto;
-                border-radius: 8px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            }
+        .question-box {
+            background: #fff7ec;
+            padding: 18px 22px;
+            border-left: 5px solid #f3961c;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #3b141c;
+            margin-bottom: 25px;
+        }
 
-            .transcription-box pre {
-                white-space: pre-wrap;
-                word-wrap: break-word;
-            }
+        .prepto-btn {
+            background: #f3961c;
+            color: white;
+            border-radius: 30px;
+            padding: 12px 32px;
+            font-weight: 600;
+            transition: 0.25s;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+        }
 
-            .button {
-                transition: background-color 0.2s ease;
-            }
+        .prepto-btn:hover {
+            background: #d07a10;
+        }
 
-            .button:hover {
-                background-color: #4CAF50;
-            }
+        .prepto-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
 
-            .webcam-overlay {
-                position: absolute;
-                top: 10px;
-                left: 10px;
-                color: white;
-                font-size: 16px;
-                background-color: rgba(0, 0, 0, 0.5);
-                padding: 5px;
-                border-radius: 5px;
-            }
+        .transcription-box {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #ddd;
+            min-height: 150px;
+            max-height: 260px;
+            overflow-y: auto;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            color: #333;
+        }
 
-            .card {
-                background-color: #fff;
-                border-radius: 10px;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-                padding: 20px;
-                margin-bottom: 20px;
-            }
+        .result-card {
+            background: #fff7ec;
+            padding: 18px;
+            border-radius: 10px;
+            border-left: 5px solid #f3961c;
+            margin-bottom: 18px;
+        }
 
-            .card h2 {
-                font-size: 1.5rem;
-                color: #333;
-            }
+        .result-card p strong {
+            color: #3b141c;
+        }
 
-            .card p {
-                font-size: 1rem;
-                color: #555;
-            }
+        /* Recording pulse indicator */
+        .recording-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: red;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 1s infinite;
+            vertical-align: middle;
+        }
 
-            .results-title {
-                font-size: 1.5rem;
-                font-weight: 600;
-                color: #333;
-            }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
 
-            .result-item {
-                padding: 1rem;
-                background-color: #f9fafb;
-                border-radius: 8px;
-                margin-bottom: 1rem;
-                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            }
+        .status-bar {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 10px;
+            min-height: 20px;
+        }
 
-            .result-item h3 {
-                font-size: 1.2rem;
-                font-weight: 600;
-                color: #333;
-            }
+        .question-counter {
+            font-size: 0.85rem;
+            color: #888;
+            text-align: right;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
 
-            .result-item p {
-                margin-top: 0.5rem;
-                color: #555;
-            }
+<body>
 
-            .start-btn:disabled {
-                background-color: #ccc;
-                cursor: not-allowed;
-            }
+    <!-- PAGE HEADER -->
+    <header class="prepto-header">
+        <h1 class="text-3xl font-bold">HR Interview Round</h1>
+        <p class="opacity-80 mt-1">Speak confidently — our AI will guide the conversation.</p>
+    </header>
 
-            /* Improve the layout of the results section */
-            .results-section {
-                margin-top: 3rem;
-                margin-bottom: 2rem;
-            }
-        </style>
-    </head>
+    <!-- MAIN INTERVIEW SECTION -->
+    <section class="prepto-section">
 
-    <body>
+        <!-- Question Counter -->
+        <div id="questionCounter" class="question-counter">Question 1 of 10</div>
 
-        <!-- Main Container -->
-        <div class="main-container">
-            <!-- Header -->
-            <div class="header">
-                <h1 class="text-3xl font-semibold text-gray-800">HR Interview Round  </h1>
-                <p class="text-lg text-gray-600 mt-2">Please speak your answers clearly. We'll guide you through the questions.</p>
-            </div>
-
-            <!-- Question Display -->
-            <div class="text-center mb-6">
-                <h2 class="text-2xl font-semibold text-gray-900" id="questionDisplay">Question: <%= question %></h2>
-            </div>
-
-            <!-- Webcam and Button -->
-            <div class="flex justify-center items-center mb-6 relative">
-                <div class="video-container rounded-lg shadow-lg">
-                    <!-- Webcam Video -->
-                    <video id="webcam" width="320" height="240" autoplay muted class="rounded-lg"></video>
-
-                    <!-- Webcam Overlay (Example: Display status or additional info) -->
-                    <div class="webcam-overlay" id="webcam-status">Webcam Active</div>
-                </div>
-            </div>  
-
-            <!-- Start/Stop Button -->
-            <div class="flex justify-center mb-6">
-                <button id="startStopButton"
-                    class="start-btn bg-blue-500 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-200">
-                    Start Recording
-                </button>
-            </div>
-
-            <!-- Transcription Box -->
-            <div class="card">
-                <h2 class="text-xl font-semibold text-gray-900">Your Transcription</h2>
-                <div id="transcription" class="transcription-box"></div>
-            </div>
-
-            <!-- Interview Results -->
-            <div id="interviewResults" class="results-section"></div>
-
+        <!-- Display Question -->
+        <div id="questionDisplay" class="question-box">
+            Loading question...
         </div>
 
-        <script>
-            
-    const videoElement = document.getElementById('webcam');
+        <!-- Recording Status -->
+        <div id="statusBar" class="status-bar"></div>
+
+        <!-- Start/Stop Button -->
+        <div class="text-center mb-6">
+            <button id="startStopButton" class="prepto-btn">🎙 Start Recording</button>
+        </div>
+
+        <!-- Transcription Output -->
+        <h2 class="text-xl font-semibold mb-2 text-gray-800">Your Transcription</h2>
+        <div id="transcription" class="transcription-box">
+            <span style="color:#aaa;">Your speech will appear here...</span>
+        </div>
+
+        <!-- Interview Results -->
+        <div id="interviewResults" class="mt-10"></div>
+
+    </section>
+
+
+<script>
     const startStopButton = document.getElementById('startStopButton');
     const transcriptionDiv = document.getElementById('transcription');
-    const webcamStatus = document.getElementById('webcam-status');
     const questionDisplay = document.getElementById('questionDisplay');
     const interviewResultsDiv = document.getElementById('interviewResults');
-    const questionDifficulty = 'easy';
+    const statusBar = document.getElementById('statusBar');
+    const questionCounterDiv = document.getElementById('questionCounter');
+
     let recognition;
     let isRecording = false;
+
+    // FIX: Keep a persistent running transcript so auto-restart doesn't wipe it
     let finalTranscript = '';
+    let interimTranscript = '';
+
     let isTranscriptionSent = false;
     let questionCounter = 0;
-    const maxQuestions = 9;
-    let interviewData = []; // Array to store interview data
-    let currentQuestion = "";   // Store the current question
-    
+    const maxQuestions = 9; // 0-indexed, so 10 questions total (0 through 9)
+    let interviewData = [];
+    let currentQuestion = "";
+    let interviewComplete = false;
 
-    
+    const SENTINEL = "Thank you, that concludes this question.";
+
+    // ─── MIC ACCESS ───────────────────────────────────────────────
     async function getMedia() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                audio: true
-            });
-            videoElement.srcObject = stream;
-            console.log('Webcam stream active');
+            await navigator.mediaDevices.getUserMedia({ audio: true });
         } catch (err) {
-            console.error('Error accessing media devices:', err);
-            alert('Unable to access webcam and microphone. Please ensure permissions are granted.');
+            statusBar.textContent = "⚠️ Microphone access denied.";
             startStopButton.disabled = true;
-            webcamStatus.textContent = 'Webcam and Audio Not Accessible';
-            webcamStatus.classList.add('bg-red-500');
         }
     }
 
-    function startRecognition() {
+    // ─── SPEECH RECOGNITION SETUP ─────────────────────────────────
+    function initRecognition() {
         if ('webkitSpeechRecognition' in window) {
             recognition = new webkitSpeechRecognition();
         } else if ('SpeechRecognition' in window) {
             recognition = new SpeechRecognition();
         } else {
-            transcriptionDiv.textContent = 'Speech Recognition is not supported in your browser.';
+            transcriptionDiv.textContent = 'Speech Recognition is not supported in this browser.';
             startStopButton.disabled = true;
-            return;
+            return false;
         }
 
         recognition.continuous = true;
         recognition.interimResults = true;
+        recognition.lang = 'en-US';
 
         recognition.onstart = function () {
-            isRecording = true;
-            startStopButton.textContent = 'Stop Recording';
-            transcriptionDiv.textContent = '';
-            finalTranscript = '';
+            // FIX: Don't clear transcript here — only clear on a fresh manual start
+            // (handled in startRecognition below)
+            statusBar.innerHTML = '<span class="recording-indicator"></span> Recording...';
         };
 
         recognition.onerror = function (event) {
-            console.error('Speech recognition error:', event.error);
-            transcriptionDiv.textContent = 'Error during speech recognition. Please try again.';
-            stopRecognition();
+            console.error("Recognition error:", event.error);
+            // Don't stop on 'no-speech' — just keep going
+            if (event.error === 'no-speech' || event.error === 'audio-capture') {
+                return;
+            }
+            statusBar.textContent = `⚠️ Error: ${event.error}`;
         };
 
+        // FIX: onend fires on silence/timeout — DO NOT submit here.
+        // Instead, restart recognition if user is still supposed to be recording.
         recognition.onend = function () {
-            console.log('Speech recognition ended');
-
-            if (!isTranscriptionSent) {
-                stopRecognition();
+            if (isRecording && !isTranscriptionSent && !interviewComplete) {
+                // Auto-restart to keep the mic alive
+                try {
+                    recognition.start();
+                } catch(e) {
+                    // Already started, ignore
+                }
+            } else {
+                statusBar.textContent = '';
             }
         };
 
         recognition.onresult = function (event) {
+            interimTranscript = '';
 
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
+            for (let i = event.resultIndex; i < event.results.length; i++) {
                 if (event.results[i].isFinal) {
                     finalTranscript += event.results[i][0].transcript + ' ';
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
                 }
             }
 
-            transcriptionDiv.innerHTML = finalTranscript;
+            // Show final (solid) + interim (greyed out) text
+            transcriptionDiv.innerHTML =
+                finalTranscript +
+                `<span style="color:#aaa;">${interimTranscript}</span>`;
         };
 
-        recognition.start();
+        return true;
     }
 
+    // ─── START ─────────────────────────────────────────────────────
+    function startRecognition() {
+        if (!initRecognition()) return;
 
-    function stopRecognition() {
-        if (recognition) {
-            recognition.stop();
-        }
-        isRecording = false;
-        startStopButton.textContent = 'Start Recording';
+        // FIX: Only clear transcript on a deliberate fresh start by user
+        finalTranscript = '';
+        interimTranscript = '';
+        isTranscriptionSent = false;
+        transcriptionDiv.innerHTML = '<span style="color:#aaa;">Listening...</span>';
 
-
-        if (finalTranscript.trim() && !isTranscriptionSent) {
-            isTranscriptionSent = true;
-            sendTranscriptionToBackend(finalTranscript);
-        }
-    }
-
-
-    async function sendTranscriptionToBackend(finalTranscript) {
-        console.log("Sending transcription to backend:", finalTranscript);
+        isRecording = true;
+        startStopButton.textContent = '⏹ Stop Recording';
 
         try {
+            recognition.start();
+        } catch(e) {
+            console.error(e);
+        }
+    }
+
+    // ─── STOP ──────────────────────────────────────────────────────
+    function stopRecognition() {
+        isRecording = false;
+        startStopButton.textContent = '🎙 Start Recording';
+        statusBar.textContent = 'Processing...';
+
+        if (recognition) recognition.stop();
+
+        // FIX: Submit only if there's actual content and hasn't been sent already
+        const trimmed = finalTranscript.trim();
+        if (trimmed && !isTranscriptionSent) {
+            isTranscriptionSent = true;
+            startStopButton.disabled = true; // prevent double-clicks while sending
+            sendTranscriptionToBackend(trimmed);
+        } else if (!trimmed) {
+            statusBar.textContent = '⚠️ No speech detected. Please try again.';
+        }
+    }
+
+    // ─── SEND TO BACKEND ───────────────────────────────────────────
+    async function sendTranscriptionToBackend(text) {
+        try {
+            statusBar.textContent = '⏳ Analyzing your answer...';
+
             const response = await fetch('/hr-round/analyze-text', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    text: finalTranscript,
-                    question: currentQuestion, // Use the stored currentQuestion variable
+                    text: text,
+                    question: currentQuestion,
                     questionCounter: questionCounter
-                }) // Send question too
+                })
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
             const data = await response.json();
-            console.log("Analysis received from backend:", data);
 
             interviewData.push({
-                question: currentQuestion, // Use the stored currentQuestion variable
-                answer: finalTranscript,
+                question: currentQuestion,
+                answer: text,
                 analysis: data.analysis
             });
 
-
             isTranscriptionSent = false;
             finalTranscript = '';
-            // questionCounter++;
+            interimTranscript = '';
 
-
-            if (questionCounter > maxQuestions) {
-                displayInterviewResults();
-                startStopButton.disabled = true;
-                startStopButton.textContent = "Interview Complete";
-                return; 
+            // FIX: Check >= maxQuestions (not >) to properly catch the last question
+            if (questionCounter >= maxQuestions) {
+                endInterview();
+                return;
             }
-            if (data.followUpQuestion && data.followUpQuestion.question) {
+
+            // FIX: Detect sentinel string and end interview instead of showing it as a question
+            if (
+                !data.followUpQuestion ||
+                !data.followUpQuestion.question ||
+                data.followUpQuestion.question === SENTINEL
+            ) {
+                endInterview();
+                return;
+            }
+
+            // Move to next question
             questionCounter++;
-            questionDisplay.textContent = `Question: ${data.followUpQuestion.question}`;
-            currentQuestion = data.followUpQuestion.question; // Update currentQuestion
+            currentQuestion = data.followUpQuestion.question;
+            questionDisplay.textContent = currentQuestion;
+            questionCounterDiv.textContent = `Question ${questionCounter + 1} of 10`;
 
-        } else {
-            questionDisplay.textContent = "Question: No further questions.";
-            currentQuestion = "No further questions."; // Update currentQuestion
-        }
-
+            // Reset UI for next answer
+            transcriptionDiv.innerHTML = '<span style="color:#aaa;">Your speech will appear here...</span>';
+            statusBar.textContent = '✅ Answer recorded. Start recording for the next question.';
+            startStopButton.disabled = false;
+            startStopButton.textContent = '🎙 Start Recording';
 
         } catch (error) {
-            console.error('Error sending transcription to backend:', error);
-            transcriptionDiv.innerHTML += `<br><strong>Error:</strong> Could not get next question. Please check console.`;
+            console.error(error);
+            statusBar.textContent = '❌ Error sending answer. Please try again.';
+            startStopButton.disabled = false;
+            isTranscriptionSent = false;
         }
     }
 
+    // ─── END INTERVIEW ─────────────────────────────────────────────
+    function endInterview() {
+        interviewComplete = true;
+        startStopButton.disabled = true;
+        startStopButton.textContent = '✅ Interview Complete';
+        questionDisplay.textContent = '🎉 Interview complete! See your results below.';
+        questionCounterDiv.textContent = '';
+        statusBar.textContent = '';
+        displayInterviewResults();
+    }
+
+    // ─── DISPLAY RESULTS ───────────────────────────────────────────
     function displayInterviewResults() {
-        let resultsHTML = `<h2 class="results-title">Interview Results</h2>`;
+        let html = `<h2 class="text-2xl font-bold mb-4 text-gray-800">📊 Interview Results</h2>`;
+        let total = 0;
+        let count = 0;
 
-        if (interviewData.length === 0) {
-            resultsHTML += "<p>No data to display.</p>";
-            interviewResultsDiv.innerHTML = resultsHTML;
-            return;
-        }
+        interviewData.forEach((item, i) => {
+            const score = item.analysis?.score ?? null;
+            const scoreColor = score >= 4 ? 'green' : score >= 2 ? 'orange' : 'red';
 
-        let overallScore = 0;
-        let validAnalysisCount = 0;
+            html += `
+                <div class="result-card">
+                    <h3 class="font-semibold text-lg mb-2">Q${i + 1}: ${item.question}</h3>
+                    <p class="mb-1"><strong>Your Answer:</strong> ${item.answer}</p>
+                    ${
+                        item.analysis
+                            ? `<p class="mb-1"><strong>Score:</strong> <span style="color:${scoreColor}; font-weight:bold;">${score} / 5</span></p>
+                               <p class="mb-1"><strong>Analysis:</strong> ${item.analysis.analysis}</p>
+                               <p><strong>Recommendation:</strong> ${item.analysis.recommendation}</p>`
+                            : "<p>No analysis available.</p>"
+                    }
+                </div>
+            `;
 
-        interviewData.forEach((item, index) => {
-            resultsHTML += `<div class="result-item">`;
-            resultsHTML += `<h3>Question ${index + 1}: ${item.question}</h3>`;
-            resultsHTML += `<p><strong>Your Answer:</strong> ${item.answer}</p>`;
-
-            if (item.analysis && item.analysis.score) {
-                resultsHTML += `<p><strong>Analysis Score:</strong> ${item.analysis.score}</p>`;
-                resultsHTML += `<p><strong>Analysis Feedback:</strong> ${item.analysis.recommendation} </p>`;
-                overallScore += item.analysis.score;
-                validAnalysisCount++;
-            } else {
-                resultsHTML += `<p><strong>Analysis:</strong> No analysis available.</p>`;
+            if (score !== null) {
+                total += score;
+                count++;
             }
-
-            resultsHTML += `</div>`;
         });
 
-        if (validAnalysisCount > 0) {
-            resultsHTML += `<h3>Total Combined Score: ${overallScore} out of 18</h3>`;
-        } else {
-            resultsHTML += `<h3>Overall Score: No scores available.</h3>`;
+        if (count > 0) {
+            const maxPossible = count * 5;
+            const percentage = ((total / maxPossible) * 100).toFixed(1);
+            html += `
+                <div style="background:#3b141c; color:white; padding:20px; border-radius:10px; text-align:center; margin-top:10px;">
+                    <p class="text-xl font-bold">Total Score: ${total} / ${maxPossible}</p>
+                    <p class="text-lg opacity-80">${percentage}% — ${getGrade(percentage)}</p>
+                </div>
+            `;
         }
 
-        interviewResultsDiv.innerHTML = resultsHTML;
+        interviewResultsDiv.innerHTML = html;
+        interviewResultsDiv.scrollIntoView({ behavior: 'smooth' });
     }
 
+    function getGrade(pct) {
+        if (pct >= 80) return '🌟 Excellent';
+        if (pct >= 60) return '👍 Good';
+        if (pct >= 40) return '📈 Needs Improvement';
+        return '🔄 Keep Practising';
+    }
+
+    // ─── INITIAL QUESTION ──────────────────────────────────────────
     async function getInitialQuestion() {
         try {
             const response = await fetch('/hr-round/initial-question');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
             const data = await response.json();
-            questionDisplay.textContent = `Question: ${data.question}`;
-            currentQuestion = data.question; // Store the initial question
-        } catch (error) {
-            console.error('Error fetching initial question:', error);
-            questionDisplay.textContent = "Error: Could not load initial question.";
+            currentQuestion = data.question;
+            questionDisplay.textContent = currentQuestion;
+            questionCounterDiv.textContent = `Question 1 of 10`;
+        } catch(e) {
+            questionDisplay.textContent = 'Failed to load question. Please refresh.';
         }
     }
 
-
+    // ─── BUTTON HANDLER ───────────────────────────────────────────
     startStopButton.addEventListener('click', () => {
-        if (isRecording) {
-            stopRecognition();
-        } else {
-            startRecognition();
-        }
+        if (interviewComplete) return;
+        if (isRecording) stopRecognition();
+        else startRecognition();
     });
 
+    // ─── INIT ─────────────────────────────────────────────────────
     getMedia();
-    getInitialQuestion(); // Fetch and display the initial question
-        </script>
+    getInitialQuestion();
+</script>
 
-    </body>
-
-    </html>
+</body>
+</html>

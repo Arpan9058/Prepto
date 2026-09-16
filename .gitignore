@@ -5,3 +5,7 @@ TechnicalRound1-master/
 api-gateway/
 firebase-service-account.json.json
 .env
+
+# generated artifacts
+resume.pdf
+temp/resume-*.html

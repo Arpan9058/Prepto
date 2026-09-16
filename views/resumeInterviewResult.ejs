@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Questions | Prepto</title>
+    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+        :root {
+            --primary-color: #3b141c;
+            --secondary-color: #f3961c;
+            --dark-color: #252525;
+            --white-color: #fff;
+            --light-gray-color: #f2f2f2;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+        }
+
+        body {
+            background-color: var(--light-gray-color);
+            color: var(--dark-color);
+        }
+
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; padding: 0; margin: 0; }
+
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100vh;
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 2px 0px 5px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        .nav .nav_logo { margin-bottom: 20px; }
+        .nav .nav_logo a { display: flex; align-items: center; gap: 10px; }
+        .nav .nav_logo img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .nav .nav_logo h2 { font-size: 24px; font-weight: 600; }
+        .nav ul { width: 100%; }
+
+        .nav ul li a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .nav ul li a:hover {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        .nav ul li a i { font-size: 20px; width: 24px; text-align: center; }
+        .nav ul li a span { font-size: 16px; }
+        .logout { margin-top: auto; margin-bottom: 20px; }
+
+        .main {
+            margin-left: 250px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 2px solid var(--secondary-color);
+            margin-bottom: 20px;
+        }
+
+        .page-header h2 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--dark-color);
+            text-transform: uppercase;
+        }
+
+        .btn-back {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn-back:hover {
+            background-color: var(--primary-color);
+            color: var(--white-color);
+        }
+
+        .tip-box {
+            background: #fff8ee;
+            border-left: 4px solid var(--secondary-color);
+            border-radius: 6px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #7a4f00;
+        }
+
+        .result-card {
+            background-color: var(--white-color);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+            line-height: 1.75;
+        }
+
+        .result-card h1,
+        .result-card h2 {
+            color: var(--primary-color);
+            font-size: 18px;
+            font-weight: 600;
+            margin: 28px 0 14px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--secondary-color);
+        }
+
+        .result-card h2:first-child,
+        .result-card h1:first-child { margin-top: 0; }
+
+        .result-card ol,
+        .result-card ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 10px;
+        }
+
+        .result-card ol li,
+        .result-card ul li {
+            background: #fafafa;
+            border-left: 4px solid var(--secondary-color);
+            padding: 12px 16px;
+            border-radius: 0 6px 6px 0;
+            margin: 8px 0;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.6;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .result-card ol li:hover,
+        .result-card ul li:hover {
+            background: #fff5e6;
+            border-left-color: var(--primary-color);
+        }
+
+        .result-card p {
+            font-size: 14px;
+            color: #444;
+            margin-bottom: 10px;
+        }
+
+        .result-card strong { color: var(--dark-color); }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .btn-print {
+            background-color: var(--white-color);
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-print:hover {
+            background-color: var(--primary-color);
+            color: var(--white-color);
+        }
+
+        @media print {
+            .nav, .actions { display: none; }
+            .main { margin-left: 0; padding: 20px; }
+        }
+
+        @media (max-width: 768px) {
+            .nav { width: 100%; height: auto; position: static; flex-direction: row; }
+            .main { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nav">
+        <div class="nav_logo">
+            <a href="/dashboard">
+                <img src="/images/WhatsApp Image 2025-03-01 at 07.23.51_0acb7dd0.jpg" alt="Prepto Logo">
+                <h2>Prepto</h2>
+            </a>
+        </div>
+        <ul>
+            <li><a href="/analyze"><i class="fas fa-file-alt"></i><span>ATS Score</span></a></li>
+            <li><a href="/resume-builder"><i class="fas fa-file-pdf"></i><span>Resume Builder</span></a></li>
+            <li><a href="/reports"><i class="fas fa-file-invoice"></i><span>Reports</span></a></li>
+            <li><a href="/progress"><i class="fas fa-chart-bar"></i><span>Progress</span></a></li>
+            <li><a href="/mock-interviews"><i class="fas fa-microphone"></i><span>Mock Interviews</span></a></li>
+            <li><a href="/api/mockTest"><i class="fas fa-pencil-alt"></i><span>Mock Tests</span></a></li>
+            <li><a href="/careerguidance"><i class="fas fa-graduation-cap"></i><span>Career Guidance</span></a></li>
+            <li><a href="/resume-interview"><i class="fas fa-question-circle"></i><span>Interview Prep</span></a></li>
+            <li class="logout"><a href="/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        </ul>
+    </div>
+
+    <div class="main">
+        <div class="page-header">
+            <h2>🎯 Your Interview Questions</h2>
+            <a href="/resume-interview" class="btn-back">← Analyze Another</a>
+        </div>
+
+        <div class="tip-box">
+            💡 <strong>Tip:</strong> These questions are generated specifically from your resume. Practice answering each one out loud using the <strong>STAR method</strong> (Situation, Task, Action, Result).
+        </div>
+
+        <div class="result-card">
+            <%- questions %>
+        </div>
+
+        <div class="actions">
+            <a href="/resume-interview" class="btn-back">Analyze Another Resume</a>
+            <button class="btn-print" onclick="window.print()">🖨️ Print Questions</button>
+        </div>
+    </div>
+
+</body>
+</html>

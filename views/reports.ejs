@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PREPTO - Reports</title>
+    <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+        :root {
+            --primary-color: #3b141c;
+            --secondary-color: #f3961c;
+            --dark-color: #252525;
+            --white-color: #fff;
+            --light-gray-color: #f2f2f2;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; font-family:"Poppins", sans-serif; }
+
+        body { background-color: var(--light-gray-color); }
+
+        a { text-decoration:none; color:inherit; }
+
+        /* Sidebar */
+        .nav {
+            position: fixed;
+            top:0; left:0;
+            width: 250px; height: 100vh;
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            padding:20px;
+            display:flex; flex-direction:column; align-items:center;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+        }
+
+        .nav_logo { margin-bottom:20px; }
+        .nav_logo a { display:flex; align-items:center; gap:10px; }
+        .nav_logo img { width:40px; height:40px; border-radius:50%; object-fit:cover; }
+        .nav_logo h2 { font-size:24px; font-weight:600; color: var(--white-color); }
+
+        .nav ul { width:100%; list-style:none; padding:0; }
+        .nav ul li a { display:flex; align-items:center; gap:10px; padding:10px 15px; border-radius:8px; transition:0.2s; }
+        .nav ul li a:hover { background-color: var(--secondary-color); color: var(--primary-color); }
+        .nav ul li a i { font-size:20px; width:24px; text-align:center; }
+        .nav ul li a span { font-size:16px; }
+
+        .logout { margin-top:auto; margin-bottom:20px; }
+
+        /* Main Content */
+        .main { margin-left:250px; padding:20px; min-height:100vh; }
+
+        h2.section_title {
+            font-size:28px; font-weight:600; color: var(--dark-color);
+            text-transform: uppercase; margin-bottom:20px;
+            border-bottom:2px solid var(--secondary-color); padding-bottom:10px;
+        }
+
+        /* Reports Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background: var(--primary-color);
+            color: white;
+            padding: 14px;
+            font-size: 15px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            vertical-align: middle;
+        }
+
+        tr:hover { background: #fafafa; }
+
+        button {
+            padding: 6px 12px;
+            background: var(--secondary-color);
+            border: none;
+            color: white;
+            border-radius:6px;
+            cursor:pointer;
+            margin-right:5px;
+            transition: 0.2s;
+        }
+
+        button:hover { background:#d98512; }
+
+        @media (max-width: 768px) {
+            .nav { width:100%; height:auto; position:static; flex-direction:row; justify-content:space-between; padding:10px; }
+            .nav ul { display:flex; flex-wrap:wrap; width:auto; }
+            .main { margin-left:0; }
+            table, th, td { font-size:14px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <div class="nav">
+        <div class="nav_logo">
+            <a href="/dashboard">
+                <img src="/images/WhatsApp Image 2025-03-01 at 07.23.51_0acb7dd0.jpg" alt="Prepto Logo">
+                <h2>Prepto</h2>
+            </a>
+        </div>
+
+        <ul>
+             <li><a href="/analyze"><i class="fas fa-file-alt"></i><span>ATS Score</span></a></li>
+            <li><a href="/resume-builder"><i class="fas fa-file-pdf"></i><span>Resume Builder</span></a></li>
+            <li><a href="/reports"><i class="fas fa-file-invoice"></i><span>Reports</span></a></li>
+            <li><a href="/progress"><i class="fas fa-chart-bar"></i><span>Progress</span></a></li>
+            <li><a href="/mock-interviews"><i class="fas fa-microphone"></i><span>Mock Interviews</span></a></li>
+            <li><a href="/api/mockTest"><i class="fas fa-pencil-alt"></i><span>Mock Tests</span></a></li>
+            <li><a href="/careerguidance"><i class="fas fa-graduation-cap"></i><span>Career Guidance</span></a></li>
+            <li><a href="/resume-interview"><i class="fas fa-question-circle"></i><span>Interview Prep</span></a></li>
+            <li class="logout"><a href="/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <h2 class="section_title">Student Reports</h2>
+
+        <table>
+            <tr>
+                <th>Test Type</th>
+                <th>Sub Test</th>
+                <th>Score</th>
+                <th>Time</th>
+                <th>Actions</th>
+            </tr>
+
+            <% reports.forEach(r => { %>
+            <tr>
+                <td><%= r.type %></td>
+                <td><%= r.subTest || '-' %></td>
+                <td><%= r.score %></td>
+                <td><%= r.submittedAt %></td>
+                <td>
+                    <a href="/reports/view/<%= r.id %>?type=<%= r.type %>&sub=<%= r.subTest %>">
+                        <button>View</button>
+                    </a>
+                    <button onclick="downloadReport('<%= r.id %>', '<%= encodeURIComponent(JSON.stringify(r.raw)) %>')">Download</button>
+                </td>
+            </tr>
+            <% }) %>
+        </table>
+    </div>
+
+    <script>
+        function downloadReport(id, encoded) {
+            window.location.href = `/reports/download/${id}?data=${encoded}`;
+        }
+    </script>
+</body>
+</html>

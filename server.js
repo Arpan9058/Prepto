@@ -19,12 +19,17 @@ const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
+
 const port = process.env.PORT || 8080; 
 const codingTest = require('./routes/codingTest')
 const hrRound = require('./routes/hrRound')
 const technical = require('./routes/Technical')
+const mockTest = require('./routes/mockInterview.js')
+const progress = require('./routes/progress.js')
+const admin = require('./firebase.js');
+const resumeAnalysis = require('./routes/resumeAnalysis');
 
-const admin = require('./firebase.js'); 
+ 
 const db = admin.firestore();
 
 
@@ -52,10 +57,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 app.use('/coding-test', codingTest);
+app.use('/reports', require('./routes/reports'));
+
+app.use('/progress', progress)
 
 app.use('/hr-round', hrRound);
 
 app.use('/technical-round', technical);
+
+app.use('/api', mockTest);
 
 app.get('/', (req, res) => {
     res.render('index');
@@ -65,10 +75,36 @@ app.get('/login', (req, res) => {
     res.render('login');
 });
 
+app.get('/forgot-password', (req, res) => {
+    res.render('forgotPassword');
+});
+
 app.get('/register', (req, res) => {
     res.render('register');
 });
 
+
+app.get('/resume-interview', ensureAuthenticated, (req, res) => {
+    res.render('resumeAnalysis');
+});
+
+app.post('/resume-interview', ensureAuthenticated, resumeAnalysis.upload.single('resume'), async (req, res) => {
+    try {
+        const resumeText = await resumeAnalysis.extractTextFromFile(req.file);
+        const questionsResult = await resumeAnalysis.generateInterviewQuestions(resumeText);
+
+        const htmlResult = marked.parse(questionsResult);
+        const sanitizedHtml = sanitizeHtml(htmlResult, {
+            allowedTags: sanitizeHtml.defaults.allowedTags.concat(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'strong', 'em', 'br', 'p']),
+            allowedAttributes: {},
+        });
+
+        res.render('resumeInterviewResult', { questions: sanitizedHtml });
+    } catch (error) {
+        console.error("Error generating interview questions:", error);
+        res.status(500).send(`An error occurred: ${error.message}`);
+    }
+});
 
 
 app.post('/api/store-user', async (req, res) => {
@@ -171,9 +207,9 @@ app.get('/mock-interviews', ensureAuthenticated, (req, res) => {
 });
 
 
-app.get('/mocktest', ensureAuthenticated, (req,res)=>{
-    res.redirect("https://mocktest-three.vercel.app/")
-});
+// app.get('/mocktest', ensureAuthenticated, (req,res)=>{
+//     res.redirect("mockInterview")
+// });
 
 app.get('/careerguidance', ensureAuthenticated, (req, res) => {
     res.render('careerGuidance');
@@ -208,67 +244,83 @@ app.get('/resume-builder', ensureAuthenticated, (req, res) => {
 
 app.post("/generate-resume", ensureAuthenticated, async (req, res) => {
     try {
-        // const resumeData = req.body;
-        
-        // if (!resumeData.fullName || !resumeData.email || !resumeData.phone || !resumeData.location) {
-        //     return res.status(400).send('Please provide all required information.');
-        // }
+        const resumeData = req.body;
 
-        // const resumeContent = await generateResume(resumeData);
-        
-        // // Store the resume content in the session for later use
-        // req.session.resumeContent = resumeContent;
-        
-        // res.render('resumeResult', { resumeContent });
+        // Render Resume.ejs into HTML
+        const resumeContent = await new Promise((resolve, reject) => {
+            res.render("Resume", resumeData, (err, html) => {
+                if (err) reject(err);
+                else resolve(html);
+            });
+        });
+
+        // Store HTML for PDF generation
+        req.session.resumeContent = resumeContent;
 
         const fileName = `resume-${req.user.uid || req.user.email}.html`;
-const tempHtmlPath = path.join(__dirname, 'temp', fileName);
-fs.writeFileSync(tempHtmlPath, resumeContent);
-res.cookie('resume_file', fileName); // Save filename in cookie
-res.render('resumeResult', { resumeContent });
+        const tempPath = path.join(__dirname, "temp", fileName);
 
-    } catch (error) {
-        console.error("Error generating resume:", error);
+        fs.writeFileSync(tempPath, resumeContent);
+        res.cookie("resume_file", fileName);
+
+        res.render("resumeResult", { resumeContent });
+
+    } catch (err) {
+        console.error("Error generating resume:", err);
         res.status(500).send("Error generating resume");
     }
 });
 
+
+
 app.get("/download-resume", ensureAuthenticated, async (req, res) => {
     try {
         const fileName = req.cookies.resume_file;
-    if (!fileName) return res.status(400).send("No resume to download.");
+        if (!fileName) return res.status(400).send("No resume to download.");
 
-    // const tempHtmlPath = path.join(__dirname, 'temp', fileName);
-        const tempHtmlPath = path.join(__dirname, 'temp', 'resume.html');
-        fs.writeFileSync(tempHtmlPath, req.session.resumeContent);
+        const tempHtmlPath = path.join(__dirname, "temp", fileName);
+        const htmlContent = fs.readFileSync(tempHtmlPath, "utf8");
 
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({
+    headless: true,
+    executablePath: 'C:\\Users\\sambh\\.cache\\puppeteer\\chrome\\win64-147.0.7727.57\\chrome-win64\\chrome.exe',
+    args: ["--no-sandbox", "--disable-setuid-sandbox"]
+});
+        
         const page = await browser.newPage();
-
-        const htmlContent = fs.readFileSync(tempHtmlPath, 'utf8');
         await page.setContent(htmlContent);
 
-        const pdfPath = path.join(__dirname, 'temp', 'resume.pdf');
+        // SAVE PDF INTO TEMP FOLDER (Corrected)
+        const pdfPath = path.join(__dirname, "temp", "resume.pdf");
+
         await page.pdf({
             path: pdfPath,
-            format: 'A4',
-            printBackground: true
-        });
-
-        res.download(pdfPath, 'resume.pdf', (err) => {
-            if (err) {
-                console.error('Error downloading file:', err);
+            format: "A4",
+            margin: {
+                top: "1in",
+                bottom: "1in",
+                left: "1in",
+                right: "1in"
             }
-            fs.unlinkSync(tempHtmlPath);
-            fs.unlinkSync(pdfPath);
         });
 
         await browser.close();
-    } catch (error) {
-        console.error("Error generating PDF:", error);
+
+        // DOWNLOAD THE *SAME* FILE YOU JUST CREATED
+        res.download(pdfPath, "resume.pdf", () => {
+            if (fs.existsSync(pdfPath)) {
+                fs.unlinkSync(pdfPath);
+            }
+        });
+
+    } catch (err) {
+        console.error("PDF generation error:", err);
         res.status(500).send("Error generating PDF");
     }
 });
+
+
+
 
 // Authentication Middleware
 // function ensureAuthenticated(req, res, next) {

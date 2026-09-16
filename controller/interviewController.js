@@ -1,6 +1,7 @@
 const geminiService = require('../services/geminiService');
 const skillExtractorService = require('../services/skillExtractorService');
 const fileHandler = require('../utils/fileHandler');
+const admin = require("../firebase"); // Initialize once at the top
 
 const initialQuestion = "Give me your introduction and your technical skills?"; 
 
@@ -39,6 +40,13 @@ exports.analyzeText = async (req, res) => {
             extractedSkills
         } = req.body;
 
+        // Initialize session state for technical interview answers
+        if (!req.session.technicalInterview) {
+            req.session.technicalInterview = {
+                answers: []
+            };
+        }
+
         console.log('Question Number:', questionCounter);
         console.log(text);
 
@@ -65,6 +73,13 @@ exports.analyzeText = async (req, res) => {
         console.log("Analyzing...");
         console.log("Analyze Result:", analyzeResult);
 
+        // Store the detailed analysis in the session
+        req.session.technicalInterview.answers.push({
+            question,
+            answer: text,
+            ...analyzeResult
+        });
+
         // Track score for current skill
         if (typeof skillScores[currentSkillIndex] !== 'number') skillScores[currentSkillIndex] = 0;
         skillScores[currentSkillIndex] += analyzeResult.totalScore || 0;
@@ -83,10 +98,10 @@ exports.analyzeText = async (req, res) => {
         let feedback = '';
         let newSkillIndex = currentSkillIndex;
         let newQuestionsPerSkillFinal = newQuestionsPerSkill;
-
+ 
         // Check if we need to move to next skill or end interview
         if (newQuestionsPerSkill === 6) {
-            if (skillScores[currentSkillIndex] >= 30) {
+            if (skillScores[currentSkillIndex] >= 20) { // Lowered threshold
                 // Passed threshold, move to next skill
                 newSkillIndex = currentSkillIndex + 1;
                 if (newSkillIndex < extractedSkills.length) {
@@ -136,6 +151,95 @@ exports.analyzeText = async (req, res) => {
 
         await fileHandler.saveToJsonFile(analyzeResult);
         
+        if (interviewComplete) {
+
+            // Ensure user is authenticated before saving
+            if (!req.user || !req.user.uid) {
+                console.log("Anonymous user or missing UID. Skipping Firestore save.");
+                const anonymousReport = "Interview report is not saved for anonymous users.";
+                return res.json({
+                    message: "Interview completed. Report not saved for anonymous user.",
+                    fullReport: anonymousReport,
+                    interviewComplete: true
+                });
+            }
+
+            const userUid = req.user.uid;
+            const interviewType = "technical";
+            const totalScore = skillScores.reduce((a, b) => a + b, 0);
+            const avgScore = totalQuestions > 0 ? totalScore / totalQuestions : 0;
+        
+            // Get all stored answers from the session
+            const answers = req.session.technicalInterview.answers || [];
+        
+            // Build HTML Report
+            let fullReport = `
+                <h2 style="color:#0057ff;">Technical Interview Report</h2>
+                <p><strong>User ID:</strong> ${userUid}</p>
+                <p><strong>Skills Evaluated:</strong> ${extractedSkills.join(", ")}</p>
+                <p><strong>Total Score:</strong> ${totalScore}</p>
+                <p><strong>Average Score:</strong> ${avgScore.toFixed(2)}</p>
+                <p><strong>Total Questions:</strong> ${newTotalQuestions}</p>
+        
+                <hr style="margin:20px 0;">
+                <h3>Skill-wise Summary</h3>
+            `;
+        
+            extractedSkills.forEach((skill, index) => {
+                fullReport += `
+                    <div style="padding:10px; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;">
+                        <p><strong>${skill} Score:</strong> ${skillScores[index]}</p>
+                    </div>
+                `;
+            });
+        
+            fullReport += `<hr style="margin:20px 0;"><h3>Detailed Question Analysis</h3>`;
+        
+            // Only process answers if we have them (and they're an array)
+            if (Array.isArray(answers) && answers.length > 0) {
+                answers.forEach((a, i) => {
+                    fullReport += `
+                        <div style="padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;">
+                            <p><strong>Q${i + 1}:</strong> ${a.question || 'N/A'}</p>
+                            <p><strong>Answer:</strong> ${a.answer || 'N/A'}</p>
+                            <p><strong>Analysis:</strong> ${a.analysis || 'N/A'}</p>
+                            <p><strong>Recommendation:</strong> ${a.recommendation || 'N/A'}</p>
+                            <p><strong>Score:</strong> <span style="color:green; font-weight:bold;">${a.totalScore || 0}/10</span></p>
+                        </div>
+                    `;
+                });
+            } else {
+                fullReport += `<p><em>Detailed question analysis data not available in backup.</em></p>`;
+            }
+        
+            // ⭐ FIX: Save report to user's subcollection, matching HR round flow
+            await admin.firestore()
+                .collection("users")
+                .doc(userUid)
+                .collection("progress")
+                .doc("TechnicalInterview")
+                .collection("attempts")
+                .add({
+                    totalScore,
+                    avgScore,
+                    extractedSkills,
+                    skillScores,
+                    fullReport,
+                    submittedAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+        
+            console.log("Technical Interview Report Saved to Firestore!");
+
+            // Clear the session data after saving
+            req.session.technicalInterview = null;
+        
+            return res.json({
+                message: "Interview completed and report saved.",
+                fullReport,
+                interviewComplete: true
+            });
+        }
+
         // Return updated state with response
         res.json({
             analysis: {

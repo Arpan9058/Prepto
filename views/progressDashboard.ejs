@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PREPTO - Progress Dashboard</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* SAME SIDEBAR CSS AS DASHBOARD */
+    :root {
+      --primary-color: #3b141c;
+      --secondary-color: #f3961c;
+      --dark-color: #252525;
+      --white-color: #fff;
+      --light-gray-color: #f2f2f2;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background-color: var(--light-gray-color);
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    /* ---------------- SIDEBAR (IDENTICAL TO DASHBOARD) ---------------- */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 250px;
+      height: 100vh;
+      background-color: var(--primary-color);
+      color: var(--white-color);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+    }
+
+    .nav .nav_logo {
+      margin-bottom: 20px;
+    }
+
+    .nav .nav_logo a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav .nav_logo img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .nav .nav_logo h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--white-color);
+    }
+
+    .nav ul {
+      width: 100%;
+    }
+
+    .nav ul li a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 15px;
+      border-radius: 8px;
+      transition: background-color 0.2s ease;
+    }
+
+    .nav ul li a:hover,
+    .nav ul li a.active {
+      background-color: var(--secondary-color);
+      color: var(--primary-color);
+    }
+
+    .nav ul li a i {
+      font-size: 20px;
+      width: 24px;
+      text-align: center;
+    }
+
+    .nav ul li a span {
+      font-size: 16px;
+    }
+
+    .logout {
+      margin-top: auto;
+      margin-bottom: 20px;
+    }
+
+    /* ---------------- MAIN AREA ---------------- */
+    .main {
+      margin-left: 250px;
+      padding: 25px;
+      min-height: 100vh;
+    }
+
+    .section_title {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--dark-color);
+      border-bottom: 2px solid var(--secondary-color);
+      padding-bottom: 10px;
+      margin-bottom: 25px;
+      text-transform: uppercase;
+    }
+
+    /* CHARTS */
+    .charts-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 25px;
+    }
+
+    .chart-container {
+      background: var(--white-color);
+      padding: 20px;
+      border-radius: 10px;
+      width: 47%;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-top: 4px solid var(--secondary-color);
+      transition: 0.2s ease;
+    }
+
+    .chart-container:hover {
+      transform: translateY(-5px);
+    }
+
+    .chart-container h3 {
+      text-align: center;
+      color: var(--primary-color);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    p {
+      text-align: center;
+      color: #666;
+      margin-bottom: 10px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 250px !important;
+    }
+
+    @media(max-width: 768px) {
+      .main { margin-left: 0; }
+      .charts-wrapper { display: block; }
+      .chart-container { width: 100%; margin-bottom: 20px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ---------------- SIDEBAR (IDENTICAL) ---------------- -->
+  <div class="nav">
+    <div class="nav_logo">
+        <a href="/dashboard">
+            <img src="/images/WhatsApp Image 2025-03-01 at 07.23.51_0acb7dd0.jpg" alt="Prepto Logo">
+            <h2>Prepto</h2>
+        </a>
+    </div>
+
+    <ul>
+         <li><a href="/analyze"><i class="fas fa-file-alt"></i><span>ATS Score</span></a></li>
+            <li><a href="/resume-builder"><i class="fas fa-file-pdf"></i><span>Resume Builder</span></a></li>
+            <li><a href="/reports"><i class="fas fa-file-invoice"></i><span>Reports</span></a></li>
+            <li><a href="/progress"><i class="fas fa-chart-bar"></i><span>Progress</span></a></li>
+            <li><a href="/mock-interviews"><i class="fas fa-microphone"></i><span>Mock Interviews</span></a></li>
+            <li><a href="/api/mockTest"><i class="fas fa-pencil-alt"></i><span>Mock Tests</span></a></li>
+            <li><a href="/careerguidance"><i class="fas fa-graduation-cap"></i><span>Career Guidance</span></a></li>
+            <li><a href="/resume-interview"><i class="fas fa-question-circle"></i><span>Interview Prep</span></a></li>
+            <li class="logout"><a href="/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+    </ul>
+</div>
+
+  <!-- ---------------- MAIN CONTENT ---------------- -->
+  <div class="main">
+
+    <h2 class="section_title">Progress Dashboard</h2>
+
+    <div class="charts-wrapper">
+
+      <% testTypes.forEach(type => { %>
+
+      <div class="chart-container">
+        <h3><%= type.replace(/([A-Z])/g, ' $1').trim() %></h3>
+
+        <% if (type === 'MockTest') { %>
+          <% let hasData = Object.values(progressData.MockTest).some(arr => arr.length > 0); %>
+          <% if (!hasData) { %>
+            <p>No attempts yet for Mock Tests.</p>
+          <% } else { %>
+            <canvas id="MockTestChart"></canvas>
+          <% } %>
+
+        <% } else { %>
+          <% if (!progressData[type] || progressData[type].length === 0) { %>
+            <p>No attempts yet for <%= type %>.</p>
+          <% } else { %>
+            <canvas id="<%= type %>Chart"></canvas>
+          <% } %>
+        <% } %>
+      </div>
+
+      <% }) %>
+
+    </div>
+
+  </div>
+
+  <!-- ---------------- CHART SCRIPT ---------------- -->
+  <script>
+    const progressData = <%- JSON.stringify(progressData) %>;
+    const testTypes = <%- JSON.stringify(testTypes) %>;
+    const mockSubTests = <%- JSON.stringify(mockSubTests) %>;
+
+    testTypes.forEach(type => {
+      (function () {
+        const id = type === "MockTest" ? "MockTestChart" : type + "Chart";
+        const canvas = document.getElementById(id);
+        if (!canvas) return;
+
+        /* MOCK TEST */
+        if (type === "MockTest") {
+          const labels = [];
+          const datasets = [];
+          const colors = ["#f3961c", "#ff6384", "#36A2EB", "#4BC0C0", "#9966FF"];
+
+          mockSubTests.forEach((sub, i) => {
+            const entries = progressData.MockTest[sub] || [];
+            if (entries.length === 0) return;
+
+            const data = entries.map(e => e.score);
+            const times = entries.map(e => e.submittedAt);
+
+            if (labels.length === 0) labels.push(...times);
+
+            datasets.push({
+              label: sub,
+              data,
+              borderColor: colors[i],
+              backgroundColor: colors[i] + "55",
+              fill: false,
+              borderWidth: 2,
+              tension: 0.3
+            });
+          });
+
+          new Chart(canvas, {
+            type: "line",
+            data: { labels, datasets },
+            options: {
+              responsive: true,
+              scales: { y: { beginAtZero: true, max: 5 } }
+            }
+          });
+
+          return;
+        }
+
+        /* OTHER TESTS */
+        const data = progressData[type].map(e => e.score);
+        const time = progressData[type].map(e => e.submittedAt);
+
+        new Chart(canvas, {
+          type: "line",
+          data: {
+            labels: time,
+            datasets: [{
+              label: type + " Score",
+              data,
+              borderColor: "#f3961c",
+              backgroundColor: "rgba(243,150,28,0.25)",
+              borderWidth: 3,
+              fill: true,
+              tension: 0.35
+            }]
+          }
+        });
+
+      })();
+    });
+
+  </script>
+
+</body>
+</html>

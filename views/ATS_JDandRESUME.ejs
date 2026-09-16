@@ -227,8 +227,8 @@
     <!-- Navigation Sidebar -->
     <div class="nav">
         <div class="nav_logo">
-            <a href="#">
-                <img src="./images/WhatsApp Image 2025-03-01 at 07.23.51_0acb7dd0.jpg" alt="Prepto Logo">
+            <a href="/dashboard">
+                <img src="/images/WhatsApp Image 2025-03-01 at 07.23.51_0acb7dd0.jpg" alt="Prepto Logo">
                 <h2>Prepto</h2>
             </a>
         </div>
@@ -236,18 +236,14 @@
         <ul>
             <li><a href="/analyze"><i class="fas fa-file-alt"></i><span>ATS Score</span></a></li>
             <li><a href="/resume-builder"><i class="fas fa-file-pdf"></i><span>Resume Builder</span></a></li>
-            <li><a href="/certificates"><i class="fas fa-award"></i><span>Certificates</span></a></li>
+            <li><a href="/reports"><i class="fas fa-file-invoice"></i><span>Reports</span></a></li>
             <li><a href="/progress"><i class="fas fa-chart-bar"></i><span>Progress</span></a></li>
             <li><a href="/mock-interviews"><i class="fas fa-microphone"></i><span>Mock Interviews</span></a></li>
-            <li><a href="/mocktest"><i class="fas fa-pencil-alt"></i><span>Mock Tests</span></a></li>
-            <li><a href="/profile"><i class="fas fa-user-circle"></i><span>Profile</span></a></li>
+            <li><a href="/api/mockTest"><i class="fas fa-pencil-alt"></i><span>Mock Tests</span></a></li>
             <li><a href="/careerguidance"><i class="fas fa-graduation-cap"></i><span>Career Guidance</span></a></li>
+            <li><a href="/resume-interview"><i class="fas fa-question-circle"></i><span>Interview Prep</span></a></li>
             <li class="logout"><a href="/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
         </ul>
-
-        <div class="logout">
-            <a href="/logout"><i class="fa-solid fa-sign-out-alt"></i> <span>Logout</span></a>
-        </div>
     </div>
 
     <!-- Main Content -->
@@ -267,7 +263,34 @@
                 <button type="submit" class="button">Analyze</button>
             </form>
         </div>
+        <!-- Loading Overlay -->
+<div id="loadingOverlay" style="display:none; position:fixed; top:0; left:0; 
+     width:100%; height:100%; background:rgba(0,0,0,0.6); 
+     z-index:9999; justify-content:center; align-items:center; flex-direction:column;">
+    
+    <div style="width:60px; height:60px; border:6px solid #f3f3f3; 
+         border-top:6px solid #f5a623; border-radius:50%; 
+         animation:spin 1s linear infinite;"></div>
+    
+    <p style="color:white; margin-top:20px; font-size:18px; font-weight:600;">
+        Analyzing your resume...
+    </p>
+    <p style="color:#ccc; font-size:14px;">This may take a few seconds</p>
+</div>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
     </div>
 
 </body>
+<script>
+    document.querySelector('form').addEventListener('submit', function() {
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.style.display = 'flex';
+    });
+</script>
 </html>

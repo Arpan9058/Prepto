@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock Test - Prepto</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+  <style>
+    /* GOOGLE FONT */
+    @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+    /* ================= ROOT COLORS ================= */
+    :root {
+      --primary-color: #3b141c;
+      --secondary-color: #f3961c;
+      --dark-color: #252525;
+      --white-color: #ffffff;
+      --light-gray-color: #f4f4f4;
+      --gray-text: #666;
+      --shadow-sm: 0 2px 5px rgba(0,0,0,0.1);
+      --shadow-md: 0 6px 15px rgba(0,0,0,0.15);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background-color: var(--light-gray-color);
+    }
+
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+
+    /* ================= SIDEBAR (IDENTICAL) ================= */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 250px;
+      height: 100vh;
+      background-color: var(--primary-color);
+      color: var(--white-color);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+    }
+
+    .nav .nav_logo {
+      margin-bottom: 20px;
+    }
+
+    .nav .nav_logo a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav .nav_logo img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .nav .nav_logo h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--white-color);
+    }
+
+    .nav ul { width: 100%; }
+
+    .nav ul li a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 15px;
+      border-radius: 8px;
+      transition: 0.2s;
+    }
+
+    .nav ul li a:hover,
+    .nav ul li a.active {
+      background-color: var(--secondary-color);
+      color: var(--primary-color);
+    }
+
+    .nav ul li a i {
+      font-size: 20px;
+      width: 25px;
+      text-align: center;
+    }
+
+    .logout { margin-top: auto; margin-bottom: 20px; }
+
+    /* ================= MAIN AREA ================= */
+    .main {
+      margin-left: 250px;
+      padding: 30px;
+      min-height: 100vh;
+    }
+
+    .section_title {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--dark-color);
+      border-bottom: 2px solid var(--secondary-color);
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    /* ================= MOCK TEST CARDS ================= */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 22px;
+    }
+
+    .card {
+      background: var(--white-color);
+      padding: 22px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+      transition: 0.3s;
+      text-align: center;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card i {
+      font-size: 40px;
+      color: var(--secondary-color);
+      margin-bottom: 12px;
+    }
+
+    .card h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--primary-color);
+    }
+
+    .card p {
+      font-size: 14px;
+      color: var(--gray-text);
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+
+    button.start-btn {
+      background: var(--primary-color);
+      color: var(--white-color);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      transition: 0.2s;
+    }
+
+    button.start-btn:hover {
+      background: var(--secondary-color);
+      color: var(--primary-color);
+    }
+
+    /* ================= TEST ENGINE ================= */
+    #test {
+      display: none;
+      padding: 25px;
+      border-radius: 12px;
+      background: var(--white-color);
+      box-shadow: var(--shadow-sm);
+    }
+
+    #test h2 {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .option-btn {
+      background: var(--secondary-color);
+      color: var(--primary-color);
+      padding: 10px;
+      border-radius: 8px;
+      margin: 7px 0;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      transition: 0.2s;
+      font-size: 15px;
+    }
+
+    .option-btn:hover {
+      background: var(--primary-color);
+      color: var(--white-color);
+    }
+
+    .timer-box {
+      padding: 10px 16px;
+      background: var(--white-color);
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: var(--shadow-sm);
+      margin-top: 12px;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .progress-bar {
+      height: 8px;
+      border-radius: 8px;
+      background: var(--primary-color);
+      margin-top: 15px;
+      width: 0%;
+      transition: 0.4s;
+    }
+
+    .nav-buttons {
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .nav-buttons button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid var(--primary-color);
+      cursor: pointer;
+      font-weight: 600;
+      background: var(--white-color);
+      transition: 0.2s;
+    }
+
+    .nav-buttons button:hover {
+      background: var(--primary-color);
+      color: var(--white-color);
+    }
+
+    /* ================= RESULT ================= */
+    #result {
+      display: none;
+      text-align: center;
+      padding: 30px;
+      background: var(--white-color);
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    #result h2 {
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+
+    #result p {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .main { margin-left: 0; }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ================= SIDEBAR ================= -->
+  <div class="nav">
+    <div class="nav_logo">
+        <a href="/dashboard">
+            <img src="/images/WhatsApp Image 2025-03-01 at 07.23.51_0acb7dd0.jpg" alt="Prepto Logo">
+            <h2>Prepto</h2>
+        </a>
+    </div>
+
+    <ul>
+        <li><a href="/analyze"><i class="fas fa-file-alt"></i><span>ATS Score</span></a></li>
+        <li><a href="/resume-builder"><i class="fas fa-file-pdf"></i><span>Resume Builder</span></a></li>
+        <li><a href="/reports"><i class="fas fa-file-invoice"></i><span>Reports</span></a></li>
+
+        <li><a href="/progress"><i class="fas fa-chart-bar"></i><span>Progress</span></a></li>
+        <li><a href="/mock-interviews"><i class="fas fa-microphone"></i><span>Mock Interviews</span></a></li>
+        <li><a href="/api/mockTest"><i class="fas fa-pencil-alt"></i><span>Mock Tests</span></a></li>
+        <li><a href="/careerguidance"><i class="fas fa-graduation-cap"></i><span>Career Guidance</span></a></li>
+        <li class="logout"><a href="/logout"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+    </ul>
+</div>
+
+<!-- ================= MAIN CONTENT ================= -->
+<div class="main">
+  <h2 class="section_title">Mock Tests</h2>
+
+  <div class="grid" id="homeGrid">
+
+    <div class="card">
+      <i class="fa-solid fa-calculator"></i>
+      <h3>Aptitude Test</h3>
+      <p>Sharpen your math and calculation skills.</p>
+      <button class="start-btn" onclick="openTest('aptitude')">Start Test</button>
+    </div>
+
+    <div class="card">
+      <i class="fa-solid fa-brain"></i>
+      <h3>Logical & Reasoning</h3>
+      <p>Improve logical problem solving.</p>
+      <button class="start-btn" onclick="openTest('reasoning')">Start Test</button>
+    </div>
+
+    <div class="card">
+      <i class="fa-solid fa-terminal"></i>
+      <h3>Automata Test</h3>
+      <p>Test DFA, NFA and CT basics.</p>
+      <button class="start-btn" onclick="openTest('automata')">Start Test</button>
+    </div>
+
+    <div class="card">
+      <i class="fa-solid fa-book-open"></i>
+      <h3>English Comprehension</h3>
+      <p>Test reading ability.</p>
+      <button class="start-btn" onclick="openTest('English Comprehension')">Start Test</button>
+    </div>
+
+    <div class="card">
+      <i class="fa-solid fa-user-check"></i>
+      <h3>Personality Test</h3>
+      <p>Evaluate behavioral traits.</p>
+      <button class="start-btn" onclick="openTest('Personality')">Start Test</button>
+    </div>
+
+    <div class="card">
+      <i class="fa-solid fa-pen"></i>
+      <h3>English Essay</h3>
+      <p>Write and get AI evaluated essay.</p>
+      <button class="start-btn" onclick="openTest('Essay')">Start Test</button>
+    </div>
+
+  </div>
+
+  <!-- ================= TEST PANEL ================= -->
+  <div class="card" id="test">
+    <h2>Question <span id="qNumber">1</span> / <span id="totalQuestions"></span></h2>
+
+    <p id="questionText" style="margin:15px 0; font-size:16px; font-weight:500;"></p>
+
+    <div id="options"></div>
+
+    <div class="timer-box">⏳ Time Left: <span id="timer">60</span>s</div>
+    <div class="progress-bar" id="progress"></div>
+
+    <div class="nav-buttons">
+      <button onclick="prevQuestion()">Previous</button>
+      <button onclick="nextQuestion()">Next</button>
+      <button onclick="submitTest()">Submit</button>
+    </div>
+  </div>
+
+  <!-- ================= RESULT PANEL ================= -->
+  <div id="result">
+    <h2>Test Completed ✅</h2>
+    <p>Your Score: <span id="score"></span></p>
+    <button class="start-btn" onclick="restartTest()" style="max-width:280px; margin-top:20px;">Restart Test</button>
+  </div>
+
+</div>
+
+<!-- ================= JS LOGIC (unchanged, cleaned) ================= -->
+<script type="module">
+  const API_BASE = "http://localhost:8080/api";
+
+  let sessionId = null;
+  let questions = [];
+  let currentQuestionIndex = 0;
+  let timer;
+  let timeLeft = 60;
+  const userAnswers = {};
+
+  window.openTest = async function (type) {
+    document.getElementById("homeGrid").style.display = "none";
+    document.getElementById("test").style.display = "block";
+
+    const res = await fetch(`${API_BASE}/sessions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ category: type })
+    });
+
+    const data = await res.json();
+    if (!data.success) return alert(data.message);
+
+    sessionId = data.sessionId;
+    questions = data.questions;
+
+    document.getElementById("totalQuestions").innerText = questions.length;
+    currentQuestionIndex = 0;
+
+    loadQuestion();
+    startTimer();
+  };
+
+  window.loadQuestion = function () {
+    const q = questions[currentQuestionIndex];
+    document.getElementById("qNumber").innerText = currentQuestionIndex + 1;
+    document.getElementById("questionText").innerText = q.question;
+
+    const optionsDiv = document.getElementById("options");
+    optionsDiv.innerHTML = "";
+
+    if (!q.options || q.options.length === 0) {
+      const ta = document.createElement("textarea");
+      ta.id = "essayAnswer";
+      ta.rows = 6;
+      ta.style.width = "100%";
+      ta.placeholder = "Write your response here...";
+      optionsDiv.appendChild(ta);
+    } else {
+      q.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.innerText = opt;
+        btn.className = "option-btn";
+        btn.onclick = () => {
+          userAnswers[q._id] = opt;
+          nextQuestion();
+        };
+        optionsDiv.appendChild(btn);
+      });
+    }
+
+    updateProgress();
+  };
+
+  function startTimer() {
+    clearInterval(timer);
+    timer = setInterval(() => {
+      document.getElementById("timer").innerText = timeLeft;
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        submitTest();
+      }
+      timeLeft--;
+    }, 1000);
+  }
+
+  function updateProgress() {
+    const percent = ((currentQuestionIndex + 1) / questions.length) * 100;
+    document.getElementById("progress").style.width = percent + "%";
+  }
+
+  window.prevQuestion = function () {
+    if (currentQuestionIndex > 0) {
+      currentQuestionIndex--;
+      loadQuestion();
+    }
+  };
+
+  window.nextQuestion = function () {
+    if (currentQuestionIndex < questions.length - 1) {
+      currentQuestionIndex++;
+      loadQuestion();
+    }
+  };
+
+  window.submitTest = async function () {
+    clearInterval(timer);
+
+    const q = questions[currentQuestionIndex];
+    if (q && (!q.options || q.options.length === 0)) {
+      const ta = document.getElementById("essayAnswer");
+      userAnswers[q._id] = ta.value;
+    }
+
+    const res = await fetch(`${API_BASE}/sessions/submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, answers: userAnswers })
+    });
+
+    const data = await res.json();
+    if (!data.success) return alert(data.message);
+
+    document.getElementById("test").style.display = "none";
+    document.getElementById("result").style.display = "block";
+    document.getElementById("score").innerText = `${data.score} / ${data.total}`;
+  };
+
+  window.restartTest = function () {
+    location.reload();
+  };
+</script>
+
+</body>
+</html>

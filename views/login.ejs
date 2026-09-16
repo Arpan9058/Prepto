@@ -53,7 +53,7 @@
           <div id="error-msg" style="color: red; margin-top: 10px;"></div>
           <button type="submit" class="button">Login</button>
         </form>
-        <p><a href="#" onclick="resetPassword()">Forgot Password?</a></p>
+        <p><a href="/forgot-password">Forgot Password?</a></p>
         <div class="signup-link">
           Don't have an account? <a href="/register">Sign up</a>
         </div>
@@ -151,15 +151,6 @@
           errorMsg.textContent = "Login failed: " + error.message;
         }
       });
-
-      function resetPassword() {
-        const email = document.getElementById('email').value;
-        if (!email) return alert("Please enter your email first.");
-
-        firebase.auth().sendPasswordResetEmail(email)
-          .then(() => alert("Password reset link sent!"))
-          .catch((err) => alert("Error: " + err.message));
-      }
     </script>
   </body>
 </html>

@@ -6,7 +6,7 @@ const {ensureAuthenticated} = require('../middleware/auth.js')
 
 const router = express.Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
 const questionsPath = path.join(__dirname, '..', 'HRQuestions.json');
 const questions = JSON.parse(fs.readFileSync(questionsPath, 'utf8'));
@@ -29,7 +29,12 @@ router.post('/analyze-text', ensureAuthenticated, async (req, res) => {
     const { text, question, questionCounter } = req.body;
     const maxQuestions = 9; 
     const nextQuestionIndex = parseInt(questionCounter) + 1;
-
+    if (!req.session.hrInterview) {
+        req.session.hrInterview = {
+            answers: [],
+            startTime: Date.now()
+        };
+    }
     const prompt = `You are an experienced HR professional and interviewer. Analyze the candidate's response to the following question,
     taking into consideration that this is a HR level interview for a Software Engineer position.
 
@@ -67,11 +72,74 @@ router.post('/analyze-text', ensureAuthenticated, async (req, res) => {
             console.error("Failed to parse JSON. Raw text:", cleanedText);
             return res.status(500).json({ error: `Failed to parse Gemini API response: ${parseError.message}. Raw text: ${cleanedText}` });
         }
+        req.session.hrInterview.answers.push({
+            question,
+            answer: text,
+            analysis: analyzeResult.analysis,
+            recommendation: analyzeResult.recommendation,
+            score: analyzeResult.score
+        });
 
+        const totalQuestions = questions.length;
+
+        // ⭐ WHEN INTERVIEW IS FINISHED → SAVE TO FIRESTORE
+        if (nextQuestionIndex >= totalQuestions) {
+
+            const admin = require('../firebase.js');
+    const db = admin.firestore();
+    const userUid = req.user.uid;
+
+    const answers = req.session.hrInterview.answers;
+
+    const totalScore = answers.reduce((sum, a) => sum + a.score, 0);
+    const avgScore = totalScore / answers.length;
+
+    // ⭐ Instead of PDF → Create full text report (string)
+    // ⭐ Generate HTML report (clean & styled)
+let fullReport = `
+<h2 style="color:#0057ff;">HR Interview Report</h2>
+<p><strong>User ID:</strong> ${userUid}</p>
+<p><strong>Total Score:</strong> ${totalScore}</p>
+<p><strong>Average Score:</strong> ${avgScore.toFixed(2)}</p>
+
+<hr style="margin:20px 0;">
+<h3>Detailed Question Analysis</h3>
+`;
+
+answers.forEach((a, i) => {
+fullReport += `
+    <div style="padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;">
+        <p><strong>Q${i + 1}:</strong> ${a.question}</p>
+        <p><strong>Answer:</strong> ${a.answer}</p>
+        <p><strong>Analysis:</strong> ${a.analysis}</p>
+        <p><strong>Recommendation:</strong> ${a.recommendation}</p>
+        <p><strong>Score:</strong> <span style="color:green; font-weight:bold;">${a.score}/5</span></p>
+    </div>
+`;
+});
+
+
+    // ⭐ Save to Firestore (no PDF, no bucket)
+    await db
+        .collection("users")
+        .doc(userUid)
+        .collection("progress")
+        .doc("HRInterview")
+        .collection("attempts")
+        .add({
+            totalScore,
+            avgScore,
+            // answers: answers,          // full answers + analysis
+            fullReport: fullReport,    // long full report here
+            submittedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+    req.session.hrInterview = null;
+        }
         console.log("Analyzing...");
         console.log("Analyze Result:", analyzeResult);
 
-        saveToJsonFile(analyzeResult);
+        // saveToJsonFile(analyzeResult);
 
         let followUpQuestion;
 
