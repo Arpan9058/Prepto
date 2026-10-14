@@ -5,6 +5,8 @@ const { createGemini } = require('../adapters/gemini');
 const bank = require('../services/questionBank');
 const sessions = require('../services/interviews');
 const progress = require('../services/progress');
+const resumes = require('../services/resumes');
+const matches = require('../services/resumeMatches');
 async function verify() {
   const report = { mode: 'live', checks: [], cleanup: 'not-needed' };
   if (process.env.FIRESTORE_EMULATOR_HOST) { report.checks.push({ check: 'Live backend', status: 'blocked', reason: 'Emulator binding is active' }); return report; }
@@ -20,6 +22,7 @@ async function verify() {
   const actual = require('firebase-admin/app').getApp().options.projectId || credential.projectId || (credential.getProjectId ? await credential.getProjectId() : null);
   if (actual !== expected) { report.checks.push({ check: 'Project safety pin', status: 'blocked', reason: 'Credential project does not match the authorized project pin' }); return report; }
   const run = `prepto-live-${randomUUID()}`, owner = `${run}-owner`, other = `${run}-other`;
+  report.runId = run;
   const roots = []; const questionIds = []; const userIds = [];
   let app, server;
   try {
@@ -43,6 +46,14 @@ async function verify() {
     await progress.saveGoal(db, owner, { skill: 'Node.js', targetScore: 80, weeklySessions: 2 });
     assert.ok((await progress.overview(db, owner)).summary.attempts >= 1);
     report.checks.push({ check: 'Live question bank, bookmarks, persistent interviews, Gemini feedback, review and progress', status: 'passed' });
+    const original = await resumes.create(db, owner, { title: run, text: 'Synthetic test candidate: Node.js API with SQL project.', requestId: randomUUID() });
+    const updated = await resumes.addVersion(db, owner, original.resume.id, { text: 'Synthetic test candidate: Node.js API, SQL queries and tests.', expectedRevision: 1, requestId: randomUUID() });
+    await assert.rejects(() => resumes.get(db, other, original.resume.id), { status: 404 });
+    const matched = await matches.create(db, createGemini(), owner, { resumeId: original.resume.id, resumeVersionId: updated.version.id, jobTitle: 'Synthetic Node.js role', jobDescription: 'Build Node.js APIs with SQL and tests.', requestId: randomUUID() });
+    assert.equal(matched.match.status, 'completed');
+    await assert.rejects(() => matches.get(db, other, matched.match.id), { status: 404 });
+    assert.equal((await matches.list(db, owner, { resumeId: original.resume.id, resumeVersionId: updated.version.id })).items.length, 1);
+    report.checks.push({ check: 'Live private resume versions and Gemini matching history', status: 'passed' });
     const { createApp } = require('../app');
     app = createApp({ env: { ...process.env, NODE_ENV: 'development', SESSION_SECRET: randomBytes(48).toString('hex') }, firebase: fb });
     server = app.listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve));

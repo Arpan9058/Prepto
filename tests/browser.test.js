@@ -149,3 +149,23 @@ test('resume browser shows validation errors and safely renders uploaded/typed c
   await Promise.all([page.waitForNavigation(), page.click('#create-resume [type=submit]')]); await settled();
   expect(await page.$('#resume-preview img')).toBeNull(); expect(await page.$eval('#resume-preview', n => n.textContent)).toContain('<img');
 });
+test('browser matches a saved version, reviews private history and retries failed feedback', async () => {
+  await page.goto(base + '/resumes'); await settled();
+  await page.type('#create-resume [name=title]', 'Matching resume'); await page.type('#create-resume [name=text]', 'Node.js SQL project');
+  await Promise.all([page.waitForNavigation(), page.click('#create-resume [type=submit]')]); await settled();
+  await page.type('#match-version [name=jobTitle]', 'Backend role'); await page.type('#match-version [name=jobDescription]', 'Node.js SQL required <img src=x>');
+  gemini.generate.mockRejectedValueOnce(new Error('Provider offline'));
+  await page.click('#match-version [type=submit]'); await page.waitForFunction(() => document.getElementById('status').classList.contains('error'));
+  await page.goto(base + '/resume-matches'); await settled();
+  expect(await page.$eval('#matches', n => n.textContent)).toContain('Matching failed');
+  await page.click('#matches button'); await page.waitForFunction(() => !document.getElementById('match-detail').hidden);
+  expect(await page.$('#detail-content img')).toBeNull();
+  await page.click('#detail-content button'); await page.waitForFunction(() => document.getElementById('detail-content').textContent.includes('Compatibility estimate: 76%'));
+  await page.reload(); await settled(); expect(await page.$eval('#matches', n => n.textContent)).toContain('76% estimate');
+  await page.click('#matches button'); await page.waitForFunction(() => !document.getElementById('match-detail').hidden);
+  expect(await page.$eval('#detail-content', n => n.textContent)).toContain('TypeScript');
+  await page.setViewport({ width: 390, height: 844 }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.setCookie({ name: 'session_token', value: 'bob', url: base, httpOnly: true }); await page.reload(); await settled();
+  expect(await page.$eval('#status', n => n.textContent)).toContain('No saved matches');
+  expect(await page.$$eval('#matches article', n => n.length)).toBe(0);
+}, 20000);

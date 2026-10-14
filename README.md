@@ -84,3 +84,7 @@ Use `npm run test:emulator` (Java 21) for deny-by-default client rules plus real
 ## Resume versions
 
 Use `/resumes` for owner-only saved text/PDF/DOCX versions. Preview earlier copies, save improvements without overwriting history, choose a current version, and export a saved version as PDF. The existing resume builder remains available for drafting. [API docs](docs/API.md) describe replay-safe writes, revision checks, upload limits and storage/index setup.
+
+## Saved job matching
+
+On a saved resume version, add a job description for private, replay-safe matching feedback. `/resume-matches` shows pending/failed/completed history, retries and same-job version comparisons. Scores are compatibility estimates; the selected immutable version and original job description remain linked. [API docs](docs/API.md) and [operations](docs/OPERATIONS.md) cover provider bindings, data retention, leases and index deployment. One-off `/analyze` remains available; use saved versions/matching for a tracked application workflow.

@@ -1,8 +1,9 @@
 (() => {
   const { request, element, state } = window.Prepto;
   const resumeId = document.body.dataset.resumeId, root = `/api/resumes/${resumeId}`;
-  let resume, selected, cursor, versionRequest = null;
+  let resume, selected, cursor, versionRequest = null, matchRequest = null, matchVersionId = null;
   async function choose(versionId) {
+    matchRequest = null;
     selected = await request(`${root}/versions/${versionId}`);
     document.getElementById('selected-label').textContent = `Version ${selected.number} · ${selected.label}`;
     document.getElementById('version-meta').textContent = `${selected.characterCount} characters · ${selected.source.kind} · ${new Date(selected.createdAt).toLocaleDateString()}`;
@@ -35,6 +36,21 @@
       else options = { method: 'POST', body: JSON.stringify({ text: form.elements.text.value, label: form.elements.label.value, requestId: versionRequest, expectedRevision: resume.revision }) };
       const result = await request(root + '/versions', options); resume = result.resume; versionRequest = null; form.elements.resume.value = ''; form.elements.label.value = ''; await versions(); await choose(result.version.id); state('New version saved. Your original is preserved.');
     } catch (error) { state(error.message, true); } finally { button.disabled = false; }
+  };
+  const matchForm = document.getElementById('match-version');
+  matchForm.addEventListener('input', () => { matchRequest = null; });
+  matchForm.onsubmit = async e => {
+    e.preventDefault(); const button = matchForm.querySelector('[type=submit]'); button.disabled = true;
+    if (!selected) { state('Load a resume version first.', true); button.disabled = false; return; }
+    matchRequest ||= window.crypto.randomUUID(); matchVersionId = selected.id; state('Matching selected version…');
+    try {
+      const value = await request('/api/resume-matches', { method: 'POST', body: JSON.stringify({ resumeId, resumeVersionId: matchVersionId, jobTitle: matchForm.elements.jobTitle.value, jobDescription: matchForm.elements.jobDescription.value, requestId: matchRequest }) });
+      const result = document.getElementById('match-result'); result.replaceChildren(); result.hidden = false;
+      result.append(element('h3', `Version ${value.match.versionNumber}: ${value.match.result.score}% compatibility estimate`), element('p', value.match.result.summary));
+      for (const step of value.match.result.recommendations) result.append(element('p', step));
+      matchRequest = null; state('Match saved privately. Open matching history for skill gaps and comparison.');
+    } catch (error) { state(`${error.message} Matching history retains failures and offers a retry.`, true); }
+    finally { button.disabled = false; }
   };
   safely(refresh)();
 })();

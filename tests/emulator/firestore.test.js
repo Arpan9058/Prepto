@@ -19,7 +19,7 @@ before(async () => {
   rules = await initializeTestEnvironment({ projectId: 'demo-prepto', firestore: { host, port: Number(port), rules: fs.readFileSync(path.join(__dirname, '../../firestore.rules'), 'utf8') } });
   adminApp = initializeApp({ projectId: 'demo-prepto' }, 'prepto-emulator-tests'); db = getFirestore(adminApp);
   const firebase = { firestore: () => db, auth: () => ({ verifyIdToken: async token => { if (!['alice', 'bob', 'admin'].includes(token)) throw new Error('Invalid offline test token'); return { uid: token, admin: token === 'admin' }; } }) };
-  const gemini = { generate: async () => ({ score: 80, feedback: 'A clear example.', nextStep: 'Explain the tradeoff.' }) };
+  const gemini = { generate: async prompt => prompt.startsWith('Match resume version') ? { score: 80, summary: 'SQL evidence', matchedSkills: ['SQL'], missingSkills: [], recommendations: ['Describe project impact'] } : ({ score: 80, feedback: 'A clear example.', nextStep: 'Explain the tradeoff.' }) };
   app = createApp({ env: { SESSION_SECRET: 'emulator-only-session-secret-32-characters' }, firebase, gemini, logger: pino({ level: 'silent' }) });
 });
 after(async () => { await rules?.cleanup(); await db?.terminate(); if (adminApp) await deleteApp(adminApp); });
@@ -67,6 +67,7 @@ test('index manifest contains every supported indexed search/session query shape
   assert.equal(shapes.size, 8);
   for (const i of manifest.indexes) { assert.ok(i.fields.length >= 2); assert.ok(i.fields.every(f => f.fieldPath && (!!f.order !== !!f.arrayConfig))); }
   for (const shape of [['ownerUid', 'createdAt', 'id'], ['ownerUid', 'status', 'createdAt', 'id']]) assert.ok(manifest.indexes.some(i => i.collectionGroup === 'interviewSessions' && JSON.stringify(i.fields.map(f => f.fieldPath)) === JSON.stringify(shape)));
+  for (const fields of [['createdAt', 'id'], ['resumeId', 'createdAt', 'id'], ['resumeId', 'resumeVersionId', 'createdAt', 'id']]) assert.ok(manifest.indexes.some(i => i.collectionGroup === 'resumeMatches' && JSON.stringify(i.fields.map(f => f.fieldPath)) === JSON.stringify(fields)));
   // The emulator accepts these queries but does NOT enforce production composite indexes.
 });
 
@@ -80,4 +81,19 @@ test('real emulator preserves private resume version history and rejects stale/c
   assert.equal(preserved.text, require('../../fixtures/resume-version.json').text);
   const versions = (await auth(request(app).get(`/api/resumes/${original.resume.id}/versions?pageSize=1`)).expect(200)).body;
   assert.equal(versions.items[0].number, 2); assert.ok(versions.nextCursor);
+});
+
+test('real emulator persists owner-only matching history, indexed filters and comparisons', async () => {
+  const source = (await auth(request(app).post('/api/resumes')).send(require('../../fixtures/resume-version.json')).expect(201)).body;
+  const body = { resumeId: source.resume.id, resumeVersionId: source.version.id, jobTitle: 'Engineer', jobDescription: 'SQL role', requestId: 'match-a' };
+  await auth(request(app).post('/api/resume-matches')).send(body).expect(201);
+  await auth(request(app).post('/api/resume-matches')).send({ ...body, requestId: 'match-b' }).expect(201);
+  await auth(request(app).post('/api/resume-matches'), 'bob').send(body).expect(404);
+  await auth(request(app).get('/api/resume-matches/match-a'), 'admin').expect(404);
+  const list = (await auth(request(app).get(`/api/resume-matches?resumeId=${body.resumeId}&resumeVersionId=${body.resumeVersionId}&pageSize=1`)).expect(200)).body;
+  assert.ok(list.nextCursor);
+  await auth(request(app).get(`/api/resume-matches?resumeId=${body.resumeId}&after=${list.nextCursor}`)).expect(200);
+  const comparison = (await auth(request(app).post('/api/resume-matches/compare')).send({ firstId: 'match-a', secondId: 'match-b' }).expect(200)).body;
+  assert.equal(comparison.scoreChange, 0);
+  assert.equal((await db.doc('users/alice/resumeMatches/match-a').get()).data().status, 'completed');
 });

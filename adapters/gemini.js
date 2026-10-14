@@ -1,5 +1,6 @@
 function createGemini({ env = process.env, fetchImpl = globalThis.fetch } = {}) {
   return {
+    model: env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
     async generate(prompt, { json = false } = {}) {
       if (!env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY is required');
       const model = env.GEMINI_MODEL || 'gemini-2.5-flash-lite';

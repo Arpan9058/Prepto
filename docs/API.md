@@ -78,3 +78,16 @@ Deployment rules, emulator/index limitations and live-check status are documente
 - `GET /api/resumes/:id/versions/:versionId/pdf`: authenticated selected-version PDF download.
 
 Provide a stable UUID `requestId` for create/save retries. Exact retries return the saved version; reusing IDs for changed content returns 409. Titles <=120, labels <=100. UID/owner fields in client bodies do not select data. Other-user/admin access to private versions returns 404. Storage: `users/{uid}/resumes/{id}/versions/{versionId}`. No direct browser Firestore access is granted. Example payload: `fixtures/resume-version.json`.
+
+## Job-description matching history
+
+Match a selected saved version on `/resumes/:id`; review all private results at `/resume-matches`. Each record retains the exact job description, version ID/number/hash, model ID, validated feedback and timestamps. Changing the current resume pointer does not change previous matches.
+
+- `POST /api/resume-matches` body `{resumeId, resumeVersionId, jobTitle, jobDescription, requestId?}`. Job title <=120, description 1-15000. The server resolves and authorizes the immutable version, evaluates through Gemini, and stores the result. Response 201 for a new successful evaluation, 200 for an exact completed replay.
+- `GET /api/resume-matches?pageSize=12&after=ID&resumeId=ID&resumeVersionId=ID`: owned, cursor-paginated summaries. Filters are optional; a version filter requires a resume filter. Other-user filters/cursors return 404; mismatched filter cursors return 400.
+- `GET /api/resume-matches/:id`: owned saved job description, status and full feedback. No private version content is returned through someone else's record.
+- `POST /api/resume-matches/compare` body `{firstId, secondId}`: compares two completed owned records for the same job description, with score change/new matched skills/remaining gaps. Different job descriptions are rejected rather than implying a comparable benchmark.
+
+The validated result contains a 0-100 compatibility estimate, summary, matched/missing skills and actionable recommendations. All strings render as text. Scores are AI-assisted estimates, not hiring outcomes. Concurrent requests use a 90-second lease outside transaction retries; repeat submissions do not make duplicate model calls, exact saved requests return cached results, failed records keep the saved description for retry, and crashed leases expire. Reuse the record ID and its original payload to retry a failed/expired record.
+
+Storage: `users/{uid}/resumeMatches/{id}`; indexes and default-deny client rules are in the deployment manifests. Owner checks apply to admins too. Resume text and job descriptions are private personal data: define retention/deletion policies in deployment operations. Original file binaries are not stored; versions preserve extracted/edited text. Example job payload: `fixtures/job-description.json`.

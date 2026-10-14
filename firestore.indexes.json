@@ -273,6 +273,60 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "resumeMatches",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "id",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "resumeMatches",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "resumeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "id",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "resumeMatches",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "resumeId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "resumeVersionId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "id",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": [
@@ -294,6 +348,16 @@
     {
       "collectionGroup": "versions",
       "fieldPath": "text",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "resumeMatches",
+      "fieldPath": "jobDescription",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "resumeMatches",
+      "fieldPath": "result",
       "indexes": []
     }
   ]
