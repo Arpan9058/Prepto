@@ -9,3 +9,13 @@ firebase-service-account.json.json
 # generated artifacts
 resume.pdf
 temp/resume-*.html
+
+.env.*
+!.env.example
+*.pem
+*.csr
+*service-account*.json*
+coverage/
+.cache/
+pdfs/
+temp/

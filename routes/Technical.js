@@ -1,25 +1,12 @@
 const express = require('express');
-const router = express.Router();
-const cookieParser = require('cookie-parser');
-const jwt = require('jsonwebtoken');
-const interviewController = require('../controller/interviewController'); 
-const {ensureAuthenticated} = require('../middleware/auth.js')
-
-
-const initialQuestion = "Give me your introduction and your technical skills?";
-let currentQuestion = initialQuestion;
-
-router.get('/', ensureAuthenticated,  (req, res) => {
-    const userEmail = req.query.email;
-    res.render('TechnicalInterview', { question: currentQuestion });
-});
-
-router.get('/technical*', ensureAuthenticated, (req, res) => {
-    const userEmail = req.query.email;
-    res.render('TechnicalInterview', { question: currentQuestion });
-});
-
-
-router.post('/analyze-text', ensureAuthenticated, interviewController.analyzeText); 
-
-module.exports = router;
+const { ensureAuthenticated } = require('../middleware/auth');
+const { asyncHandler } = require('../middleware/errors');
+const { analyzeText, initialQuestion } = require('../controller/interviewController');
+function createTechnicalRouter() {
+  const router = express.Router();
+  router.use(ensureAuthenticated);
+  router.get(['/', /^\/technical/ ], (req, res) => { delete req.session.technicalInterview; res.render('TechnicalInterview', { question: initialQuestion }); });
+  router.post('/analyze-text', asyncHandler(analyzeText));
+  return router;
+}
+module.exports = { createTechnicalRouter };

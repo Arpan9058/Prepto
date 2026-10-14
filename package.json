@@ -1,9 +1,15 @@
 {
-  "name": "jobtonic",
+  "name": "prepto",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node --use-env-proxy server.js",
+    "dev": "node --use-env-proxy --watch server.js",
+    "build": "node scripts/build.js",
+    "lint": "eslint .",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --coverage",
+    "check": "npm run build && npm run lint && npm test",
+    "audit": "npm audit --omit=dev"
   },
   "keywords": [],
   "author": "",
@@ -11,32 +17,57 @@
   "type": "commonjs",
   "description": "",
   "dependencies": {
-    "@google/generative-ai": "^0.22.0",
-    "axios": "^1.8.1",
-    "bcryptjs": "^3.0.2",
-    "body-parser": "^1.20.3",
-    "child_process": "^1.0.2",
     "cookie-parser": "^1.4.7",
-    "dotenv": "^16.4.7",
+    "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
-    "express": "^4.21.2",
-    "express-session": "^1.18.1",
-    "firebase-admin": "^13.4.0",
-    "googleapis": "^144.0.0",
-    "highlight.js": "^11.11.1",
-    "http-proxy-middleware": "^3.0.5",
-    "jsdom": "^26.0.0",
-    "jsonwebtoken": "^9.0.2",
-    "mammoth": "^1.9.0",
-    "marked": "^15.0.7",
-    "marked-highlight": "^2.2.1",
-    "mongodb": "^6.13.1",
-    "mongoose": "^8.10.1",
-    "multer": "^1.4.5-lts.1",
-    "node-fetch": "^3.3.2",
-    "pdf-parse": "^1.1.1",
+    "express": "^5.3.0",
+    "express-session": "^1.18.2",
+    "firebase-admin": "^14.5.0",
+    "https-proxy-agent": "^7.0.6",
+    "mammoth": "^1.11.0",
+    "marked": "^15.0.12",
+    "multer": "^2.0.2",
+    "pdf-parse": "2.4.5",
     "pdfkit": "^0.17.2",
-    "puppeteer": "^24.42.0",
-    "sanitize-html": "^2.14.0"
+    "pino": "^10.1.0",
+    "pino-http": "^11.0.0",
+    "puppeteer-core": "^25.13.0",
+    "sanitize-html": "^2.17.0"
+  },
+  "engines": {
+    "node": ">=24.9.0 <25"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "globals": "^16.5.0",
+    "jest": "^30.2.0",
+    "supertest": "^7.1.4",
+    "jszip": "^3.10.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/tests/setup.js"
+    ],
+    "collectCoverageFrom": [
+      "app.js",
+      "middleware/**/*.js",
+      "adapters/**/*.js",
+      "routes/**/*.js",
+      "controller/**/*.js",
+      "services/**/*.js",
+      "ats.js",
+      "resumeGenerator.js",
+      "careerGuidance.js",
+      "utils/**/*.js"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "json-summary",
+      "lcov"
+    ],
+    "coverageProvider": "v8"
   }
 }

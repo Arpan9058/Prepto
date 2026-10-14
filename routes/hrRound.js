@@ -1,168 +1,33 @@
 const express = require('express');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const fs = require('fs');
-const path = require('path');
-const {ensureAuthenticated} = require('../middleware/auth.js')
-
-const router = express.Router();
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-
-const questionsPath = path.join(__dirname, '..', 'HRQuestions.json');
-const questions = JSON.parse(fs.readFileSync(questionsPath, 'utf8'));
-
-const saveToJsonFile = (data) => {
-    const filePath = path.join(__dirname, '..', 'data', 'analysisResults.json');
-    const dirPath = path.dirname(filePath);
-    if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
+const questions = require('../HRQuestions.json');
+const { ensureAuthenticated } = require('../middleware/auth');
+const { asyncHandler, httpError } = require('../middleware/errors');
+const { answerReport, attempts } = require('../utils/reports');
+function createHrRouter() {
+  const router = express.Router();
+  router.use(ensureAuthenticated);
+  router.get('/', (req, res) => { req.session.hrInterview = { answers: [] }; res.render('hrRound', { question: questions }); });
+  router.get('/initial-question', (req, res) => { req.session.hrInterview = { answers: [] }; res.json({ question: questions[0] }); });
+  router.post('/analyze-text', asyncHandler(async (req, res) => {
+    const state = req.session.hrInterview ? structuredClone(req.session.hrInterview) : null;
+    if (!state) throw httpError(409, 'Start an HR interview first');
+    if (state.completed) throw httpError(409, 'Interview already completed');
+    if (typeof req.body.text !== 'string' || !req.body.text.trim()) throw httpError(400, 'Answer is required');
+    const index = state.answers.length;
+    if (req.body.questionCounter !== undefined && Number(req.body.questionCounter) !== index) throw httpError(409, 'Question is out of sequence');
+    const question = questions[index];
+    const analysis = await req.app.locals.gemini.generate(`Evaluate this HR interview answer. Return JSON analysis, recommendation and score (0-5). Question: ${question}\nAnswer: ${req.body.text}`, { json: true });
+    if (!Number.isFinite(analysis.score) || analysis.score < 0 || analysis.score > 5) throw new Error('Invalid HR score');
+    state.answers.push({ question, answer: req.body.text, analysis: String(analysis.analysis || ''), recommendation: String(analysis.recommendation || ''), score: analysis.score });
+    const completed = state.answers.length === questions.length;
+    if (completed) {
+      const totalScore = state.answers.reduce((sum, a) => sum + a.score, 0);
+      await attempts(req.app.locals.firebase.firestore(), req.user.uid, 'HRInterview').add({ totalScore, avgScore: totalScore / state.answers.length, fullReport: answerReport('HR Interview Report', state.answers), submittedAt: new Date() });
+      state.completed = true;
     }
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
-    console.log(`Analysis saved to: ${filePath}`);
-};
-
-router.get('/', ensureAuthenticated,  (req, res) => {
-    res.render('hrRound', { question: questions });
-});
-
-router.post('/analyze-text', ensureAuthenticated, async (req, res) => {
-    const { text, question, questionCounter } = req.body;
-    const maxQuestions = 9; 
-    const nextQuestionIndex = parseInt(questionCounter) + 1;
-    if (!req.session.hrInterview) {
-        req.session.hrInterview = {
-            answers: [],
-            startTime: Date.now()
-        };
-    }
-    const prompt = `You are an experienced HR professional and interviewer. Analyze the candidate's response to the following question,
-    taking into consideration that this is a HR level interview for a Software Engineer position.
-
-    Question: ${question}
-    Candidate's Answer: ${text}
-
-    Your analysis should:
-    1. Assess the candidate's response based on relevance to the question, clarity of communication, and completeness of the answer.
-    2. Provide a score out of 5 for the response, keeping in mind that it is a speech to text transcription interview so adjust some terms accordingly and Calculate the score in a lenient way.
-    3. Offer a recommendation for improving the answer in a way that encourages the candidate to expand without making them feel discouraged.
-
-    Please make sure the output is in the following valid JSON format without any additional markdown or formatting issues:
-
-    {
-        "analysis": "Your analysis here (Ensure proper escaping of quotes using \\" for any quotes inside the string).",
-        "recommendation": "Your recommendation here (Ensure proper escaping of quotes using \\" for any quotes inside the string).",
-        "score": <integer between 1 and 5>
-    }`;
-
-    console.log("Generated Prompt: ", prompt);
-
-    try {
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const generatedText = await response.text();
-        console.log("API Response Text: ", generatedText);
-        const cleanedText = generatedText.replace(/```json|```/g, '').trim();
-
-        let analyzeResult;
-
-        try {
-            analyzeResult = JSON.parse(cleanedText);
-        } catch (parseError) {
-            console.error("JSON Parse Error:", parseError);
-            console.error("Failed to parse JSON. Raw text:", cleanedText);
-            return res.status(500).json({ error: `Failed to parse Gemini API response: ${parseError.message}. Raw text: ${cleanedText}` });
-        }
-        req.session.hrInterview.answers.push({
-            question,
-            answer: text,
-            analysis: analyzeResult.analysis,
-            recommendation: analyzeResult.recommendation,
-            score: analyzeResult.score
-        });
-
-        const totalQuestions = questions.length;
-
-        // ⭐ WHEN INTERVIEW IS FINISHED → SAVE TO FIRESTORE
-        if (nextQuestionIndex >= totalQuestions) {
-
-            const admin = require('../firebase.js');
-    const db = admin.firestore();
-    const userUid = req.user.uid;
-
-    const answers = req.session.hrInterview.answers;
-
-    const totalScore = answers.reduce((sum, a) => sum + a.score, 0);
-    const avgScore = totalScore / answers.length;
-
-    // ⭐ Instead of PDF → Create full text report (string)
-    // ⭐ Generate HTML report (clean & styled)
-let fullReport = `
-<h2 style="color:#0057ff;">HR Interview Report</h2>
-<p><strong>User ID:</strong> ${userUid}</p>
-<p><strong>Total Score:</strong> ${totalScore}</p>
-<p><strong>Average Score:</strong> ${avgScore.toFixed(2)}</p>
-
-<hr style="margin:20px 0;">
-<h3>Detailed Question Analysis</h3>
-`;
-
-answers.forEach((a, i) => {
-fullReport += `
-    <div style="padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px;">
-        <p><strong>Q${i + 1}:</strong> ${a.question}</p>
-        <p><strong>Answer:</strong> ${a.answer}</p>
-        <p><strong>Analysis:</strong> ${a.analysis}</p>
-        <p><strong>Recommendation:</strong> ${a.recommendation}</p>
-        <p><strong>Score:</strong> <span style="color:green; font-weight:bold;">${a.score}/5</span></p>
-    </div>
-`;
-});
-
-
-    // ⭐ Save to Firestore (no PDF, no bucket)
-    await db
-        .collection("users")
-        .doc(userUid)
-        .collection("progress")
-        .doc("HRInterview")
-        .collection("attempts")
-        .add({
-            totalScore,
-            avgScore,
-            // answers: answers,          // full answers + analysis
-            fullReport: fullReport,    // long full report here
-            submittedAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-
-    req.session.hrInterview = null;
-        }
-        console.log("Analyzing...");
-        console.log("Analyze Result:", analyzeResult);
-
-        // saveToJsonFile(analyzeResult);
-
-        let followUpQuestion;
-
-        if (nextQuestionIndex < questions.length) {
-            followUpQuestion = { question: questions[nextQuestionIndex] };
-        } else {
-            followUpQuestion = { question: "Thank you, that concludes this question." };
-        }
-
-        res.json({ analysis: analyzeResult, followUpQuestion: followUpQuestion });
-
-    } catch (error) {
-        console.error("Error processing the request:", error);
-        res.status(500).json({ error: 'Failed to generate content.' });
-    }
-});
-
-router.get('/initial-question', ensureAuthenticated, (req, res) => {
-    if (questions.length > 0) {
-        res.json({ question: questions[0] });
-    } else {
-        res.status(404).json({ error: 'No questions available.' });
-    }
-});
-
-module.exports = router;
+    req.session.hrInterview = state;
+    res.json({ analysis, interviewComplete: completed, followUpQuestion: { question: completed ? 'Thank you, that concludes this question.' : questions[state.answers.length] } });
+  }));
+  return router;
+}
+module.exports = { createHrRouter };

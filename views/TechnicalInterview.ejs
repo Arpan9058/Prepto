@@ -244,6 +244,8 @@
     </div>
 
     <script>
+        function escapeHtml(value) { const span = document.createElement('span'); span.textContent = String(value ?? ''); return span.innerHTML; }
+
         // ─── ELEMENTS ──────────────────────────────────────────────
         const videoElement      = document.getElementById('webcam');
         const startStopButton   = document.getElementById('startStopButton');
@@ -341,15 +343,15 @@
                 interimTranscript = '';
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript + ' ';
+                        escapeHtml(finalTranscript) += event.results[i][0].transcript + ' ';
                     } else {
                         interimTranscript += event.results[i][0].transcript;
                     }
                 }
                 // Show final (solid) + interim (greyed)
                 transcriptionDiv.innerHTML =
-                    finalTranscript +
-                    `<span style="color:#aaa;">${interimTranscript}</span>`;
+                    escapeHtml(finalTranscript) +
+                    `<span style="color:#aaa;">${escapeHtml(interimTranscript)}</span>`;
             };
 
             return true;
@@ -499,28 +501,28 @@
                     : '#aaa';
 
                 html += `<div class="result-item">`;
-                html += `<h3 class="mb-2">Q${index + 1}: ${item.question}</h3>`;
-                html += `<p class="mb-1"><strong>Your Answer:</strong> ${item.answer}</p>`;
+                html += `<h3 class="mb-2">Q${index + 1}: ${escapeHtml(item.question)}</h3>`;
+                html += `<p class="mb-1"><strong>Your Answer:</strong> ${escapeHtml(item.answer)}</p>`;
 
                 if (analysis && score !== null) {
-                    html += `<p class="mb-1"><strong>Feedback:</strong> ${analysis.analysis}</p>`;
-                    html += `<p class="mb-1"><strong>Recommendation:</strong> ${analysis.recommendation}</p>`;
+                    html += `<p class="mb-1"><strong>Feedback:</strong> ${escapeHtml(analysis.analysis)}</p>`;
+                    html += `<p class="mb-1"><strong>Recommendation:</strong> ${escapeHtml(analysis.recommendation)}</p>`;
 
                     const scores = analysis.scores;
                     if (scores) {
                         html += `
                             <ul class="mb-2 text-sm" style="padding-left:18px;">
                                 <strong>Individual Scores:</strong>
-                                <li>Technical Knowledge: ${scores.technicalKnowledge}</li>
-                                <li>Problem Solving: ${scores.problemSolving}</li>
-                                <li>Communication: ${scores.communication}</li>
-                                <li>Relevance: ${scores.relevance}</li>
-                                <li>Professionalism: ${scores.professionalism}</li>
+                                <li>Technical Knowledge: ${escapeHtml(scores.technicalKnowledge)}</li>
+                                <li>Problem Solving: ${escapeHtml(scores.problemSolving)}</li>
+                                <li>Communication: ${escapeHtml(scores.communication)}</li>
+                                <li>Relevance: ${escapeHtml(scores.relevance)}</li>
+                                <li>Professionalism: ${escapeHtml(scores.professionalism)}</li>
                             </ul>
                         `;
                     }
 
-                    html += `<p><strong>Score:</strong> <span style="color:${scoreColor}; font-weight:bold;">${score} / 10</span></p>`;
+                    html += `<p><strong>Score:</strong> <span style="color:${scoreColor}; font-weight:bold;">${escapeHtml(score)} / 10</span></p>`;
                     overallScore += score;
                     validAnalysisCount++;
                 } else {

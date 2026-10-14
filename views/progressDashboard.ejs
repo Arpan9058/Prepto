@@ -243,7 +243,7 @@
 
   <!-- ---------------- CHART SCRIPT ---------------- -->
   <script>
-    const progressData = <%- JSON.stringify(progressData) %>;
+    const progressData = <%- JSON.stringify(progressData).replace(/</g, '\\u003c') %>;
     const testTypes = <%- JSON.stringify(testTypes) %>;
     const mockSubTests = <%- JSON.stringify(mockSubTests) %>;
 

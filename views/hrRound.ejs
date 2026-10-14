@@ -164,6 +164,8 @@
 
 
 <script>
+        function escapeHtml(value) { const span = document.createElement('span'); span.textContent = String(value ?? ''); return span.innerHTML; }
+
     const startStopButton = document.getElementById('startStopButton');
     const transcriptionDiv = document.getElementById('transcription');
     const questionDisplay = document.getElementById('questionDisplay');
@@ -248,7 +250,7 @@
 
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript + ' ';
+                    escapeHtml(finalTranscript) += event.results[i][0].transcript + ' ';
                 } else {
                     interimTranscript += event.results[i][0].transcript;
                 }
@@ -256,8 +258,8 @@
 
             // Show final (solid) + interim (greyed out) text
             transcriptionDiv.innerHTML =
-                finalTranscript +
-                `<span style="color:#aaa;">${interimTranscript}</span>`;
+                escapeHtml(finalTranscript) +
+                `<span style="color:#aaa;">${escapeHtml(interimTranscript)}</span>`;
         };
 
         return true;
@@ -388,13 +390,13 @@
 
             html += `
                 <div class="result-card">
-                    <h3 class="font-semibold text-lg mb-2">Q${i + 1}: ${item.question}</h3>
-                    <p class="mb-1"><strong>Your Answer:</strong> ${item.answer}</p>
+                    <h3 class="font-semibold text-lg mb-2">Q${i + 1}: ${escapeHtml(item.question)}</h3>
+                    <p class="mb-1"><strong>Your Answer:</strong> ${escapeHtml(item.answer)}</p>
                     ${
                         item.analysis
-                            ? `<p class="mb-1"><strong>Score:</strong> <span style="color:${scoreColor}; font-weight:bold;">${score} / 5</span></p>
-                               <p class="mb-1"><strong>Analysis:</strong> ${item.analysis.analysis}</p>
-                               <p><strong>Recommendation:</strong> ${item.analysis.recommendation}</p>`
+                            ? `<p class="mb-1"><strong>Score:</strong> <span style="color:${scoreColor}; font-weight:bold;">${escapeHtml(score)} / 5</span></p>
+                               <p class="mb-1"><strong>Analysis:</strong> ${escapeHtml(item.analysis.analysis)}</p>
+                               <p><strong>Recommendation:</strong> ${escapeHtml(item.analysis.recommendation)}</p>`
                             : "<p>No analysis available.</p>"
                     }
                 </div>

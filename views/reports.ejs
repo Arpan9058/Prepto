@@ -151,17 +151,13 @@
                     <a href="/reports/view/<%= r.id %>?type=<%= r.type %>&sub=<%= r.subTest %>">
                         <button>View</button>
                     </a>
-                    <button onclick="downloadReport('<%= r.id %>', '<%= encodeURIComponent(JSON.stringify(r.raw)) %>')">Download</button>
+                    <a href="/reports/download/<%= r.id %>?type=<%= r.type %>&sub=<%= r.subTest || '' %>"><button>Download</button></a>
                 </td>
             </tr>
             <% }) %>
         </table>
     </div>
 
-    <script>
-        function downloadReport(id, encoded) {
-            window.location.href = `/reports/download/${id}?data=${encoded}`;
-        }
-    </script>
+
 </body>
 </html>

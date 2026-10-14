@@ -1,40 +1,22 @@
-const admin = require('firebase-admin');
-
-// async function ensureAuthenticated(req, res, next) {
-//     const token = req.headers.authorization?.split('Bearer ')[1] || req.cookies['session_token'];
-//     if (!token) return res.redirect('/login');
-
-//     try {
-//         const decodedToken = await admin.auth().verifyIdToken(token);
-//         req.session.uid = decodedToken.uid;
-//         req.session.email = decodedToken.email;
-//         next();
-//     } catch (error) {
-//         console.error('Auth error:', error);
-//         return res.redirect('/login');
-//     }
-// }
-
-async function ensureAuthenticated(req, res, next) {
-    const token = req.headers.authorization?.split('Bearer ')[1] || req.cookies['session_token'];
-    if (!token) {
-        // API requests return 401
-        if (req.path.startsWith('/api')) {
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
-        // normal web page redirect
-        return res.redirect('/login');
-    }
-    try {
-        const decodedToken = await admin.auth().verifyIdToken(token);
-        req.user = decodedToken;
-        next();
-    } catch (error) {
-        if (req.path.startsWith('/api')) {
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
-        return res.redirect('/login');
-    }
+const { asyncHandler } = require('./errors');
+const ensureAuthenticated = asyncHandler(async (req, res, next) => {
+  const token = req.headers.authorization?.match(/^Bearer (.+)$/)?.[1] || req.cookies.session_token;
+  if (!token) return unauthorized(req, res);
+  let decoded;
+  try { decoded = await req.app.locals.firebase.auth().verifyIdToken(token, true); }
+  catch { return unauthorized(req, res); }
+  if (!decoded.uid || decoded.uid.includes('/')) return unauthorized(req, res);
+  req.user = decoded;
+  // A browser session cannot be reused for another Firebase identity.
+  if (req.session.ownerUid && req.session.ownerUid !== decoded.uid) {
+    for (const key of Object.keys(req.session)) if (key !== 'cookie') delete req.session[key];
+  }
+  req.session.ownerUid = decoded.uid;
+  next();
+});
+function unauthorized(req, res) {
+  if (req.originalUrl.startsWith('/api/') || req.headers.authorization || req.method !== 'GET')
+    return res.status(401).json({ error: 'Unauthorized' });
+  return res.redirect('/login');
 }
-
 module.exports = { ensureAuthenticated };

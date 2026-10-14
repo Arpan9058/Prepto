@@ -1,0 +1,19 @@
+services:
+  app:
+    build: .
+    init: true
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      TRUST_PROXY: "true"
+      CHROMIUM_EXECUTABLE_PATH: /usr/bin/chromium
+      CHROMIUM_NO_SANDBOX: "true"
+    # For a trusted local TLS reverse proxy. Secure cookies require HTTPS.
+    ports:
+      - "127.0.0.1:8080:8080"
+    shm_size: 256mb
+    restart: unless-stopped
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
