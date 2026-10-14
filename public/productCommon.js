@@ -1,6 +1,6 @@
 window.Prepto = {
   async request(url, options = {}) {
-    const response = await window.fetch(url, { credentials: 'same-origin', ...options, headers: { 'Content-Type': 'application/json', ...options.headers } });
+    const response = await window.fetch(url, { credentials: 'same-origin', ...options, headers: { ...(options.body instanceof window.FormData ? {} : { 'Content-Type': 'application/json' }), ...options.headers } });
     const data = await response.json();
     if (!response.ok) throw new Error(response.status === 401 ? 'Your login expired. Please sign in again.' : data.error || 'Request failed');
     return data;

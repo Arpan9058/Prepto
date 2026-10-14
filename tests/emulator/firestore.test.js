@@ -25,7 +25,7 @@ before(async () => {
 after(async () => { await rules?.cleanup(); await db?.terminate(); if (adminApp) await deleteApp(adminApp); });
 beforeEach(async () => { await rules.clearFirestore(); });
 const auth = (req, uid = 'alice') => req.set('Authorization', `Bearer ${uid}`);
-const sensitive = ['questionBank/q1', 'questionEvents/e1', 'interviewSessions/s1', 'sessions/s2', 'webSessions/w1', 'users/alice/bookmarks/q1', 'users/alice/studyGoals/g1', 'users/alice/progress/InterviewPractice/attempts/a1', 'users/alice/resumeVersions/v1', 'users/alice/resumeMatches/m1'];
+const sensitive = ['questionBank/q1', 'questionEvents/e1', 'interviewSessions/s1', 'sessions/s2', 'webSessions/w1', 'users/alice/bookmarks/q1', 'users/alice/studyGoals/g1', 'users/alice/progress/InterviewPractice/attempts/a1', 'users/alice/resumes/r1/versions/v1', 'users/alice/resumeMatches/m1'];
 for (const identity of ['anonymous', 'alice', 'bob', 'admin']) test(`client rules deny sensitive reads/writes for ${identity}`, async () => {
   await rules.withSecurityRulesDisabled(async context => { for (const p of sensitive) await setDoc(doc(context.firestore(), p), { ownerUid: 'alice', answer: 'private answer', text: 'private resume' }); });
   const context = identity === 'anonymous' ? rules.unauthenticatedContext() : rules.authenticatedContext(identity, { admin: identity === 'admin' });
@@ -68,4 +68,16 @@ test('index manifest contains every supported indexed search/session query shape
   for (const i of manifest.indexes) { assert.ok(i.fields.length >= 2); assert.ok(i.fields.every(f => f.fieldPath && (!!f.order !== !!f.arrayConfig))); }
   for (const shape of [['ownerUid', 'createdAt', 'id'], ['ownerUid', 'status', 'createdAt', 'id']]) assert.ok(manifest.indexes.some(i => i.collectionGroup === 'interviewSessions' && JSON.stringify(i.fields.map(f => f.fieldPath)) === JSON.stringify(shape)));
   // The emulator accepts these queries but does NOT enforce production composite indexes.
+});
+
+test('real emulator preserves private resume version history and rejects stale/cross-user changes', async () => {
+  const original = (await auth(request(app).post('/api/resumes')).send(require('../../fixtures/resume-version.json')).expect(201)).body;
+  const saved = (await auth(request(app).post(`/api/resumes/${original.resume.id}/versions`)).send({ text: 'Improved SQL experience', expectedRevision: 1, requestId: 'emulator-version-two' }).expect(201)).body;
+  assert.equal(saved.version.number, 2);
+  await auth(request(app).post(`/api/resumes/${original.resume.id}/versions`)).send({ text: 'Stale version', expectedRevision: 1 }).expect(409);
+  await auth(request(app).get(`/api/resumes/${original.resume.id}/versions/${original.version.id}`), 'bob').expect(404);
+  const preserved = (await auth(request(app).get(`/api/resumes/${original.resume.id}/versions/${original.version.id}`)).expect(200)).body;
+  assert.equal(preserved.text, require('../../fixtures/resume-version.json').text);
+  const versions = (await auth(request(app).get(`/api/resumes/${original.resume.id}/versions?pageSize=1`)).expect(200)).body;
+  assert.equal(versions.items[0].number, 2); assert.ok(versions.nextCursor);
 });

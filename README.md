@@ -80,3 +80,7 @@ Visit `/question-bank` to search by title/skill keyword, filter categories and d
 ## Production-readiness gates
 
 Use `npm run test:emulator` (Java 21) for deny-by-default client rules plus real emulator storage/query/transaction tests. Backend authorization remains mandatory because Firebase Admin bypasses rules. Live validation is deliberately deferred; no live-service success is claimed. See [deployment and operations](docs/OPERATIONS.md) for reviewed rules/index deployment, proxy scope, analytics-window semantics, workflow guidance, staging checks and cleanup-safe live verification. GitHub CI includes emulator checks; publication is not required for pushing Git changes.
+
+## Resume versions
+
+Use `/resumes` for owner-only saved text/PDF/DOCX versions. Preview earlier copies, save improvements without overwriting history, choose a current version, and export a saved version as PDF. The existing resume builder remains available for drafting. [API docs](docs/API.md) describe replay-safe writes, revision checks, upload limits and storage/index setup.

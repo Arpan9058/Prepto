@@ -125,3 +125,27 @@ test('progress browser renders loading, empty, recoverable errors and safe user 
   await page.waitForFunction(() => !!document.querySelector('#goals [data-goal-id]'));
   expect(await page.$('#goals img')).toBeNull(); expect(await page.$eval('#goals', n => n.textContent)).toContain('<img');
 });
+test('resume browser preserves versions, changes the current pointer and keeps other users out', async () => {
+  await page.goto(base + '/resumes'); await settled();
+  expect(await page.$eval('#status', n => n.textContent)).toContain('No saved resumes');
+  await page.type('#create-resume [name=title]', 'Backend engineer'); await page.type('#create-resume [name=text]', 'Original Node.js experience');
+  await Promise.all([page.waitForNavigation(), page.click('#create-resume [type=submit]')]); await settled();
+  const resumeUrl = page.url(); expect(await page.$eval('#resume-preview', n => n.textContent)).toBe('Original Node.js experience');
+  await page.$eval('#new-version [name=text]', n => { n.value = 'Improved Node.js and SQL experience'; }); await page.type('#new-version [name=label]', 'SQL role');
+  await page.click('#new-version [type=submit]'); await page.waitForFunction(() => document.getElementById('selected-label').textContent.startsWith('Version 2'));
+  await page.reload(); await settled(); expect(await page.$$eval('#versions article', n => n.length)).toBe(2);
+  await page.click('#versions article:nth-child(2) button'); await page.waitForFunction(() => document.getElementById('selected-label').textContent.startsWith('Version 1'));
+  expect(await page.$eval('#resume-preview', n => n.textContent)).toBe('Original Node.js experience');
+  await page.click('#make-current'); await page.waitForFunction(() => document.getElementById('make-current').hidden); await page.reload(); await settled();
+  expect(await page.$eval('#selected-label', n => n.textContent)).toContain('Version 1');
+  await page.setViewport({ width: 390, height: 844 }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.setCookie({ name: 'session_token', value: 'bob', url: base, httpOnly: true }); await page.goto(resumeUrl); await settled();
+  expect(await page.$eval('#status', n => n.textContent)).toContain('Resume not found'); expect(await page.$eval('#resume-preview', n => n.textContent)).toBe('');
+}, 20000);
+test('resume browser shows validation errors and safely renders uploaded/typed content', async () => {
+  await page.goto(base + '/resumes'); await settled(); await page.type('#create-resume [name=title]', 'My resume');
+  await page.click('#create-resume [type=submit]'); await page.waitForFunction(() => document.getElementById('status').classList.contains('error'));
+  await page.type('#create-resume [name=text]', '<img src=x onerror=alert(1)> Safe text');
+  await Promise.all([page.waitForNavigation(), page.click('#create-resume [type=submit]')]); await settled();
+  expect(await page.$('#resume-preview img')).toBeNull(); expect(await page.$eval('#resume-preview', n => n.textContent)).toContain('<img');
+});

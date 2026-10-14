@@ -64,3 +64,17 @@ Only scores with known denominators are normalized. Historic coding attempts mis
 `fixtures/progress-history.json` provides three fictitious relative-date examples for tests and UI checks. No demo histories/goals are written into a live user's account during setup. Empty, loading and recoverable error states are built into the dashboard, and rendered user/model strings use DOM text nodes.
 
 Deployment rules, emulator/index limitations and live-check status are documented in [OPERATIONS.md](OPERATIONS.md). The supplied rules deny browser access to all database data; Express owner/admin authorization is still enforced for Admin SDK calls.
+
+## Private resume versions
+
+`/resumes` creates/lists private resume libraries; `/resumes/:id` previews immutable versions, saves an improved copy, chooses a current version and exports the selected text as PDF. Upload PDF/DOCX (up to 5 MiB) or paste 1-50000 characters. Uploaded files are extracted into text; PDF downloads render that saved text with escaped content and blocked browser resources.
+
+- `POST /api/resumes` JSON `{title, text, label?, requestId?}` or multipart fields with one `resume` file. File extraction takes precedence over pasted text. Creates library plus initial version atomically.
+- `GET /api/resumes?pageSize=12&after=ID`: owned libraries with cursor pagination.
+- `GET /api/resumes/:id`: owned metadata; `GET .../:id/versions?pageSize=12&after=ID`: version summaries without full text.
+- `GET /api/resumes/:id/versions/:versionId`: owned saved text and source metadata.
+- `POST /api/resumes/:id/versions` body `{text, label?, requestId?, expectedRevision}` or equivalent multipart upload: creates a new immutable version and updates current pointer/counter atomically. Stale revisions return 409.
+- `PUT /api/resumes/:id/current` body `{versionId, expectedRevision}`: selects an existing version without editing its contents.
+- `GET /api/resumes/:id/versions/:versionId/pdf`: authenticated selected-version PDF download.
+
+Provide a stable UUID `requestId` for create/save retries. Exact retries return the saved version; reusing IDs for changed content returns 409. Titles <=120, labels <=100. UID/owner fields in client bodies do not select data. Other-user/admin access to private versions returns 404. Storage: `users/{uid}/resumes/{id}/versions/{versionId}`. No direct browser Firestore access is granted. Example payload: `fixtures/resume-version.json`.

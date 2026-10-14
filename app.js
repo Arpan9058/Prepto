@@ -105,6 +105,9 @@ function createApp({ env = process.env, firebase = firebaseDefault, gemini = cre
   app.get('/question-bank', ensureAuthenticated, (req, res) => res.render('questionBank', { user: req.user, ...require('./utils/product') }));
   app.get('/interviews', ensureAuthenticated, (_req, res) => res.render('interviews'));
   app.get('/interviews/:id', ensureAuthenticated, (req, res) => res.render('interviewSession', { sessionId: require('./utils/product').id(req.params.id) }));
+  app.get('/resumes', ensureAuthenticated, (_req, res) => res.render('resumes'));
+  app.get('/resumes/:id', ensureAuthenticated, (req, res) => res.render('resumeVersions', { resumeId: require('./utils/product').id(req.params.id) }));
+  app.use('/api', require('./routes/resumes').createResumesRouter());
   app.use('/api', require('./routes/progressApi').createProgressApiRouter());
   app.use('/api', require('./routes/interviews').createInterviewsRouter());
   app.use('/api', require('./routes/questionBank').createQuestionBankRouter());
