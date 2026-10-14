@@ -102,6 +102,8 @@ function createApp({ env = process.env, firebase = firebaseDefault, gemini = cre
     const buffer = await app.locals.pdf(req.session.resumeContent);
     res.attachment('resume.pdf').type('application/pdf').send(buffer);
   }));
+  app.get('/coding-practice', ensureAuthenticated, (_req, res) => res.render('codingPractice'));
+  app.use('/api', require('./routes/codingPractice').createCodingPracticeRouter());
   app.get('/question-bank', ensureAuthenticated, (req, res) => res.render('questionBank', { user: req.user, ...require('./utils/product') }));
   app.get('/interviews', ensureAuthenticated, (_req, res) => res.render('interviews'));
   app.get('/interviews/:id', ensureAuthenticated, (req, res) => res.render('interviewSession', { sessionId: require('./utils/product').id(req.params.id) }));

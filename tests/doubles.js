@@ -74,6 +74,7 @@ function createFirebaseDouble(seed = {}) {
 function createGeminiDouble() {
   return { model: 'offline-double', generate: jest.fn(async (prompt, options) => {
     if (!options?.json) return '**Useful result**<script>alert("x")</script>';
+    if (prompt.startsWith('Review coding practice')) return { score: 75, summary: 'Good approach; inspect edge cases.', improvements: ['Handle empty input explicitly'] };
     if (prompt.startsWith('Match resume version')) return { score: 76, summary: 'Good Node.js alignment; strengthen typed APIs.', matchedSkills: ['Node.js', 'PostgreSQL'], missingSkills: ['TypeScript'], recommendations: ['Add a concrete typed API project and measurable outcomes.'] };
     if (prompt.startsWith('Extract')) return ['Node.js', 'SQL', 'JavaScript'];
     if (prompt.includes('HR interview')) return { score: 4, analysis: 'Clear answer', recommendation: 'Add an example' };

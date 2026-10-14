@@ -1,6 +1,6 @@
 const sanitizeHtml = require('sanitize-html');
 const { marked } = require('marked');
-const testTypes = ['CodingTest', 'HRInterview', 'MockTest', 'TechnicalInterview', 'InterviewPractice'];
+const testTypes = ['CodingPractice', 'CodingTest', 'HRInterview', 'MockTest', 'TechnicalInterview', 'InterviewPractice'];
 const mockSubTests = ['aptitude', 'reasoning', 'automata', 'englishComprehension', 'personality'];
 function safeHtml(html) { return sanitizeHtml(String(html), { allowedAttributes: {}, allowedTags: sanitizeHtml.defaults.allowedTags }); }
 function markdown(text) { return safeHtml(marked.parse(String(text))); }
@@ -22,7 +22,7 @@ async function listReports(db, uid, limitPerSource) {
     const snapshot = await query.get();
     for (const doc of snapshot.docs) {
       const d = doc.data();
-      reports.push({ id: doc.id, type, subTest: sub, score: d.score ?? d.totalScore ?? 0, submittedAt: formatDate(d.submittedAt), raw: { ...d, fullReport: safeHtml(d.fullReport || d.reportText || '') } });
+      reports.push({ id: doc.id, type, subTest: sub, score: type === 'CodingPractice' ? `AI estimate ${d.aiScore}% (not executed)` : d.score ?? d.totalScore ?? 0, submittedAt: formatDate(d.submittedAt), raw: { ...d, fullReport: safeHtml(d.fullReport || d.reportText || '') } });
     }
   }
   return reports;

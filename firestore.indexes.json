@@ -327,6 +327,38 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "codingSubmissions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "id",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "codingSubmissions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "problemId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "id",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": [
@@ -358,6 +390,26 @@
     {
       "collectionGroup": "resumeMatches",
       "fieldPath": "result",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "codingDrafts",
+      "fieldPath": "code",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "codingSubmissions",
+      "fieldPath": "code",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "codingSubmissions",
+      "fieldPath": "problem",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "codingSubmissions",
+      "fieldPath": "feedback",
       "indexes": []
     }
   ]

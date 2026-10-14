@@ -88,3 +88,7 @@ Use `/resumes` for owner-only saved text/PDF/DOCX versions. Preview earlier copi
 ## Saved job matching
 
 On a saved resume version, add a job description for private, replay-safe matching feedback. `/resume-matches` shows pending/failed/completed history, retries and same-job version comparisons. Scores are compatibility estimates; the selected immutable version and original job description remain linked. [API docs](docs/API.md) and [operations](docs/OPERATIONS.md) cover provider bindings, data retention, leases and index deployment. One-off `/analyze` remains available; use saved versions/matching for a tracked application workflow.
+
+### Coding practice
+
+Open `/coding-practice` for searchable problems, JavaScript/Python editing, owner-only saved drafts/submissions and answer review. `/progress` displays a separate AI estimate panel and saved attempt history. Code execution is disabled; AI feedback never establishes passing executable tests. See [API documentation](docs/API.md), [operations](docs/OPERATIONS.md) and [dependency advisories](docs/DEPENDENCIES.md). Live API and staging validation remain pending.

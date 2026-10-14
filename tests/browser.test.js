@@ -194,3 +194,39 @@ test('browser compares saved version matches for the same job and recovers histo
   page.off('request', intercept); page.on('request', r => r.continue()); await page.click('#refresh-matches'); await settled();
   expect(await page.$$eval('#matches article', n => n.length)).toBe(2);
 }, 20000);
+test('coding browser filters problems, preserves private drafts and reviews AI-only feedback and progress', async () => {
+  await page.goto(base + '/coding-practice'); await settled();
+  await page.type('#problem-filters [name=q]', 'pair'); await page.click('#problem-filters button'); await settled();
+  expect(await page.$$eval('#problems article', n => n.length)).toBe(1);
+  await page.click('#problems button'); await page.waitForFunction(() => !document.getElementById('workspace').hidden && document.getElementById('code-editor').value.includes('pairSum'));
+  await page.$eval('#code-editor', n => { n.value = 'function pairSum(v,t) { return null; } // <img src=x onerror=alert(1)>';  n.dispatchEvent(new Event('input')); });
+  await page.click('#save-code'); await page.waitForFunction(() => document.getElementById('draft-note').textContent === 'Saved draft revision 1');
+  await page.reload(); await settled(); await page.click('#problems button'); await page.waitForFunction(() => document.getElementById('draft-note').textContent === 'Saved draft revision 1');
+  expect(await page.$eval('#code-editor', n => n.value)).toContain('return null');
+  gemini.generate.mockRejectedValueOnce(new Error('Offline provider unavailable')); await page.click('#submit-code'); await page.waitForFunction(() => document.getElementById('status').classList.contains('error'));
+  await page.click('#refresh-submissions'); await page.waitForFunction(() => !!document.querySelector('#coding-submissions article'));
+  await page.click('#coding-submissions button'); await page.waitForFunction(() => !!document.querySelector('#review-content button'));
+  await page.click('#review-content button'); await page.waitForFunction(() => document.getElementById('review-content').textContent.includes('AI estimate: 75%'));
+  expect(await page.$eval('#review-content', n => n.textContent)).toContain('No executable tests were run'); expect(await page.$('#review-content img')).toBeNull();
+  await page.reload(); await settled(); await page.waitForSelector('#coding-submissions button'); await page.click('#coding-submissions button'); await page.waitForFunction(() => document.getElementById('review-content').textContent.includes('Reference approach'));
+  await page.setViewport({ width: 390, height: 844 }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.goto(base + '/progress'); await settled(); expect(await page.$eval('#coding-trends', n => n.textContent)).toContain('Latest AI estimate 75%');
+  expect(await page.$eval('#history', n => n.textContent)).toContain('execution disabled');
+  await page.setCookie({ name: 'session_token', value: 'bob', url: base, httpOnly: true }); await page.goto(base + '/coding-practice'); await settled();
+  await page.waitForFunction(() => document.getElementById('coding-submissions').textContent.includes('No submissions yet'));
+  await page.click('#problems button'); await page.waitForFunction(() => document.getElementById('draft-note').textContent.startsWith('New draft'));
+}, 20000);
+
+test('coding library browser exposes loading, empty and recoverable error states', async () => {
+  await page.setRequestInterception(true); let held, signal; const intercepted = new Promise(r => { signal = r; });
+  const intercept = r => { if (r.url().includes('/api/coding/problems?')) { held = r; signal(); } else r.continue(); };
+  page.on('request', intercept); await page.goto(base + '/coding-practice'); await intercepted;
+  expect(await page.$eval('#status', n => n.textContent)).toContain('Loading problems');
+  await held.respond({ status: 503, contentType: 'application/json', body: '{"error":"Problem library unavailable"}' });
+  await page.waitForFunction(() => document.getElementById('status').classList.contains('error'));
+  expect(await page.$eval('#status', n => n.textContent)).toContain('Problem library unavailable');
+  page.off('request', intercept); page.on('request', r => r.continue()); await page.click('#problem-filters button'); await settled();
+  expect(await page.$$eval('#problems article', n => n.length)).toBe(2);
+  await page.type('#problem-filters [name=q]', 'absent problem'); await page.click('#problem-filters button'); await settled();
+  expect(await page.$eval('#status', n => n.textContent)).toContain('No problems match');
+});

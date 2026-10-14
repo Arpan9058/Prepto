@@ -9,7 +9,8 @@ function normalize(r) {
   const raw = r.raw;
   const points = Number.isFinite(raw.score ?? raw.totalScore) ? raw.score ?? raw.totalScore : null;
   let score = null;
-  if (validScore(raw.normalizedScore)) score = raw.normalizedScore;
+  if (r.type === 'CodingPractice') score = null;
+  else if (validScore(raw.normalizedScore)) score = raw.normalizedScore;
   else if (Number.isFinite(raw.maxScore) && raw.maxScore > 0 && points !== null) score = points / raw.maxScore * 100;
   else if (r.type === 'MockTest' && Number.isFinite(raw.total) && raw.total > 0 && points !== null) score = points / raw.total * 100;
   else if (r.type === 'HRInterview' && Number.isFinite(raw.avgScore)) score = raw.avgScore / 5 * 100;
@@ -17,7 +18,7 @@ function normalize(r) {
   else if (r.type === 'CodingTest' && Number.isFinite(raw.avgScore)) score = raw.avgScore;
   if (!validScore(score)) score = null;
   const bySkill = new Map();
-  const results = Array.isArray(raw.skillResults) ? raw.skillResults : r.type === 'InterviewPractice' && Array.isArray(raw.answers) ? raw.answers.flatMap(a => (a.skills || []).map(skill => ({ skill, score: a.score, nextStep: a.nextStep }))) : [];
+  const results = r.type === 'CodingPractice' ? [] : Array.isArray(raw.skillResults) ? raw.skillResults : r.type === 'InterviewPractice' && Array.isArray(raw.answers) ? raw.answers.flatMap(a => (a.skills || []).map(skill => ({ skill, score: a.score, nextStep: a.nextStep }))) : [];
   for (const result of results) {
     if (!result || typeof result.skill !== 'string' || !result.skill.trim() || result.skill.length > 60 || !validScore(result.score)) continue;
     const key = result.skill.trim().toLowerCase();
@@ -27,7 +28,7 @@ function normalize(r) {
   }
   const skills = [...bySkill.values()].map(s => ({ skill: s.skill, score: round(s.scores.reduce((a, b) => a + b, 0) / s.scores.length), nextStep: s.nextStep }));
   const key = Buffer.from(`${r.type}|${r.subTest || ''}|${r.id}`).toString('base64url');
-  return { key, id: r.id, type: r.type, category: r.subTest, title: typeof raw.title === 'string' ? raw.title.slice(0, 100) : r.type, submittedAt: r.submittedAt === 'N/A' ? null : r.submittedAt, points, score: score === null ? null : round(score), skills, reportUrl: `/reports/view/${encodeURIComponent(r.id)}?type=${r.type}${r.subTest ? '&sub=' + encodeURIComponent(r.subTest) : ''}`, sessionId: r.type === 'InterviewPractice' ? r.id : null };
+  return { aiScore: r.type === 'CodingPractice' && validScore(raw.aiScore) ? raw.aiScore : null, aiSkills: r.type === 'CodingPractice' && Array.isArray(raw.skills) ? raw.skills : [], key, id: r.id, type: r.type, category: r.subTest, title: typeof raw.title === 'string' ? raw.title.slice(0, 100) : r.type, submittedAt: r.submittedAt === 'N/A' ? null : r.submittedAt, points, score: score === null ? null : round(score), skills, reportUrl: `/reports/view/${encodeURIComponent(r.id)}?type=${r.type}${r.subTest ? '&sub=' + encodeURIComponent(r.subTest) : ''}`, sessionId: r.type === 'InterviewPractice' ? r.id : null };
 }
 function summarize(items, now = new Date()) {
   const ordered = [...items].sort((a, b) => (Date.parse(b.submittedAt) || 0) - (Date.parse(a.submittedAt) || 0) || a.key.localeCompare(b.key));
@@ -47,13 +48,15 @@ function summarize(items, now = new Date()) {
   }).filter(c => c.sampleCount);
   const recommendations = skills.slice(0, 3).map(s => ({ skill: s.skill, message: s.latest < 80 ? `Practice ${s.skill} twice this week. Review the weakest concept, explain it aloud, then complete a new interview. Aim for 80%.` : `Build on ${s.skill}: try a harder question and explain the tradeoffs. Aim for ${Math.min(100, s.latest + 10)}%.`, nextStep: s.nextStep, questionBankUrl: `/question-bank` }));
   if (!recommendations.length) recommendations.push({ skill: null, message: 'Complete a focused practice interview to discover your strengths and choose a study goal.', nextStep: '', questionBankUrl: '/question-bank' });
-  return { summary: { attempts: ordered.length, gradedAttempts: graded.length, averageScore: graded.length ? round(graded.reduce((sum, r) => sum + r.score, 0) / graded.length) : null, lastPracticedAt: ordered.find(r => r.submittedAt)?.submittedAt || null, sessionsLast7Days: recent.length }, skills, comparisons, recommendations };
+  const coding = ordered.filter(r => r.type === 'CodingPractice');
+  const aiSkills = [...new Set(coding.flatMap(r => r.aiSkills || []))].map(skill => { const history = coding.filter(r => r.aiSkills?.includes(skill) && r.aiScore !== null).map(r => ({ score: r.aiScore, submittedAt: r.submittedAt })); return { skill, latest: history[0]?.score ?? null, previous: history[1]?.score ?? null, sampleCount: history.length, history: history.slice(0, 20).reverse() }; });
+  return { codingPractice: { attempts: coding.length, latestAiScore: coding[0]?.aiScore ?? null, skills: aiSkills, execution: 'disabled', description: 'AI estimates only; code was not executed. These estimates are excluded from normalized scores and interview skill goals.' }, summary: { attempts: ordered.length, gradedAttempts: graded.length, averageScore: graded.length ? round(graded.reduce((sum, r) => sum + r.score, 0) / graded.length) : null, lastPracticedAt: ordered.find(r => r.submittedAt)?.submittedAt || null, sessionsLast7Days: recent.length }, skills, comparisons, recommendations };
 }
 async function records(db, uid) {
   const rows = await listReports(db, uid, 201);
   const counts = new Map(); let truncated = false;
   const filtered = rows.filter(r => { const source = `${r.type}:${r.subTest || ''}`; const n = (counts.get(source) || 0) + 1; counts.set(source, n); if (n > 200) { truncated = true; return false; } return true; });
-  return { items: filtered.map(normalize).sort((a, b) => (Date.parse(b.submittedAt) || 0) - (Date.parse(a.submittedAt) || 0) || a.key.localeCompare(b.key)), window: { perSource: 200, truncated, scope: 'recent-attempts-per-source', description: 'Analytics use the latest 200 attempts per interview type/mock category. Older attempts remain in Reports.' } };
+  return { items: filtered.map(normalize).sort((a, b) => (Date.parse(b.submittedAt) || 0) - (Date.parse(a.submittedAt) || 0) || a.key.localeCompare(b.key)), window: { perSource: 200, truncated, scope: 'recent-attempts-per-source', description: 'Analytics use the latest 200 attempts per practice type/mock category. Older attempts remain in Reports.' } };
 }
 function enrichGoal(goal, items, skills, now) {
   const trend = skills.find(s => s.skill.toLowerCase() === goal.skill.toLowerCase());

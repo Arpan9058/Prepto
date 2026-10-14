@@ -14,6 +14,8 @@
   function render() {
     document.getElementById('window-note').textContent = `${data.window.description}${data.window.truncated ? ' This account has older records outside this window.' : ''} Scores can vary with question difficulty.`;
     cards('metrics', [['Recent attempts', data.summary.attempts], ['Average score in this window', percent(data.summary.averageScore)], ['Completed in 7 days', data.summary.sessionsLast7Days]], ([title, value]) => { const card = element('article', undefined, 'card'); card.append(element('p', title, 'subtle'), element('div', value, 'metric')); return card; });
+    document.getElementById('coding-progress-note').textContent = `${data.codingPractice.attempts} reviews. ${data.codingPractice.description}`;
+    cards('coding-trends', data.codingPractice.skills, s => { const card = element('article', undefined, 'card'); card.append(element('h3', s.skill), element('p', `Latest AI estimate ${percent(s.latest)} · Previous ${percent(s.previous)} · ${s.sampleCount} reviews`)); return card; });
     cards('skills', data.skills, s => {
       const card = element('article', undefined, 'card'); card.append(element('h3', s.skill), element('div', percent(s.latest), 'metric'), element('p', change(s.delta)), element('p', `${s.sampleCount} scored attempts`, 'subtle'));
       const chart = element('div', undefined, 'chart-bars'); chart.setAttribute('role', 'img'); chart.setAttribute('aria-label', `${s.skill} score history: ${s.history.map(h => h.score + '%').join(', ')}`);
@@ -42,7 +44,7 @@
     const body = document.getElementById('history'); if (!append) body.replaceChildren();
     for (const attempt of result.items) {
       const row = element('tr'), cell = element('td'), link = element('a', 'View report'); link.href = attempt.reportUrl; cell.append(link);
-      row.append(element('td', attempt.submittedAt ? new Date(attempt.submittedAt).toLocaleDateString() : 'Unknown date'), element('td', attempt.title), element('td', attempt.score === null ? `${attempt.points ?? '—'} points · scale unavailable` : percent(attempt.score)), cell); body.append(row);
+      row.append(element('td', attempt.submittedAt ? new Date(attempt.submittedAt).toLocaleDateString() : 'Unknown date'), element('td', attempt.title), element('td', attempt.aiScore !== null ? `AI estimate ${attempt.aiScore}% · execution disabled` : attempt.score === null ? `${attempt.points ?? '—'} points · scale unavailable` : percent(attempt.score)), cell); body.append(row);
     }
     document.getElementById('history-empty').hidden = !!body.children.length;
     document.getElementById('more-history').hidden = !cursor;

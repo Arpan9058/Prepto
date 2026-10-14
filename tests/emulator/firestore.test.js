@@ -19,13 +19,13 @@ before(async () => {
   rules = await initializeTestEnvironment({ projectId: 'demo-prepto', firestore: { host, port: Number(port), rules: fs.readFileSync(path.join(__dirname, '../../firestore.rules'), 'utf8') } });
   adminApp = initializeApp({ projectId: 'demo-prepto' }, 'prepto-emulator-tests'); db = getFirestore(adminApp);
   const firebase = { firestore: () => db, auth: () => ({ verifyIdToken: async token => { if (!['alice', 'bob', 'admin'].includes(token)) throw new Error('Invalid offline test token'); return { uid: token, admin: token === 'admin' }; } }) };
-  const gemini = { generate: async prompt => prompt.startsWith('Match resume version') ? { score: 80, summary: 'SQL evidence', matchedSkills: ['SQL'], missingSkills: [], recommendations: ['Describe project impact'] } : ({ score: 80, feedback: 'A clear example.', nextStep: 'Explain the tradeoff.' }) };
+  const gemini = { generate: async prompt => prompt.startsWith('Review coding practice') ? { score: 70, summary: 'Review boundary inputs', improvements: ['Handle empty arrays'] } : prompt.startsWith('Match resume version') ? { score: 80, summary: 'SQL evidence', matchedSkills: ['SQL'], missingSkills: [], recommendations: ['Describe project impact'] } : ({ score: 80, feedback: 'A clear example.', nextStep: 'Explain the tradeoff.' }) };
   app = createApp({ env: { SESSION_SECRET: 'emulator-only-session-secret-32-characters' }, firebase, gemini, logger: pino({ level: 'silent' }) });
 });
 after(async () => { await rules?.cleanup(); await db?.terminate(); if (adminApp) await deleteApp(adminApp); });
 beforeEach(async () => { await rules.clearFirestore(); });
 const auth = (req, uid = 'alice') => req.set('Authorization', `Bearer ${uid}`);
-const sensitive = ['questionBank/q1', 'questionEvents/e1', 'interviewSessions/s1', 'sessions/s2', 'webSessions/w1', 'users/alice/bookmarks/q1', 'users/alice/studyGoals/g1', 'users/alice/progress/InterviewPractice/attempts/a1', 'users/alice/resumes/r1/versions/v1', 'users/alice/resumeMatches/m1'];
+const sensitive = ['users/alice/codingDrafts/two-sum-javascript', 'users/alice/codingSubmissions/c1', 'users/alice/progress/CodingPractice/attempts/c1', 'questionBank/q1', 'questionEvents/e1', 'interviewSessions/s1', 'sessions/s2', 'webSessions/w1', 'users/alice/bookmarks/q1', 'users/alice/studyGoals/g1', 'users/alice/progress/InterviewPractice/attempts/a1', 'users/alice/resumes/r1/versions/v1', 'users/alice/resumeMatches/m1'];
 for (const identity of ['anonymous', 'alice', 'bob', 'admin']) test(`client rules deny sensitive reads/writes for ${identity}`, async () => {
   await rules.withSecurityRulesDisabled(async context => { for (const p of sensitive) await setDoc(doc(context.firestore(), p), { ownerUid: 'alice', answer: 'private answer', text: 'private resume' }); });
   const context = identity === 'anonymous' ? rules.unauthenticatedContext() : rules.authenticatedContext(identity, { admin: identity === 'admin' });
@@ -68,6 +68,7 @@ test('index manifest contains every supported indexed search/session query shape
   for (const i of manifest.indexes) { assert.ok(i.fields.length >= 2); assert.ok(i.fields.every(f => f.fieldPath && (!!f.order !== !!f.arrayConfig))); }
   for (const shape of [['ownerUid', 'createdAt', 'id'], ['ownerUid', 'status', 'createdAt', 'id']]) assert.ok(manifest.indexes.some(i => i.collectionGroup === 'interviewSessions' && JSON.stringify(i.fields.map(f => f.fieldPath)) === JSON.stringify(shape)));
   for (const fields of [['createdAt', 'id'], ['resumeId', 'createdAt', 'id'], ['resumeId', 'resumeVersionId', 'createdAt', 'id']]) assert.ok(manifest.indexes.some(i => i.collectionGroup === 'resumeMatches' && JSON.stringify(i.fields.map(f => f.fieldPath)) === JSON.stringify(fields)));
+  for (const fields of [['createdAt', 'id'], ['problemId', 'createdAt', 'id']]) assert.ok(manifest.indexes.some(i => i.collectionGroup === 'codingSubmissions' && JSON.stringify(i.fields.map(f => f.fieldPath)) === JSON.stringify(fields)));
   // The emulator accepts these queries but does NOT enforce production composite indexes.
 });
 
@@ -96,4 +97,21 @@ test('real emulator persists owner-only matching history, indexed filters and co
   const comparison = (await auth(request(app).post('/api/resume-matches/compare')).send({ firstId: 'match-a', secondId: 'match-b' }).expect(200)).body;
   assert.equal(comparison.scoreChange, 0);
   assert.equal((await db.doc('users/alice/resumeMatches/match-a').get()).data().status, 'completed');
+});
+
+test('real emulator persists owner-only coding drafts/reviews and atomic AI-only progress', async () => {
+  const body = { problemId: 'two-sum', language: 'javascript', code: 'function pairSum() { return null; }', revision: 0, requestId: 'emulator-coding' };
+  await auth(request(app).put('/api/coding/drafts/two-sum')).send(body).expect(200);
+  await auth(request(app).put('/api/coding/drafts/two-sum')).send(body).expect(409);
+  const bob = (await auth(request(app).get('/api/coding/drafts/two-sum?language=javascript'), 'bob')).body;
+  assert.equal(bob.revision, 0);
+  const created = (await auth(request(app).post('/api/coding/submissions')).send(body).expect(201)).body.submission;
+  assert.equal(created.execution.executed, false); assert.equal(created.execution.passedTestCases, null);
+  await auth(request(app).post('/api/coding/submissions')).send(body).expect(200);
+  for (const uid of ['bob', 'admin']) await auth(request(app).get('/api/coding/submissions/emulator-coding'), uid).expect(404);
+  await auth(request(app).get('/api/coding/submissions?problemId=two-sum')).expect(200);
+  const dashboard = (await auth(request(app).get('/api/progress/overview'))).body;
+  assert.equal(dashboard.codingPractice.attempts, 1); assert.equal(dashboard.summary.averageScore, null);
+  assert.equal((await db.doc('users/alice/progress/CodingPractice/attempts/emulator-coding').get()).data().evaluationKind, 'ai-estimate');
+  await auth(request(app).post('/api/coding/execute')).send(body).expect(501);
 });

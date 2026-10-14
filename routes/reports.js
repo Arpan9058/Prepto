@@ -16,7 +16,7 @@ function createReportsRouter() {
   }
   router.get('/view/:id', asyncHandler(async (req, res) => {
     const data = await load(req);
-    res.render('testReport', { type: req.query.type, sub: req.query.sub, submittedAt: formatDate(data.submittedAt), score: data.score ?? data.totalScore ?? 0, fullReport: data.fullReport });
+    res.render('testReport', { type: req.query.type, sub: req.query.sub, submittedAt: formatDate(data.submittedAt), score: req.query.type === 'CodingPractice' ? `AI estimate ${data.aiScore}% (execution disabled)` : data.score ?? data.totalScore ?? 0, fullReport: data.fullReport });
   }));
   router.get('/download/:id', asyncHandler(async (req, res) => {
     const data = await load(req);
