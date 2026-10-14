@@ -30,6 +30,7 @@
     const actions = element('div', undefined, 'row');
     const bookmark = element('button', q.bookmarked ? 'Unsave question' : 'Save question', 'secondary'); bookmark.setAttribute('aria-pressed', String(q.bookmarked));
     bookmark.onclick = async () => { bookmark.disabled = true; try { await request(`/api/questions/${q.id}/bookmark`, { method: q.bookmarked ? 'DELETE' : 'PUT' }); q.bookmarked = !q.bookmarked; bookmark.textContent = q.bookmarked ? 'Unsave question' : 'Save question'; bookmark.setAttribute('aria-pressed', String(q.bookmarked)); if (saved) await load(); } catch (e) { state(e.message, true); } finally { bookmark.disabled = false; } };
+    const practice = element('a', 'Practice', 'button'); practice.href = `/interviews?question=${q.id}`; if (!q.archived) actions.append(practice);
     actions.append(bookmark);
     if (isAdmin) {
       const edit = element('button', 'Edit', 'secondary'); edit.onclick = () => openEditor(q); actions.append(edit);

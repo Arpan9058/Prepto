@@ -103,6 +103,9 @@ function createApp({ env = process.env, firebase = firebaseDefault, gemini = cre
     res.attachment('resume.pdf').type('application/pdf').send(buffer);
   }));
   app.get('/question-bank', ensureAuthenticated, (req, res) => res.render('questionBank', { user: req.user, ...require('./utils/product') }));
+  app.get('/interviews', ensureAuthenticated, (_req, res) => res.render('interviews'));
+  app.get('/interviews/:id', ensureAuthenticated, (req, res) => res.render('interviewSession', { sessionId: require('./utils/product').id(req.params.id) }));
+  app.use('/api', require('./routes/interviews').createInterviewsRouter());
   app.use('/api', require('./routes/questionBank').createQuestionBankRouter());
   app.use('/api', createMockRouter());
   app.use('/reports', createReportsRouter());

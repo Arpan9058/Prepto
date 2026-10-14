@@ -25,3 +25,23 @@ Grant `admin: true` only using a trusted operator's Firebase Admin custom-claim 
 `npm run seed:bank` deliberately installs 13 illustrative questions from `fixtures/question-bank.json` into `questionBank` using ADC/service-account environment credentials. It is idempotent and skips existing IDs so edits are preserved. It does not change the legacy mock-test question collection. Tests seed doubles; setup never seeds a live project automatically.
 
 `npm run check` runs build, lint, unit/integration regression tests and Chromium browser checks without live Firebase/Gemini credentials. Use Node 24.9+ and Chromium as described in README. The browser suite exercises real rendered pages and APIs against injected doubles, not production services.
+
+## Persistent interviews
+
+`/interviews` lists owned sessions and lets learners choose 1-10 bank questions. `/interviews/:id` continues a saved session across page reloads, application restarts and devices using Firestore `interviewSessions`, not Express session state. Existing HR/technical routes are retained; persistence applies to this new workflow.
+
+- `POST /api/interviews` body `{title?, questionIds}` starts an owned `active` session with immutable question/rubric snapshots. Archived questions cannot be selected.
+- `GET /api/interviews?status=active|paused|completed&pageSize=12&after=ID` lists only authenticated user's session summaries.
+- `GET /api/interviews/:id` returns owned session state, public question cards and previously saved feedback; answer keys/model explanations stay hidden until completion.
+- `POST /api/interviews/:id/pause` / `.../resume` body `{version}` transitions active/paused. Use the latest server version; stale changes return 409. Repeating an already-applied transition is idempotent.
+- `POST /api/interviews/:id/answers` body `{questionId, text, requestId, version}` saves the current question's answer in sequence. Supply a new UUID `requestId` per answer. Replaying the exact saved request returns saved feedback; changed/repeated answers are rejected. Multiple choice is graded against saved keys. Open-ended answers use the shared Gemini adapter and saved rubric, with validated 0-100 scores, plain-text feedback and an actionable next step.
+- `POST /api/interviews/:id/complete` body `{version}` requires every answer saved and atomically writes completed state plus one `InterviewPractice` progress/report attempt. Repeated completion does not duplicate attempts.
+- `GET /api/interviews/:id/review` is available only after completion and only to the owner; returns saved answers/feedback and model explanations.
+
+Every single-session endpoint checks ownership, even for administrators; another user's ID returns 404. Do not grant browser clients direct Firestore access to `interviewSessions`. Deploy the added owner/status composite indexes from `firestore.indexes.json`.
+
+AI evaluation runs outside Firestore transaction retries, under a 90-second lease. Concurrent submissions receive 409; failed provider calls release the lease, and crashed evaluations expire. Pause/completion cannot race an active evaluation. Refresh before retrying a failed network request; already-saved answers remain visible. Feedback is educational guidance, not a validated hiring assessment.
+
+Sample sessions in tests use `fixtures/question-bank.json`; no personal histories are seeded into production. The legacy sample/mock questions remain separate. Live open-ended evaluation needs Gemini access; multiple-choice grading does not.
+
+`fixtures/interview-start.json` is a credential-free example start payload for the HTTP multiple-choice practice session. It can be used with the start endpoint after question-bank seeding. Tests also use it as their default session selection.

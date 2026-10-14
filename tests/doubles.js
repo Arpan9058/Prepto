@@ -75,6 +75,7 @@ function createGeminiDouble() {
     if (!options?.json) return '**Useful result**<script>alert("x")</script>';
     if (prompt.startsWith('Extract')) return ['Node.js', 'SQL', 'JavaScript'];
     if (prompt.includes('HR interview')) return { score: 4, analysis: 'Clear answer', recommendation: 'Add an example' };
+    if (prompt.startsWith('Evaluate practice')) return { score: 70, feedback: 'Good explanation with a clear example.', nextStep: 'Practice explaining the tradeoff in your own words.' };
     if (prompt.startsWith('Evaluate this')) return { score: 80, feedback: { implementation: 'Correct', suggestions: ['Add tests'] } };
     return { totalScore: 8, analysis: 'Good answer', recommendation: 'Expand', followUpQuestion: 'Explain a tradeoff', scores: { technicalKnowledge: 8 } };
   }) };

@@ -4,12 +4,13 @@ const { createApp } = require('../app');
 const { chromiumPath } = require('../resumeGenerator');
 const { createFirebaseDouble, createGeminiDouble } = require('./doubles');
 const { seed } = require('../scripts/seed-question-bank');
-let browser, server, page, base, store;
+let browser, server, page, base, store, gemini;
 beforeAll(async () => { browser = await puppeteer.launch({ executablePath: chromiumPath(process.env), headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] }); });
 afterAll(async () => { await browser?.close(); });
 beforeEach(async () => {
   store = createFirebaseDouble(); await seed(store.db);
-  const app = createApp({ env: { SESSION_SECRET: 'offline-browser-tests-session-secret' }, firebase: store.firebase, gemini: createGeminiDouble(), logger: pino({ level: 'silent' }) });
+  gemini = createGeminiDouble();
+  const app = createApp({ env: { SESSION_SECRET: 'offline-browser-tests-session-secret' }, firebase: store.firebase, gemini, logger: pino({ level: 'silent' }) });
   server = app.listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve)); base = `http://127.0.0.1:${server.address().port}`;
   page = await browser.newPage(); await page.setCookie({ name: 'session_token', value: 'alice', url: base, httpOnly: true });
 });
@@ -45,10 +46,48 @@ test('admin browser creates, edits and archives with accessible controls', async
   for (const [name, value] of Object.entries(values)) await page.type(`#question-form [name=${name}]`, value);
   await page.click('#question-form [type=submit]'); await page.waitForFunction(() => !document.getElementById('editor').open); await settled();
   await page.type('#search', 'browser'); await page.click('#filters [type=submit]'); await settled(); expect(await page.$$eval('#questions article', n => n.length)).toBe(1);
-  await page.click('#questions button:nth-child(2)'); await page.waitForFunction(() => document.getElementById('editor').open);
+  await page.click('#questions .row button:nth-of-type(2)'); await page.waitForFunction(() => document.getElementById('editor').open);
   await page.$eval('#question-form [name=title]', node => { node.value = 'Browser edited question'; });
   await page.click('#question-form [type=submit]'); await page.waitForFunction(() => !document.getElementById('editor').open); await settled();
   expect(await page.$eval('#questions h2', n => n.textContent)).toBe('Browser edited question');
   page.on('dialog', dialog => dialog.accept()); await page.click('#questions .danger'); await page.waitForFunction(() => !document.querySelector('#questions article'));
   await page.click('#archived'); await settled(); expect(await page.$eval('#questions h2', n => n.textContent)).toBe('Browser edited question');
+}, 20000);
+test('browser interview start, pause/resume, reload, completion and private review work', async () => {
+  await page.goto(base + '/interviews?question=sample-13'); await settled();
+  expect(await page.$eval('#question-picker input[value="sample-13"]', n => n.checked)).toBe(true);
+  await Promise.all([page.waitForNavigation(), page.click('#start-interview [type=submit]')]); await settled();
+  const sessionUrl = page.url();
+  await page.click('#pause'); await page.waitForFunction(() => document.getElementById('session-meta').textContent.startsWith('paused'));
+  await page.reload(); await settled(); expect(await page.$eval('#status', n => n.textContent)).toContain('paused');
+  await page.click('#resume'); await page.waitForFunction(() => document.getElementById('session-meta').textContent.startsWith('active'));
+  await page.select('#choice-answer select', 'GET'); await page.click('#answer-form [type=submit]');
+  await page.waitForFunction(() => document.querySelectorAll('#answers article').length === 1);
+  expect(await page.$eval('#answers', n => n.textContent)).toContain('Score 100%');
+  await page.click('#complete'); await page.waitForFunction(() => document.getElementById('session-meta').textContent.startsWith('completed'));
+  await page.reload(); await settled(); await page.click('#answers details summary');
+  expect(await page.$eval('#answers', n => n.textContent)).toContain('Correct option: GET');
+  await page.setCookie({ name: 'session_token', value: 'bob', url: base, httpOnly: true }); await page.goto(sessionUrl); await settled();
+  expect(await page.$eval('#status', n => n.textContent)).toContain('Interview not found');
+  expect(await page.$$eval('#answers article', n => n.length)).toBe(0);
+}, 20000);
+test('open-ended browser feedback is saved after reload', async () => {
+  await page.goto(base + '/interviews?question=sample-01'); await settled();
+  await Promise.all([page.waitForNavigation(), page.click('#start-interview [type=submit]')]); await settled();
+  await page.type('#text-answer textarea', 'An event loop processes asynchronous callbacks.'); await page.click('#answer-form [type=submit]');
+  await page.waitForFunction(() => document.querySelectorAll('#answers article').length === 1);
+  await page.reload(); await settled(); expect(await page.$eval('#answers', n => n.textContent)).toContain('Good explanation with a clear example.');
+  expect(await page.$eval('#answers', n => n.textContent)).toContain('An event loop');
+}, 20000);
+
+test('browser can refresh and retry the same answer after provider failure', async () => {
+  gemini.generate.mockRejectedValueOnce(new Error('provider unavailable'));
+  await page.goto(base + '/interviews?question=sample-01'); await settled();
+  await Promise.all([page.waitForNavigation(), page.click('#start-interview [type=submit]')]); await settled();
+  await page.type('#text-answer textarea', 'My saved answer attempt'); await page.click('#answer-form [type=submit]');
+  await page.waitForFunction(() => document.getElementById('status').classList.contains('error'));
+  await page.click('#refresh'); await settled();
+  expect(await page.$eval('#text-answer textarea', node => node.value)).toBe('My saved answer attempt');
+  await page.click('#answer-form [type=submit]'); await page.waitForFunction(() => document.querySelectorAll('#answers article').length === 1);
+  expect(await page.$eval('#answers', node => node.textContent)).toContain('My saved answer attempt');
 }, 20000);

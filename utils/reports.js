@@ -1,6 +1,6 @@
 const sanitizeHtml = require('sanitize-html');
 const { marked } = require('marked');
-const testTypes = ['CodingTest', 'HRInterview', 'MockTest', 'TechnicalInterview'];
+const testTypes = ['CodingTest', 'HRInterview', 'MockTest', 'TechnicalInterview', 'InterviewPractice'];
 const mockSubTests = ['aptitude', 'reasoning', 'automata', 'englishComprehension', 'personality'];
 function safeHtml(html) { return sanitizeHtml(String(html), { allowedAttributes: {}, allowedTags: sanitizeHtml.defaults.allowedTags }); }
 function markdown(text) { return safeHtml(marked.parse(String(text))); }

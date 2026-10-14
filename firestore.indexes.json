@@ -205,7 +205,63 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "interviewSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "ownerUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "id",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "interviewSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "ownerUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "id",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {
+      "collectionGroup": "interviewSessions",
+      "fieldPath": "questions",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "interviewSessions",
+      "fieldPath": "answers",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "interviewSessions",
+      "fieldPath": "pending",
+      "indexes": []
+    }
+  ]
 }

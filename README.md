@@ -68,3 +68,7 @@ GitHub Actions runs clean `npm ci`, build/lint/offline tests and a production au
 ## Product question bank
 
 Visit `/question-bank` to search by title/skill keyword, filter categories and difficulty, and bookmark practice questions. Verified admins can create, edit and archive content with backend enforcement and conflict detection. See [Product API and setup](docs/API.md) for custom claims, composite indexes, sample data and endpoint contracts. `npm run check` includes real Chromium browser checks; `npm run test:browser` runs them alone. Existing mock tests and resume/interview routes are retained.
+
+## Saved practice interviews
+
+`/interviews` starts owned, persistent practice sessions from bank questions. Pause/resume, sequential answers, validated saved feedback, completion and private answer review survive restarts through Firestore. Completion also adds a report/progress attempt. Bank cards link directly into practice. Existing HR/technical interview experiences remain available. See [API/setup documentation](docs/API.md) for ownership, replay safety, leases and new indexes.
