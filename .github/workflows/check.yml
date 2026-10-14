@@ -18,7 +18,22 @@ jobs:
       - name: Configure Chromium
         run: echo "CHROMIUM_EXECUTABLE_PATH=${{ steps.chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
       - run: npm ci
-      - run: npm run check
+      - name: Build, lint and regression tests
+        shell: bash
+        run: |
+          set +e
+          npm run check > check-output.log 2>&1
+          result=$?
+          cat check-output.log
+          if [ "$result" -ne 0 ]; then
+            {
+              echo '### Regression failure details (offline tests)'
+              echo '```text'
+              tail -240 check-output.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$result"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
