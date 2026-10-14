@@ -9,6 +9,8 @@ const submit = (body = input, uid) => auth(request(app).post('/api/coding/submis
 beforeEach(() => { store = createFirebaseDouble(); gemini = createGeminiDouble(); app = createApp({ env: { SESSION_SECRET: 'offline-coding-practice-session-secret' }, firebase: store.firebase, gemini, logger: pino({ level: 'silent' }) }); });
 test('library search, filters, cursor validation and reference answer hiding', async () => {
   const first = (await auth(request(app).get('/api/coding/problems?pageSize=1')).expect(200)).body;
+  const detail = (await auth(request(app).get('/api/coding/problems/two-sum')).expect(200)).body; expect(detail.starter.python).toContain('def pair_sum'); expect(detail.solution).toBeUndefined();
+  await auth(request(app).get('/api/coding/problems/unknown')).expect(404);
   expect(first.items[0].solution).toBeUndefined(); expect(first.nextCursor).toBe('two-sum');
   expect((await auth(request(app).get('/api/coding/problems?pageSize=1&after=two-sum'))).body.items[0].id).toBe('balanced-brackets');
   expect((await auth(request(app).get('/api/coding/problems?q=stack&category=strings&difficulty=medium'))).body.items).toHaveLength(1);
@@ -81,4 +83,10 @@ test('failed review retries use the original problem snapshot when library data 
   const p = require('../fixtures/coding-problems.json')[0], original = p.prompt;
   try { p.prompt = 'Changed library prompt'; await submit().expect(201); expect(gemini.generate.mock.calls[1][0]).toContain(original); expect(gemini.generate.mock.calls[1][0]).not.toContain(p.prompt); }
   finally { p.prompt = original; }
+});
+
+test.each([{ score: 70, summary: null, improvements: [] }, { score: 70, summary: '', improvements: [] }, { score: 70, summary: 'Review', improvements: null }, { score: 70, summary: 'Review', improvements: [42] }])('malformed AI feedback returns a provider failure and leaves a retryable private record: %j', async value => {
+  gemini.generate.mockResolvedValueOnce(value); await submit().expect(500);
+  expect((await auth(request(app).get('/api/coding/submissions/coding-one'))).body.status).toBe('failed');
+  expect((await auth(request(app).get('/api/progress/overview'))).body.codingPractice.attempts).toBe(0);
 });

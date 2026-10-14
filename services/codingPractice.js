@@ -30,7 +30,8 @@ async function saveDraft(db, uid, body) {
 }
 function feedback(value) {
   if (!value || !Number.isFinite(value.score) || value.score < 0 || value.score > 100) throw new Error('Invalid coding feedback');
-  const summary = text(value.summary, 'feedback summary', 3000);
+  if (typeof value.summary !== 'string' || !value.summary.trim() || value.summary.length > 3000) throw new Error('Invalid coding feedback');
+  const summary = value.summary.trim();
   if (!Array.isArray(value.improvements) || value.improvements.length > 10 || value.improvements.some(v => typeof v !== 'string' || !v.trim() || v.length > 600)) throw new Error('Invalid coding feedback');
   return { score: Math.round(value.score), summary, improvements: value.improvements, kind: 'ai-estimate', label: 'AI feedback estimate; code has not been executed' };
 }
