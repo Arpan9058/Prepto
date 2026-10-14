@@ -169,3 +169,28 @@ test('browser matches a saved version, reviews private history and retries faile
   expect(await page.$eval('#status', n => n.textContent)).toContain('No saved matches');
   expect(await page.$$eval('#matches article', n => n.length)).toBe(0);
 }, 20000);
+test('browser compares saved version matches for the same job and recovers history errors', async () => {
+  await page.goto(base + '/resume-matches'); await settled();
+  const feedback = { score: 60, summary: 'First version', matchedSkills: ['Node.js'], missingSkills: ['SQL'], recommendations: ['Show SQL evidence'] };
+  gemini.generate.mockResolvedValueOnce(feedback).mockResolvedValueOnce({ ...feedback, score: 80, summary: 'Improved version', matchedSkills: ['Node.js', 'SQL'], missingSkills: [] });
+  const ids = await page.evaluate(async () => {
+    const post = async (url, body) => { const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); if (!r.ok) throw new Error('Fixture setup failed'); return r.json(); };
+    const first = await post('/api/resumes', { title: 'Comparison resume', text: 'Node.js project' });
+    const second = await post(`/api/resumes/${first.resume.id}/versions`, { text: 'Node.js SQL project', expectedRevision: 1 });
+    const base = { resumeId: first.resume.id, jobTitle: 'Backend role', jobDescription: 'Node.js SQL required' };
+    const a = await post('/api/resume-matches', { ...base, resumeVersionId: first.version.id });
+    const b = await post('/api/resume-matches', { ...base, resumeVersionId: second.version.id });
+    return [a.match.id, b.match.id];
+  });
+  await page.reload(); await settled();
+  for (const id of ids) await page.click(`#matches input[value="${id}"]`);
+  await page.click('#compare-matches'); await page.waitForFunction(() => !document.getElementById('comparison').hidden);
+  expect(await page.$eval('#comparison', n => n.textContent)).toContain('+20 points');
+  expect(await page.$eval('#comparison', n => n.textContent)).toContain('Newly matched: SQL');
+  await page.setRequestInterception(true);
+  const intercept = r => r.url().includes('/api/resume-matches?') ? r.respond({ status: 503, contentType: 'application/json', body: '{"error":"History unavailable"}' }) : r.continue();
+  page.on('request', intercept); await page.click('#refresh-matches'); await page.waitForFunction(() => document.getElementById('status').classList.contains('error'));
+  expect(await page.$eval('#status', n => n.textContent)).toContain('History unavailable');
+  page.off('request', intercept); page.on('request', r => r.continue()); await page.click('#refresh-matches'); await settled();
+  expect(await page.$$eval('#matches article', n => n.length)).toBe(2);
+}, 20000);
