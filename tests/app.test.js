@@ -153,7 +153,7 @@ test('technical interview ignores forged frontend scores and persists server sco
   expect(start.body.extractedSkills).toEqual(['Node.js', 'SQL', 'JavaScript']);
   for (let i = 0; i < 18; i++) {
     const r = await auth(agent.post('/technical-round/analyze-text')).send({ text: 'A tradeoff', skillScores: [1000, 1000, 1000], totalQuestions: 100, question: 'forged' }).expect(200);
-    if (i === 17) expect(r.body.interviewComplete).toBe(true);
+    if (i === 17) { expect(r.body.interviewComplete).toBe(true); expect(r.body.analysis.totalScore).toBe(8); expect(r.body.analysis.followUpQuestion).toContain('Interview complete'); }
   }
   await auth(agent.post('/technical-round/analyze-text')).send({ text: 'Again' }).expect(409);
   const reports = [...store.records.entries()].filter(([p]) => p.includes('/TechnicalInterview/attempts/'));

@@ -4,7 +4,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends chromium ca-cer
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
-RUN npm ci --omit=dev && rm -rf .cache
+# Optional trusted corporate/platform CA is mounted only during installation.
+# Never disable TLS verification or copy the CA/credentials into the image.
+RUN --mount=type=secret,id=build_ca \
+    if [ -f /run/secrets/build_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/build_ca; fi; \
+    npm ci --omit=dev && rm -rf /tmp/npm-cache
 COPY --chown=node:node . .
 USER node
 EXPOSE 8080

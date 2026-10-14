@@ -26,7 +26,7 @@ async function analyzeText(req, res) {
     const fullReport = answerReport('Technical Interview Report', state.answers);
     await attempts(req.app.locals.firebase.firestore(), req.user.uid, 'TechnicalInterview').add({ totalScore, avgScore: totalScore / state.answers.length, extractedSkills: state.skills, skillScores: state.skillScores, fullReport, submittedAt: new Date() });
     req.session.technicalInterview = state;
-    return res.json({ ...responseState(state), fullReport, interviewComplete: true });
+    return res.json({ ...responseState(state), analysis: { ...analysis, followUpQuestion: 'Interview complete. Thank you!' }, fullReport, interviewComplete: true });
   }
   state.question = perSkill === 0 ? `Tell me about ${state.skills[state.currentSkillIndex]} (easy level)` : String(analysis.followUpQuestion || `Explain more about ${state.skills[state.currentSkillIndex]}`);
   req.session.technicalInterview = state;

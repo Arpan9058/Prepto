@@ -59,6 +59,8 @@ docker compose build
 docker compose up -d
 ```
 
+Behind a TLS-inspecting build proxy, pass its trusted public CA without retaining it in the image: `docker build --secret id=build_ca,src=/path/to/trusted-ca.pem --build-arg https_proxy --build-arg http_proxy -t prepto .` (export the proxy variables first). The optional BuildKit secret configures Node certificate trust for installation; TLS and npm artifact verification remain enabled. Container DNS must also resolve the proxy hostname.
+
 Create a private `.env` first. Compose binds only to localhost for use behind a trusted TLS reverse proxy. Production requires HTTPS for Secure cookies; use local development mode for plain HTTP. Production sessions persist in Firestore `webSessions` (enable TTL on `expiresAt`). Chromium sandbox bypass is explicit in the isolated container configuration. See [SECURITY.md](SECURITY.md) for deployment and key-rotation requirements.
 
 GitHub Actions runs clean `npm ci`, build/lint/offline tests and a production audit; Dependabot checks npm, actions and Docker updates weekly. No publication of a Codex environment is needed to commit or push to GitHub.

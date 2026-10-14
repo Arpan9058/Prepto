@@ -9,7 +9,7 @@ function escapeHtml(value) {
 }
 function answerReport(title, answers) {
   return `<h2>${escapeHtml(title)}</h2>` + answers.map(a =>
-    `<section><p>${escapeHtml(a.question)}</p><p>${escapeHtml(a.answer ?? a.selectedAnswer)}</p><p>${escapeHtml(a.analysis)}</p><p>${escapeHtml(a.recommendation)}</p><p>Score: ${escapeHtml(a.score ?? a.totalScore)}</p></section>`).join('');
+    `<section><p>${escapeHtml(a.question)}</p><p>${escapeHtml(a.answer ?? a.selectedAnswer)}</p><p>${escapeHtml(a.analysis)}</p><p>${escapeHtml(a.recommendation)}</p><p>Score: ${escapeHtml(a.score ?? a.totalScore ?? (a.correct === undefined ? '' : a.correct ? 1 : 0))}</p>${a.correctAnswer === undefined ? '' : `<p>Correct answer: ${escapeHtml(a.correctAnswer)}</p>`}</section>`).join('');
 }
 function attempts(db, uid, type, sub) { return db.collection('users').doc(uid).collection('progress').doc(type).collection(type === 'MockTest' ? sub : 'attempts'); }
 function validReport(type, sub) { return testTypes.includes(type) && (type !== 'MockTest' || mockSubTests.includes(sub)); }

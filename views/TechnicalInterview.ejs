@@ -437,7 +437,7 @@
 
                 // FIX: Check sentinel phrases to detect end of interview
                 const nextQ = data.analysis?.followUpQuestion || '';
-                const isEnd = !nextQ || END_PHRASES.some(phrase =>
+                const isEnd = data.interviewComplete || !nextQ || END_PHRASES.some(phrase =>
                     nextQ.toLowerCase().includes(phrase.toLowerCase())
                 );
 
