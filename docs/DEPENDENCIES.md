@@ -1,0 +1,7 @@
+# Dependency advisories
+
+The full baseline audit had 12 high and 24 moderate dependency findings. Compatible gRPC 1.x is overridden to >=1.14.6, fixing certificate authorization/message leakage advisories in the emulator client chain. `get-uri`'s FTP transport is overridden to basic-ftp >=6.2.3, fixing directory-listing backtracking. Its Client access/close interface is retained and tested against a loopback protocol fixture; the Firebase CLI/emulator and browser regression suites also pass. Overrides are recorded in the lockfile and reproduced by npm ci. No automated major downgrade is applied.
+
+After remediation the full audit has **3 high, 24 moderate, 0 critical** findings. The remaining high chain is braces → chokidar → firebase-tools (GHSA-vfj7-8cjw-p6xm). The registry's latest braces is 3.0.3 and affected; Firebase CLI 15.33.0 is current and requires chokidar 3. Replacing it with chokidar 5 removes glob support and violates the CLI's supported dependency contract. Do not force that override or suppress the advisory. Use the CLI only for trusted repository/configuration files and loopback emulator tests; keep live secrets stripped from test children. Revisit when upstream publishes a compatible patched release.
+
+Production-only audit remains 3 moderate, zero high/critical (Mammoth/argparse/sprintf-js). Other moderate findings include Jest tooling, OpenTelemetry and uuid. Registry advisories can change; rerun both full and production audits. Offline tests never establish live API or staging readiness.
