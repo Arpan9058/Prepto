@@ -14,7 +14,7 @@ async function analyzeText(req, res) {
   }
   const analysis = await req.app.locals.gemini.generate(`Evaluate the technical interview answer. Return JSON with analysis, recommendation, totalScore (0-10), scores and followUpQuestion. Question: ${state.question}\nAnswer: ${text}`, { json: true });
   if (!Number.isFinite(analysis.totalScore) || analysis.totalScore < 0 || analysis.totalScore > 10) throw new Error('Invalid technical score');
-  state.answers.push({ question: state.question, answer: text, analysis: String(analysis.analysis || ''), recommendation: String(analysis.recommendation || ''), totalScore: analysis.totalScore });
+  state.answers.push({ skills: [state.skills[state.currentSkillIndex]], question: state.question, answer: text, analysis: String(analysis.analysis || ''), recommendation: String(analysis.recommendation || ''), totalScore: analysis.totalScore });
   state.skillScores[state.currentSkillIndex] += analysis.totalScore;
   const perSkill = state.answers.length % 6;
   if (perSkill === 0) {
@@ -24,7 +24,7 @@ async function analyzeText(req, res) {
   if (state.completed) {
     const totalScore = state.skillScores.reduce((sum, n) => sum + n, 0);
     const fullReport = answerReport('Technical Interview Report', state.answers);
-    await attempts(req.app.locals.firebase.firestore(), req.user.uid, 'TechnicalInterview').add({ totalScore, avgScore: totalScore / state.answers.length, extractedSkills: state.skills, skillScores: state.skillScores, fullReport, submittedAt: new Date() });
+    await attempts(req.app.locals.firebase.firestore(), req.user.uid, 'TechnicalInterview').add({ totalScore, maxScore: state.answers.length * 10, normalizedScore: totalScore / (state.answers.length * 10) * 100, skillResults: state.answers.flatMap(a => a.skills.map(skill => ({ skill, score: a.totalScore * 10, nextStep: a.recommendation }))), avgScore: totalScore / state.answers.length, extractedSkills: state.skills, skillScores: state.skillScores, fullReport, submittedAt: new Date() });
     req.session.technicalInterview = state;
     return res.json({ ...responseState(state), analysis: { ...analysis, followUpQuestion: 'Interview complete. Thank you!' }, fullReport, interviewComplete: true });
   }

@@ -91,3 +91,37 @@ test('browser can refresh and retry the same answer after provider failure', asy
   await page.click('#answer-form [type=submit]'); await page.waitForFunction(() => document.querySelectorAll('#answers article').length === 1);
   expect(await page.$eval('#answers', node => node.textContent)).toContain('My saved answer attempt');
 }, 20000);
+function seedBrowserProgress() {
+  for (const sample of require('../fixtures/progress-history.json')) store.records.set(`users/alice/progress/${sample.type}/attempts/${sample.id}`, { ...sample.raw, title: sample.title, submittedAt: new Date(Date.now() - sample.daysAgo * 86400000) });
+}
+test('progress browser shows trends, comparisons, history and persisted editable study goals', async () => {
+  seedBrowserProgress(); await page.goto(base + '/progress'); await settled();
+  expect(await page.$$eval('#history tr', n => n.length)).toBe(3);
+  expect(await page.$eval('#skills', n => n.textContent)).toContain('Node.js');
+  expect(await page.$eval('#comparisons', n => n.textContent)).toContain('+15 points');
+  expect(await page.$eval('#skills [role=img]', n => n.getAttribute('aria-label'))).toContain('score history');
+  await page.type('#goal-form [name=skill]', 'Node.js'); await page.$eval('#goal-form [name=targetScore]', n => { n.value = '90'; });
+  await page.click('#goal-form [type=submit]'); await page.waitForFunction(() => !!document.querySelector('#goals [data-goal-id]')); await settled();
+  expect(await page.$eval('#goals', n => n.textContent)).toContain('10 points to your target');
+  await page.reload(); await settled(); expect(await page.$eval('#goals', n => n.textContent)).toContain('Node.js');
+  await page.click('#goals button'); await page.$eval('#goal-form [name=targetScore]', n => { n.value = '75'; }); await page.click('#goal-form [type=submit]');
+  await page.waitForFunction(() => document.getElementById('goals').textContent.includes('Goal met'));
+  await page.select('#history-type', 'HRInterview'); await page.waitForFunction(() => document.getElementById('history').children.length === 0); expect(await page.$eval('#history-empty', n => n.hidden)).toBe(false);
+  await page.setViewport({ width: 390, height: 844 }); expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+}, 20000);
+test('progress browser renders loading, empty, recoverable errors and safe user text', async () => {
+  await page.setRequestInterception(true);
+  let held, signal; const intercepted = new Promise(resolve => { signal = resolve; });
+  const intercept = req => { if (req.url().includes('/api/progress/overview')) { held = req; signal(); } else req.continue(); };
+  page.on('request', intercept);
+  await page.goto(base + '/progress'); await intercepted;
+  expect(await page.$eval('#status', n => n.textContent)).toContain('Loading progress');
+  expect(await page.$eval('#refresh-progress', n => n.disabled)).toBe(true);
+  await held.respond({ status: 500, contentType: 'application/json', body: '{"error":"Progress temporarily unavailable"}' });
+  await settled(); expect(await page.$eval('#status', n => n.textContent)).toContain('Progress temporarily unavailable');
+  page.off('request', intercept); page.on('request', req => req.continue());
+  await page.click('#refresh-progress'); await settled(); expect(await page.$eval('#status', n => n.textContent)).toContain('Your progress starts');
+  await page.type('#goal-form [name=skill]', '<img src=x onerror=alert(1)>'); await page.click('#goal-form [type=submit]');
+  await page.waitForFunction(() => !!document.querySelector('#goals [data-goal-id]'));
+  expect(await page.$('#goals img')).toBeNull(); expect(await page.$eval('#goals', n => n.textContent)).toContain('<img');
+});

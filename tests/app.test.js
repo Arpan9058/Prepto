@@ -122,7 +122,7 @@ test('reports, downloads and progress are owned and sanitized, including technic
   await auth(request(app).get('/reports/view/r2?type=HRInterview')).expect(404);
   await auth(request(app).get('/reports/view/r1?type=bad')).expect(400);
   await auth(request(app).get('/reports/view/r1?type=MockTest&sub=bad')).expect(400);
-  const progress = await auth(request(app).get('/progress')).expect(200);
+  const progress = await auth(request(app).get('/progress/legacy')).expect(200);
   expect(progress.text).toContain('TechnicalInterview'); expect(progress.text).toContain('24');
 });
 test('HR interview uses server questions and saves one report after all questions', async () => {

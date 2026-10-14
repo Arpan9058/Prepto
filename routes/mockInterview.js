@@ -40,7 +40,7 @@ function createMockRouter() {
         return { questionId: q._id, question: q.question, selectedAnswer: selected, correctAnswer: q.answer, correct: selected === q.answer };
       });
       const score = detailed.filter(a => a.correct).length;
-      tx.set(attempts(db, req.user.uid, 'MockTest', data.category).doc(sessionId), { score, total: detailed.length, answers: detailed, fullReport: answerReport('Mock Test Report', detailed), submittedAt: new Date() });
+      tx.set(attempts(db, req.user.uid, 'MockTest', data.category).doc(sessionId), { score, maxScore: detailed.length, normalizedScore: score / detailed.length * 100, skillResults: [{ skill: data.category, score: score / detailed.length * 100, nextStep: 'Review incorrect answers and practice a similar question.' }], total: detailed.length, answers: detailed, fullReport: answerReport('Mock Test Report', detailed), submittedAt: new Date() });
       tx.update(ref, { completed: true });
       return { success: true, score, total: detailed.length, message: 'Mock test submitted successfully!' };
     });

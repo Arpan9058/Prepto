@@ -13,11 +13,13 @@ function answerReport(title, answers) {
 }
 function attempts(db, uid, type, sub) { return db.collection('users').doc(uid).collection('progress').doc(type).collection(type === 'MockTest' ? sub : 'attempts'); }
 function validReport(type, sub) { return testTypes.includes(type) && (type !== 'MockTest' || mockSubTests.includes(sub)); }
-function formatDate(value) { return value?.toDate ? value.toDate().toISOString() : value instanceof Date ? value.toISOString() : 'N/A'; }
-async function listReports(db, uid) {
+function formatDate(value) { return value?.toDate ? value.toDate().toISOString() : typeof value?.toISOString === 'function' ? value.toISOString() : 'N/A'; }
+async function listReports(db, uid, limitPerSource) {
   const reports = [];
   for (const type of testTypes) for (const sub of type === 'MockTest' ? mockSubTests : [null]) {
-    const snapshot = await attempts(db, uid, type, sub).orderBy('submittedAt', 'desc').get();
+    let query = attempts(db, uid, type, sub).orderBy('submittedAt', 'desc');
+    if (limitPerSource) query = query.limit(limitPerSource);
+    const snapshot = await query.get();
     for (const doc of snapshot.docs) {
       const d = doc.data();
       reports.push({ id: doc.id, type, subTest: sub, score: d.score ?? d.totalScore ?? 0, submittedAt: formatDate(d.submittedAt), raw: { ...d, fullReport: safeHtml(d.fullReport || d.reportText || '') } });

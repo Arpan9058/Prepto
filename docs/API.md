@@ -45,3 +45,20 @@ AI evaluation runs outside Firestore transaction retries, under a 90-second leas
 Sample sessions in tests use `fixtures/question-bank.json`; no personal histories are seeded into production. The legacy sample/mock questions remain separate. Live open-ended evaluation needs Gemini access; multiple-choice grading does not.
 
 `fixtures/interview-start.json` is a credential-free example start payload for the HTTP multiple-choice practice session. It can be used with the start endpoint after question-bank seeding. Tests also use it as their default session selection.
+
+## Progress and study goals
+
+`/progress` is the enhanced dashboard. `/progress/legacy` preserves the original chart dashboard; `/reports` still exposes all stored reports. New completion records include an explicit score scale and skill results without rewriting old attempts.
+
+- `GET /api/progress/overview`: owned summary, skill trends with sample counts, latest-vs-previous comparisons by attempt type, feedback-based recommendations and persisted personal goals.
+- `GET /api/progress/attempts?type=InterviewPractice&pageSize=10&after=CURSOR`: owned history with normalized score where the original scale is known, raw points otherwise, review links and cursor pagination. Invalid or foreign cursors return 400. Never supply UID in a request to select another user's records.
+- `PUT /api/progress/goals` body `{skill, targetScore, weeklySessions, revision?}`: create/update one personal goal per case-insensitive skill. Skill <=60 characters; target score is integer 1-100; weekly sessions integer 1-14. Existing goals require current revision; stale changes return 409. Goal progress combines latest skill score and completed skill-bearing sessions in the rolling past seven days.
+- `DELETE /api/progress/goals/:id` body `{revision}`: delete only the authenticated user's owned goal, with concurrency checks.
+
+Store `users/{uid}/studyGoals` behind backend-only Firestore rules. No additional composite index is needed for goals. Updates never accept an owner UID from the client. Admin roles do not bypass private progress/session ownership.
+
+Analytics uses at most the latest 200 attempts per source (type/mock category) to bound Firestore reads. Responses disclose `window.perSource` and `window.truncated`; the dashboard links to original reports for older records. Before large-scale use, replace cross-source reads with maintained rollups and a unified history index. Cursor pagination reflects the current bounded window; concurrent new attempts may shift that window.
+
+Only scores with known denominators are normalized. Historic coding attempts missing a scale remain raw points and are excluded from score comparisons rather than assuming a denominator. Skill trends require explicit skill results or persistent-practice answers. Latest-vs-previous comparisons stay within each attempt type. Feedback scores are educational indicators and can vary with question difficulty; no ranking against other users is presented.
+
+`fixtures/progress-history.json` provides three fictitious relative-date examples for tests and UI checks. No demo histories/goals are written into a live user's account during setup. Empty, loading and recoverable error states are built into the dashboard, and rendered user/model strings use DOM text nodes.

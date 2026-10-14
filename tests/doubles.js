@@ -51,6 +51,7 @@ function createFirebaseDouble(seed = {}) {
         const writes = [];
         const result = await fn({ get: async ref => snapshot(ref.path),
           set: (ref, data) => writes.push(() => records.set(ref.path, clone(data))),
+          delete: ref => writes.push(() => records.delete(ref.path)),
           update: (ref, data) => writes.push(() => records.set(ref.path, { ...records.get(ref.path), ...clone(data) })) });
         writes.forEach(write => write());
         return result;

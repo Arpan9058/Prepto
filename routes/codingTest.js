@@ -176,7 +176,7 @@ function createCodingRouter() {
     const score = Object.values(state.answers).reduce((sum, a) => sum + a.evaluation.score, 0);
     const fullReport = answerReport('Coding Test Report', Object.values(state.answers).map(a => ({ question: a.question.title, answer: a.code, score: a.evaluation.score, analysis: a.evaluation.feedback?.implementation })));
     if (!state.completed) {
-      await attempts(req.app.locals.firebase.firestore(), req.user.uid, 'CodingTest').add({ score, fullReport, submittedAt: new Date() });
+      await attempts(req.app.locals.firebase.firestore(), req.user.uid, 'CodingTest').add({ score, maxScore: Object.keys(state.answers).length * 100, normalizedScore: Object.keys(state.answers).length ? score / Object.keys(state.answers).length : null, skillResults: Object.values(state.answers).map(a => ({ skill: state.language, score: a.evaluation.score, nextStep: 'Review edge cases and implement a different solution.' })), fullReport, submittedAt: new Date() });
       state.completed = true;
     }
     res.render('results', { score, answers: state.answers, language: state.language, fullReport });

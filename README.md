@@ -72,3 +72,7 @@ Visit `/question-bank` to search by title/skill keyword, filter categories and d
 ## Saved practice interviews
 
 `/interviews` starts owned, persistent practice sessions from bank questions. Pause/resume, sequential answers, validated saved feedback, completion and private answer review survive restarts through Firestore. Completion also adds a report/progress attempt. Bank cards link directly into practice. Existing HR/technical interview experiences remain available. See [API/setup documentation](docs/API.md) for ownership, replay safety, leases and new indexes.
+
+## Progress and study goals
+
+`/progress` combines owned attempt history, skill trend charts, same-type score comparisons, feedback-based next steps and editable personal study goals. Loading, empty and retry/error states support first-time users and service failures. The original chart view remains at `/progress/legacy`. Historical scores without known scales stay visible as raw points. Analytics explicitly discloses its recent-attempt window. See [API/setup docs](docs/API.md) and `fixtures/progress-history.json` for contracts and illustrative data.

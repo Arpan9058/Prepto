@@ -22,7 +22,7 @@ function createHrRouter() {
     const completed = state.answers.length === questions.length;
     if (completed) {
       const totalScore = state.answers.reduce((sum, a) => sum + a.score, 0);
-      await attempts(req.app.locals.firebase.firestore(), req.user.uid, 'HRInterview').add({ totalScore, avgScore: totalScore / state.answers.length, fullReport: answerReport('HR Interview Report', state.answers), submittedAt: new Date() });
+      await attempts(req.app.locals.firebase.firestore(), req.user.uid, 'HRInterview').add({ totalScore, maxScore: state.answers.length * 5, normalizedScore: totalScore / (state.answers.length * 5) * 100, skillResults: state.answers.map(a => ({ skill: 'Communication', score: a.score * 20, nextStep: a.recommendation })), avgScore: totalScore / state.answers.length, fullReport: answerReport('HR Interview Report', state.answers), submittedAt: new Date() });
       state.completed = true;
     }
     req.session.hrInterview = state;

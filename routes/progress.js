@@ -4,7 +4,8 @@ const { asyncHandler } = require('../middleware/errors');
 const { listReports, testTypes, mockSubTests } = require('../utils/reports');
 function createProgressRouter() {
   const router = express.Router();
-  router.get('/', ensureAuthenticated, asyncHandler(async (req, res) => {
+  router.get('/', ensureAuthenticated, (_req, res) => res.render('progressProduct', { types: testTypes }));
+  router.get('/legacy', ensureAuthenticated, asyncHandler(async (req, res) => {
     const reports = await listReports(req.app.locals.firebase.firestore(), req.user.uid);
     const progressData = Object.fromEntries(testTypes.map(t => [t, t === 'MockTest' ? Object.fromEntries(mockSubTests.map(s => [s, []])) : []]));
     for (const r of reports.reverse()) {
