@@ -1,0 +1,11 @@
+const { spawn } = require('node:child_process');
+const path = require('node:path');
+const env = { ...process.env };
+for (const name of Object.keys(env)) if (/^(FIREBASE_|GEMINI_|SESSION_SECRET$|GOOGLE_APPLICATION_CREDENTIALS$|GOOGLE_CLOUD_PROJECT$|GCLOUD_PROJECT$)/.test(name)) delete env[name];
+env.CI = 'true';
+env.XDG_CONFIG_HOME = path.resolve('.cache/firebase-config');
+env.FIREBASE_EMULATORS_PATH = path.resolve('.cache/firebase-emulators');
+env.no_grpc_proxy = '127.0.0.1,localhost';
+const child = spawn(process.execPath, [require.resolve('firebase-tools/lib/bin/firebase.js'), 'emulators:exec', '--only', 'firestore', '--project', 'demo-prepto', '--config', 'firebase.json', 'node --test tests/emulator/*.test.js'], { env, stdio: 'inherit' });
+child.on('exit', code => { process.exitCode = code ?? 1; });
+child.on('error', () => { console.error('Unable to start Firebase emulator'); process.exitCode = 1; });

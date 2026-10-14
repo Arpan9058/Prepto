@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // This application uses Firebase client Auth, then authenticated Express APIs.
+    // No browser SDK receives database access, including admin-claim clients.
+    // Server Admin SDK bypasses these rules: backend checks remain mandatory.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

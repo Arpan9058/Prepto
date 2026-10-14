@@ -4,7 +4,7 @@ Express/EJS interview preparation, ATS PDF/DOCX analysis, mock tests, reports, p
 
 ## Local development
 
-Use Node **24.9+ in the 24.x line** (`.nvmrc` pins 24.19.0), npm and Chromium. On Debian/Ubuntu, install Chromium with `sudo apt-get update && sudo apt-get install -y chromium`. On other platforms install Chrome/Chromium and set `CHROMIUM_EXECUTABLE_PATH` to its executable.
+Use Node **24.12+ in the 24.x line** (`.nvmrc` pins 24.19.0), npm and Chromium. On Debian/Ubuntu, install Chromium with `sudo apt-get update && sudo apt-get install -y chromium`. On other platforms install Chrome/Chromium and set `CHROMIUM_EXECUTABLE_PATH` to its executable.
 
 ```sh
 npm ci
@@ -76,3 +76,7 @@ Visit `/question-bank` to search by title/skill keyword, filter categories and d
 ## Progress and study goals
 
 `/progress` combines owned attempt history, skill trend charts, same-type score comparisons, feedback-based next steps and editable personal study goals. Loading, empty and retry/error states support first-time users and service failures. The original chart view remains at `/progress/legacy`. Historical scores without known scales stay visible as raw points. Analytics explicitly discloses its recent-attempt window. See [API/setup docs](docs/API.md) and `fixtures/progress-history.json` for contracts and illustrative data.
+
+## Production-readiness gates
+
+Use `npm run test:emulator` (Java 21) for deny-by-default client rules plus real emulator storage/query/transaction tests. Backend authorization remains mandatory because Firebase Admin bypasses rules. Live validation is deliberately deferred; no live-service success is claimed. See [deployment and operations](docs/OPERATIONS.md) for reviewed rules/index deployment, proxy scope, analytics-window semantics, workflow guidance, staging checks and cleanup-safe live verification. GitHub CI includes emulator checks; publication is not required for pushing Git changes.

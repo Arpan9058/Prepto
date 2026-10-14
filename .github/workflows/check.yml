@@ -19,6 +19,16 @@ jobs:
         run: echo "CHROMIUM_EXECUTABLE_PATH=${{ steps.chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
       - run: npm ci
       - run: npm run check
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/cache@v4
+        with:
+          path: .cache/firebase-emulators
+          key: firestore-emulator-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - name: Firestore rules and backend emulator tests
+        run: npm run test:emulator
       - name: Production dependency audit
         run: npm audit --omit=dev --audit-level=high
       - uses: actions/upload-artifact@v4

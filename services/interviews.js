@@ -34,6 +34,7 @@ async function list(db, uid, params) {
   return { items: snap.docs.slice(0, size).map(d => view(d.data(), false)), nextCursor: snap.docs.length > size ? snap.docs[size - 1].id : null };
 }
 async function transition(db, uid, sessionId, target, version) {
+  if (!['active', 'paused'].includes(target)) throw httpError(400, 'Invalid interview transition');
   const ref = sessions(db).doc(id(sessionId));
   const raw = await db.runTransaction(async tx => {
     const current = owned(await tx.get(ref), uid);

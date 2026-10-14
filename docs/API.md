@@ -24,7 +24,7 @@ Grant `admin: true` only using a trusted operator's Firebase Admin custom-claim 
 
 `npm run seed:bank` deliberately installs 13 illustrative questions from `fixtures/question-bank.json` into `questionBank` using ADC/service-account environment credentials. It is idempotent and skips existing IDs so edits are preserved. It does not change the legacy mock-test question collection. Tests seed doubles; setup never seeds a live project automatically.
 
-`npm run check` runs build, lint, unit/integration regression tests and Chromium browser checks without live Firebase/Gemini credentials. Use Node 24.9+ and Chromium as described in README. The browser suite exercises real rendered pages and APIs against injected doubles, not production services.
+`npm run check` runs build, lint, unit/integration regression tests and Chromium browser checks without live Firebase/Gemini credentials. Use Node 24.12+ and Chromium as described in README. The browser suite exercises real rendered pages and APIs against injected doubles, not production services.
 
 ## Persistent interviews
 
@@ -57,8 +57,10 @@ Sample sessions in tests use `fixtures/question-bank.json`; no personal historie
 
 Store `users/{uid}/studyGoals` behind backend-only Firestore rules. No additional composite index is needed for goals. Updates never accept an owner UID from the client. Admin roles do not bypass private progress/session ownership.
 
-Analytics uses at most the latest 200 attempts per source (type/mock category) to bound Firestore reads. Responses disclose `window.perSource` and `window.truncated`; the dashboard links to original reports for older records. Before large-scale use, replace cross-source reads with maintained rollups and a unified history index. Cursor pagination reflects the current bounded window; concurrent new attempts may shift that window.
+Analytics uses at most the latest 200 attempts per source (type/mock category) to bound Firestore reads. Responses always disclose `window.perSource`, `window.truncated`, `window.scope` and a human-readable `window.description`; the dashboard links to original reports for older records. Before large-scale use, replace cross-source reads with maintained rollups and a unified history index. Cursor pagination reflects the current bounded window; concurrent new attempts may shift that window.
 
 Only scores with known denominators are normalized. Historic coding attempts missing a scale remain raw points and are excluded from score comparisons rather than assuming a denominator. Skill trends require explicit skill results or persistent-practice answers. Latest-vs-previous comparisons stay within each attempt type. Feedback scores are educational indicators and can vary with question difficulty; no ranking against other users is presented.
 
 `fixtures/progress-history.json` provides three fictitious relative-date examples for tests and UI checks. No demo histories/goals are written into a live user's account during setup. Empty, loading and recoverable error states are built into the dashboard, and rendered user/model strings use DOM text nodes.
+
+Deployment rules, emulator/index limitations and live-check status are documented in [OPERATIONS.md](OPERATIONS.md). The supplied rules deny browser access to all database data; Express owner/admin authorization is still enforced for Admin SDK calls.

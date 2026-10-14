@@ -19,3 +19,6 @@ coverage/
 .cache/
 pdfs/
 temp/
+
+*-debug.log
+firebase-debug.log

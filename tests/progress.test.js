@@ -73,7 +73,7 @@ test('empty and unscored history produce honest starter states, including unknow
 test('analytics discloses its bounded window and filters history types', async () => {
   for (let i = 0; i < 205; i++) store.records.set(`users/alice/progress/CodingTest/attempts/r${i}`, { score: 80, maxScore: 100, submittedAt: new Date(Date.now() - i * 1000) });
   const overview = (await auth(request(app).get('/api/progress/overview'))).body;
-  expect(overview.summary.attempts).toBe(200); expect(overview.window).toEqual({ perSource: 200, truncated: true });
+  expect(overview.summary.attempts).toBe(200); expect(overview.window).toMatchObject({ perSource: 200, truncated: true, scope: 'recent-attempts-per-source' });
   expect((await auth(request(app).get('/api/progress/attempts?type=HRInterview'))).body.items).toEqual([]);
 });
 test('invalid goals and query parameters are rejected', async () => {

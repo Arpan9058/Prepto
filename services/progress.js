@@ -19,7 +19,7 @@ function normalize(r) {
   const bySkill = new Map();
   const results = Array.isArray(raw.skillResults) ? raw.skillResults : r.type === 'InterviewPractice' && Array.isArray(raw.answers) ? raw.answers.flatMap(a => (a.skills || []).map(skill => ({ skill, score: a.score, nextStep: a.nextStep }))) : [];
   for (const result of results) {
-    if (typeof result.skill !== 'string' || !result.skill.trim() || result.skill.length > 60 || !validScore(result.score)) continue;
+    if (!result || typeof result.skill !== 'string' || !result.skill.trim() || result.skill.length > 60 || !validScore(result.score)) continue;
     const key = result.skill.trim().toLowerCase();
     if (!bySkill.has(key)) bySkill.set(key, { skill: result.skill.trim(), scores: [], nextStep: '' });
     const entry = bySkill.get(key); entry.scores.push(result.score);
@@ -53,7 +53,7 @@ async function records(db, uid) {
   const rows = await listReports(db, uid, 201);
   const counts = new Map(); let truncated = false;
   const filtered = rows.filter(r => { const source = `${r.type}:${r.subTest || ''}`; const n = (counts.get(source) || 0) + 1; counts.set(source, n); if (n > 200) { truncated = true; return false; } return true; });
-  return { items: filtered.map(normalize).sort((a, b) => (Date.parse(b.submittedAt) || 0) - (Date.parse(a.submittedAt) || 0) || a.key.localeCompare(b.key)), window: { perSource: 200, truncated } };
+  return { items: filtered.map(normalize).sort((a, b) => (Date.parse(b.submittedAt) || 0) - (Date.parse(a.submittedAt) || 0) || a.key.localeCompare(b.key)), window: { perSource: 200, truncated, scope: 'recent-attempts-per-source', description: 'Analytics use the latest 200 attempts per interview type/mock category. Older attempts remain in Reports.' } };
 }
 function enrichGoal(goal, items, skills, now) {
   const trend = skills.find(s => s.skill.toLowerCase() === goal.skill.toLowerCase());
