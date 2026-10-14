@@ -64,3 +64,7 @@ Behind a TLS-inspecting build proxy, pass its trusted public CA without retainin
 Create a private `.env` first. Compose binds only to localhost for use behind a trusted TLS reverse proxy. Production requires HTTPS for Secure cookies; use local development mode for plain HTTP. Production sessions persist in Firestore `webSessions` (enable TTL on `expiresAt`). Chromium sandbox bypass is explicit in the isolated container configuration. See [SECURITY.md](SECURITY.md) for deployment and key-rotation requirements.
 
 GitHub Actions runs clean `npm ci`, build/lint/offline tests and a production audit; Dependabot checks npm, actions and Docker updates weekly. No publication of a Codex environment is needed to commit or push to GitHub.
+
+## Product question bank
+
+Visit `/question-bank` to search by title/skill keyword, filter categories and difficulty, and bookmark practice questions. Verified admins can create, edit and archive content with backend enforcement and conflict detection. See [Product API and setup](docs/API.md) for custom claims, composite indexes, sample data and endpoint contracts. `npm run check` includes real Chromium browser checks; `npm run test:browser` runs them alone. Existing mock tests and resume/interview routes are retained.

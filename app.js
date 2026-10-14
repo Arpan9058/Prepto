@@ -102,6 +102,8 @@ function createApp({ env = process.env, firebase = firebaseDefault, gemini = cre
     const buffer = await app.locals.pdf(req.session.resumeContent);
     res.attachment('resume.pdf').type('application/pdf').send(buffer);
   }));
+  app.get('/question-bank', ensureAuthenticated, (req, res) => res.render('questionBank', { user: req.user, ...require('./utils/product') }));
+  app.use('/api', require('./routes/questionBank').createQuestionBankRouter());
   app.use('/api', createMockRouter());
   app.use('/reports', createReportsRouter());
   app.use('/progress', createProgressRouter());

@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --coverage",
     "check": "npm run build && npm run lint && npm test",
-    "audit": "npm audit --omit=dev"
+    "audit": "npm audit --omit=dev",
+    "seed:bank": "node --use-env-proxy scripts/seed-question-bank.js",
+    "test:browser": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/browser.test.js"
   },
   "keywords": [],
   "author": "",

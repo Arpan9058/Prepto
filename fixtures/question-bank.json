@@ -1,0 +1,188 @@
+[
+  {
+    "id": "sample-01",
+    "title": "Node event loop",
+    "prompt": "Explain node event loop using an example and discuss an important tradeoff.",
+    "category": "technical",
+    "difficulty": "easy",
+    "type": "openEnded",
+    "skills": [
+      "Node.js"
+    ],
+    "options": [],
+    "answer": "",
+    "explanation": "A strong answer states the core concept, provides a concrete example, and explains correctness, limits and tradeoffs."
+  },
+  {
+    "id": "sample-02",
+    "title": "SQL joins",
+    "prompt": "Explain sql joins using an example and discuss an important tradeoff.",
+    "category": "technical",
+    "difficulty": "medium",
+    "type": "openEnded",
+    "skills": [
+      "SQL"
+    ],
+    "options": [],
+    "answer": "",
+    "explanation": "A strong answer states the core concept, provides a concrete example, and explains correctness, limits and tradeoffs."
+  },
+  {
+    "id": "sample-03",
+    "title": "REST idempotency",
+    "prompt": "Explain rest idempotency using an example and discuss an important tradeoff.",
+    "category": "technical",
+    "difficulty": "hard",
+    "type": "openEnded",
+    "skills": [
+      "APIs"
+    ],
+    "options": [],
+    "answer": "",
+    "explanation": "A strong answer states the core concept, provides a concrete example, and explains correctness, limits and tradeoffs."
+  },
+  {
+    "id": "sample-04",
+    "title": "Handling disagreements",
+    "prompt": "Explain handling disagreements using an example and discuss an important tradeoff.",
+    "category": "behavioral",
+    "difficulty": "easy",
+    "type": "openEnded",
+    "skills": [
+      "Communication"
+    ],
+    "options": [],
+    "answer": "",
+    "explanation": "A strong answer states the core concept, provides a concrete example, and explains correctness, limits and tradeoffs."
+  },
+  {
+    "id": "sample-05",
+    "title": "Cache invalidation",
+    "prompt": "Explain cache invalidation using an example and discuss an important tradeoff.",
+    "category": "systemDesign",
+    "difficulty": "medium",
+    "type": "openEnded",
+    "skills": [
+      "Caching"
+    ],
+    "options": [],
+    "answer": "",
+    "explanation": "A strong answer states the core concept, provides a concrete example, and explains correctness, limits and tradeoffs."
+  },
+  {
+    "id": "sample-06",
+    "title": "Database indexes",
+    "prompt": "Explain database indexes using an example and discuss an important tradeoff.",
+    "category": "technical",
+    "difficulty": "hard",
+    "type": "openEnded",
+    "skills": [
+      "SQL"
+    ],
+    "options": [],
+    "answer": "",
+    "explanation": "A strong answer states the core concept, provides a concrete example, and explains correctness, limits and tradeoffs."
+  },
+  {
+    "id": "sample-07",
+    "title": "System availability",
+    "prompt": "Explain system availability using an example and discuss an important tradeoff.",
+    "category": "systemDesign",
+    "difficulty": "easy",
+    "type": "openEnded",
+    "skills": [
+      "Architecture"
+    ],
+    "options": [],
+    "answer": "",
+    "explanation": "A strong answer states the core concept, provides a concrete example, and explains correctness, limits and tradeoffs."
+  },
+  {
+    "id": "sample-08",
+    "title": "JavaScript closures",
+    "prompt": "Explain javascript closures using an example and discuss an important tradeoff.",
+    "category": "technical",
+    "difficulty": "medium",
+    "type": "openEnded",
+    "skills": [
+      "JavaScript"
+    ],
+    "options": [],
+    "answer": "",
+    "explanation": "A strong answer states the core concept, provides a concrete example, and explains correctness, limits and tradeoffs."
+  },
+  {
+    "id": "sample-09",
+    "title": "Incident communication",
+    "prompt": "Explain incident communication using an example and discuss an important tradeoff.",
+    "category": "behavioral",
+    "difficulty": "hard",
+    "type": "openEnded",
+    "skills": [
+      "Communication"
+    ],
+    "options": [],
+    "answer": "",
+    "explanation": "A strong answer states the core concept, provides a concrete example, and explains correctness, limits and tradeoffs."
+  },
+  {
+    "id": "sample-10",
+    "title": "Async error handling",
+    "prompt": "Explain async error handling using an example and discuss an important tradeoff.",
+    "category": "technical",
+    "difficulty": "easy",
+    "type": "openEnded",
+    "skills": [
+      "Node.js"
+    ],
+    "options": [],
+    "answer": "",
+    "explanation": "A strong answer states the core concept, provides a concrete example, and explains correctness, limits and tradeoffs."
+  },
+  {
+    "id": "sample-11",
+    "title": "API pagination",
+    "prompt": "Explain api pagination using an example and discuss an important tradeoff.",
+    "category": "technical",
+    "difficulty": "medium",
+    "type": "openEnded",
+    "skills": [
+      "APIs"
+    ],
+    "options": [],
+    "answer": "",
+    "explanation": "A strong answer states the core concept, provides a concrete example, and explains correctness, limits and tradeoffs."
+  },
+  {
+    "id": "sample-12",
+    "title": "Scaling a queue",
+    "prompt": "Explain scaling a queue using an example and discuss an important tradeoff.",
+    "category": "systemDesign",
+    "difficulty": "hard",
+    "type": "openEnded",
+    "skills": [
+      "Architecture"
+    ],
+    "options": [],
+    "answer": "",
+    "explanation": "A strong answer states the core concept, provides a concrete example, and explains correctness, limits and tradeoffs."
+  },
+  {
+    "id": "sample-13",
+    "title": "HTTP safe methods",
+    "prompt": "Which HTTP method should be safe and read-only?",
+    "category": "technical",
+    "difficulty": "easy",
+    "type": "multipleChoice",
+    "skills": [
+      "APIs"
+    ],
+    "options": [
+      "GET",
+      "POST",
+      "PATCH"
+    ],
+    "answer": "GET",
+    "explanation": "GET retrieves data; it should not mutate application state."
+  }
+]

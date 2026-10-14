@@ -12,13 +12,34 @@ function createFirebaseDouble(seed = {}) {
       update: async data => { records.set(path, { ...records.get(path), ...clone(data) }); },
       delete: async () => { records.delete(path); } };
   }
-  function collection(path, order) {
+  function collection(path, options = {}) {
+    const order = options.order || [];
+    const compare = (a, b) => {
+      for (const [field, direction] of order) {
+        const av = a.data()[field], bv = b.data()[field];
+        const diff = av > bv ? 1 : av < bv ? -1 : 0;
+        if (diff) return diff * (direction === 'desc' ? -1 : 1);
+      }
+      return 0;
+    };
     return { path, doc: id => doc(`${path}/${id || randomUUID()}`),
       add: async data => { const ref = doc(`${path}/${randomUUID()}`); await ref.set(data); return ref; },
-      orderBy: (field, direction) => collection(path, { field, direction }),
+      where: (field, op, value) => collection(path, { ...options, filters: [...(options.filters || []), [field, op, value]] }),
+      orderBy: (field, direction = 'asc') => collection(path, { ...options, order: [...order, [field, direction]] }),
+      limit: count => collection(path, { ...options, count }),
+      startAfter: cursor => collection(path, { ...options, cursor }),
       get: async () => {
-        const docs = [...records.keys()].filter(p => p.startsWith(path + '/') && p.split('/').length === path.split('/').length + 1).map(snapshot);
-        if (order) docs.sort((a, b) => ((a.data()[order.field] > b.data()[order.field]) ? 1 : -1) * (order.direction === 'desc' ? -1 : 1));
+        let docs = [...records.keys()].filter(p => p.startsWith(path + '/') && p.split('/').length === path.split('/').length + 1).map(snapshot);
+        for (const [field, op, value] of options.filters || []) docs = docs.filter(d => {
+          const actual = d.data()[field];
+          if (op === '==') return actual === value;
+          if (op === 'array-contains') return Array.isArray(actual) && actual.includes(value);
+          if (op === 'in') return value.includes(actual);
+          throw new Error(`Unsupported mock query operator ${op}`);
+        });
+        if (order.length) docs.sort(compare);
+        if (options.cursor) docs = docs.filter(d => compare(d, options.cursor) > 0);
+        if (options.count) docs = docs.slice(0, options.count);
         return { docs, empty: docs.length === 0, forEach: fn => docs.forEach(fn) };
       } };
   }
@@ -43,8 +64,8 @@ function createFirebaseDouble(seed = {}) {
     }
   };
   const verifyIdToken = jest.fn(async token => {
-    if (!['alice', 'bob'].includes(token)) throw new Error('Invalid token containing private information');
-    return { uid: token, email: `${token}@example.test` };
+    if (!['alice', 'bob', 'admin'].includes(token)) throw new Error('Invalid token containing private information');
+    return { uid: token, admin: token === 'admin', email: `${token}@example.test` };
   });
   const firebase = { firestore: () => db, auth: () => ({ verifyIdToken }) };
   return { firebase, records, db, verifyIdToken };
