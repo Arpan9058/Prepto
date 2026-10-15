@@ -1,6 +1,8 @@
 # Prepto
 
-Express/EJS interview preparation, ATS PDF/DOCX analysis, mock tests, reports, progress tracking and resume PDF export.
+React + TypeScript + Vite interview-preparation workspace with an Express/Firebase backend: interviews, coding, resume versions, matching history, reports and progress. Navy/ivory/teal visual identity; existing URLs and backend authorization preserved.
+
+See [frontend architecture, completed migration checklist, screenshots and validation](docs/FRONTEND_MIGRATION.md).
 
 ## Local development
 
@@ -8,7 +10,7 @@ Use Node **24.12+ in the 24.x line** (`.nvmrc` pins 24.19.0), npm and Chromium. 
 
 ```sh
 npm ci
-cp .env.example .env
+# Configure existing .env/secure bindings; do not overwrite an existing .env.
 # Fill SESSION_SECRET (>=32 random characters), then Firebase credentials and GEMINI_API_KEY.
 npm run check
 npm start
@@ -19,8 +21,8 @@ npm start
 | Command | Purpose |
 | --- | --- |
 | `npm start` | Start server on port 8080 with native Node environment proxy support |
-| `npm run dev` | Same server with watch/restart |
-| `npm run build` | Compile/check every JavaScript source and EJS template; no bundler needed |
+| `npm run dev` | Same-origin Vite middleware + Express development |
+| `npm run build` | Backend/document checks, strict TypeScript check and Vite production build |
 | `npm run lint` | ESLint |
 | `npm test` | Offline Jest/Supertest suite with coverage and real PDF/DOCX extraction/Chromium export |
 | `npm run check` | Build, lint and tests |
@@ -101,6 +103,7 @@ See the [coding content review](docs/CODING_LIBRARY.md) for the complete 18-prob
 
 ```sh
 npm ci
+npm run build
 NODE_ENV=development HOST=127.0.0.1 PORT=8080 npm run demo
 ```
 

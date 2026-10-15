@@ -115,3 +115,13 @@ test('real emulator persists owner-only coding drafts/reviews and atomic AI-only
   assert.equal((await db.doc('users/alice/progress/CodingPractice/attempts/emulator-coding').get()).data().evaluationKind, 'ai-estimate');
   await auth(request(app).post('/api/coding/execute')).send(body).expect(501);
 });
+test('React JSON profile and report adapters keep owner scoping with actual emulator storage', async () => {
+  await auth(request(app).put('/api/profile')).send({ fullName: 'Synthetic emulator learner', mobile: '', admin: true, uid: 'bob' }).expect(200);
+  assert.equal((await db.doc('users/alice').get()).data().admin, undefined);
+  assert.equal((await auth(request(app).get('/api/profile'), 'bob')).body.fullName, '');
+  const submission = { problemId: 'two-sum', language: 'javascript', code: 'return null;', requestId: 'react-emulator-report' };
+  await auth(request(app).post('/api/coding/submissions')).send(submission).expect(201);
+  const report = (await auth(request(app).get('/api/reports/react-emulator-report?type=CodingPractice')).expect(200)).body;
+  assert.ok(report.score.includes('not executed'));
+  for (const uid of ['bob', 'admin']) await auth(request(app).get('/api/reports/react-emulator-report?type=CodingPractice'), uid).expect(404);
+});

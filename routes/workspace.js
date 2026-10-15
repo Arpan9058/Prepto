@@ -16,13 +16,24 @@ function createWorkspaceRouter({ env }) {
     res.set('Cache-Control', 'no-store').json({ demo: req.app.locals.demoMode === true, firebase });
   });
   r.use(ensureAuthenticated); const db = req => req.app.locals.firebase.firestore();
+  r.get('/legacy/rounds/:kind', (req, res) => {
+    const kind = req.params.kind; if (!['hr', 'technical'].includes(kind)) throw httpError(400, 'Invalid round');
+    const state = kind === 'hr' ? req.session.hrInterview : req.session.technicalInterview;
+    res.json({ started: !!state, completed: !!state?.completed, counter: state?.answers.length || 0, question: kind === 'hr' ? require('../HRQuestions.json')[state?.answers.length || 0] || '' : state?.question || require('../controller/interviewController').initialQuestion });
+  });
+  r.post('/legacy/rounds/:kind/start', (req, res) => {
+    if (req.params.kind === 'hr') req.session.hrInterview = { answers: [] };
+    else if (req.params.kind === 'technical') delete req.session.technicalInterview;
+    else throw httpError(400, 'Invalid round');
+    res.json({ question: req.params.kind === 'hr' ? require('../HRQuestions.json')[0] : require('../controller/interviewController').initialQuestion });
+  });
   r.get('/session', (req, res) => res.set('Cache-Control', 'no-store').json({ uid: req.user.uid, admin: req.user.admin === true, demo: req.app.locals.demoMode === true }));
-  r.get('/profile', asyncHandler(async (req, res) => { const d = await db(req).collection('users').doc(req.user.uid).get(); const raw = d.exists ? d.data() : {}; res.set('Cache-Control', 'no-store').json({ fullName: raw.fullName || '', mobile: raw.mobile || '' }); }));
+  r.get('/profile', asyncHandler(async (req, res) => { const d = await db(req).collection('users').doc(req.user.uid).get(); const raw = d.exists ? d.data() : {}; res.set('Cache-Control', 'no-store').json({ fullName: typeof raw.fullName === 'string' ? raw.fullName : '', mobile: typeof raw.mobile === 'string' ? raw.mobile : '' }); }));
   r.put('/profile', asyncHandler(async (req, res) => {
     const { fullName, mobile = '' } = req.body;
     if (typeof fullName !== 'string' || !fullName.trim() || fullName.length > 200 || typeof mobile !== 'string' || mobile.length > 40) throw httpError(400, 'Provide a name up to 200 characters and a phone up to 40 characters');
     const ref = db(req).collection('users').doc(req.user.uid);
-    await db(req).runTransaction(async tx => { const old = await tx.get(ref); tx.set(ref, { ...(old.exists ? old.data() : {}), fullName: fullName.trim(), mobile, updatedAt: new Date() }); });
+    await db(req).runTransaction(async tx => { const old = await tx.get(ref); tx.set(ref, { ...(old.exists ? old.data() : { email: req.user.email || '', createdAt: new Date() }), fullName: fullName.trim(), mobile, updatedAt: new Date() }); });
     res.json({ saved: true });
   }));
   r.get('/reports', asyncHandler(async (req, res) => {

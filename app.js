@@ -5,6 +5,7 @@ const session = require('express-session');
 const pino = require('pino');
 const pinoHttp = require('pino-http');
 const ejs = require('ejs');
+const { renderResponse } = require('./utils/legacyResponse');
 const firebaseDefault = require('./firebase');
 const { createGemini } = require('./adapters/gemini');
 const { ensureAuthenticated } = require('./middleware/auth');
@@ -54,9 +55,12 @@ function createApp({ env = process.env, firebase = firebaseDefault, gemini = cre
   });
   const renderFrontend = require('./middleware/frontend').frontendRenderer(app, frontend);
   app.locals.renderFrontend = renderFrontend;
+  app.use('/api', (_req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
   app.use('/api', require('./routes/workspace').createWorkspaceRouter({ env }));
   if (renderFrontend) {
     app.get(['/', '/login', '/register', '/forgot-password'], asyncHandler(renderFrontend));
+    app.get('/progress/legacy', ensureAuthenticated, (_req, res) => res.redirect('/progress'));
+    app.get(['/mock-interviews', '/hr-round', '/technical-round', '/technical-round/{*path}', '/coding-test', '/coding-test/question/:id', '/coding-test/results', '/api/mockTest', '/analyze', '/resume-interview', '/careerguidance', '/resume-builder'], ensureAuthenticated, (req, res, next) => req.get('accept')?.includes('application/json') ? next() : asyncHandler(renderFrontend)(req, res, next));
     app.get(['/dashboard', '/onboarding', '/question-bank', '/interviews', '/interviews/:id', '/resumes', '/resumes/:id', '/resume-matches', '/coding-practice', '/progress', '/reports', '/reports/view/:id'], ensureAuthenticated, asyncHandler(renderFrontend));
   }
   app.use(express.static(path.join(__dirname, 'public')));
@@ -86,16 +90,16 @@ function createApp({ env = process.env, firebase = firebaseDefault, gemini = cre
     if (typeof req.body.jobDescription !== 'string' || !req.body.jobDescription.trim()) throw httpError(400, 'Job description is required');
     const text = await ats.extractTextFromFile(req.file);
     const result = await ats.analyzeWithGemini(text, req.body.jobDescription, gemini);
-    res.render('ATSResult', { analysis: markdown(result) });
+    renderResponse(req, res, 'ATSResult', { analysis: markdown(result) });
   }));
   app.post('/resume-interview', ensureAuthenticated, ats.upload.single('resume'), asyncHandler(async (req, res) => {
     const text = await ats.extractTextFromFile(req.file);
     const result = await require('./routes/resumeAnalysis').generateInterviewQuestions(text, gemini);
-    res.render('resumeInterviewResult', { questions: markdown(result) });
+    renderResponse(req, res, 'resumeInterviewResult', { questions: markdown(result) });
   }));
   app.post('/career-guidance', ensureAuthenticated, asyncHandler(async (req, res) => {
     if (typeof req.body.skills !== 'string' || !req.body.skills.trim()) throw httpError(400, 'Skills are required');
-    res.render('careerResult', { careerGuidance: markdown(await require('./careerGuidance').analyzeWithGemini(req.body.skills, gemini)) });
+    renderResponse(req, res, 'careerResult', { careerGuidance: markdown(await require('./careerGuidance').analyzeWithGemini(req.body.skills, gemini)) });
   }));
   app.post('/generate-resume', ensureAuthenticated, asyncHandler(async (req, res) => {
     const keys = ['fullName', 'location', 'email', 'phone', 'links', 'objective', 'education', 'projects', 'skills', 'tools', 'core', 'experience', 'certifications', 'competitive'];
@@ -104,7 +108,7 @@ function createApp({ env = process.env, firebase = firebaseDefault, gemini = cre
     const html = await ejs.renderFile(path.join(__dirname, 'views/Resume.ejs'), data);
     // Ownership is bound to this authenticated session, never to a client filename.
     req.session.resumeContent = html;
-    res.render('resumeResult', { resumeContent: safeHtml(html) });
+    renderResponse(req, res, 'resumeResult', { resumeContent: safeHtml(html) });
   }));
   app.get('/download-resume', ensureAuthenticated, asyncHandler(async (req, res) => {
     if (!req.session.resumeContent) throw httpError(400, 'No resume to download');

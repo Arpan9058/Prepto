@@ -105,3 +105,9 @@ Submission status is pending/failed/reviewed. Reviewed means **AI feedback saved
 ## Offline demo boundary
 
 The separate `npm run demo` loopback process provides `GET /demo` (labelled guide), `POST /demo/start` (new synthetic learner with an opaque one-hour HttpOnly cookie), and `POST /demo/exit` (revoke token and clear that learner). Cross-origin mutations/public hosts are rejected. Product APIs keep their usual owner/admin enforcement and return `X-Prepto-Mode: offline-demo`; results use model `synthetic-offline-demo` and fixed illustrative scores. API token exchange/profile endpoints are unavailable. These demo routes do not exist in normal `npm start`, even with `DEMO_MODE=true`. See [DEMO.md](DEMO.md); no executable results or live validation are implied.
+
+## React integration
+
+`GET /api/runtime` returns demo status and allowlisted publishable Firebase web configuration only. `GET /api/session` requires auth and returns uid/boolean admin/demo. `GET/PUT /api/profile` reads/updates the authenticated owner's name/mobile; client-supplied owner/admin fields grant nothing. `GET /api/reports` returns owner-scoped metadata; `GET /api/reports/:id?type=...&sub=...` validates existing report identifiers, reads only the owner's collection and returns sanitized HTML. JSON downloads keep `/reports/download/:id`.
+
+`GET /api/legacy/rounds/hr|technical` reads the current owner's browser session; `POST .../start` explicitly starts/restarts that round. Existing HR/technical answer endpoints remain unchanged. Legacy coding GETs/POST redirects and one-off ATS/resume/career results support `Accept: application/json` for React while preserving HTML negotiation for compatibility clients. Original legacy ownership, sequencing, repeat-submit and time-limit checks still apply. These endpoints introduce no execution runner. See FRONTEND_MIGRATION.md for screen status and pending live checks.

@@ -72,3 +72,7 @@ The progress dashboard separates CodingPractice AI estimate trends from normaliz
 ## Isolated local demonstration
 
 Use `npm run demo` only as the documented loopback development entry point, never as a production command. `demo/app.js` injects process-local synthetic storage/auth and fixed feedback into the same product services; production `npm start` is unchanged. Demo tokens cannot authenticate Firebase and no production flag enables them. The demo refuses production mode/public bind addresses, preserves existing bindings, blocks live login/token routes and keeps admin/owner checks. Refer to [DEMO.md](DEMO.md) for session cleanup, screenshots, commands and pending live/deployment checks. No environment publication is needed.
+
+## React build and deployment
+
+Run `npm ci && npm run build` before `npm start`. Production Express serves `frontend/dist`; Vite is a build/development dependency. `npm run dev` mounts Vite on the same Express server, retaining identical auth/origin guards. Docker now uses a frontend build stage; local build checks do not prove Docker execution. New public runtime configuration includes only publishable Firebase web metadata; no server binding belongs in VITE variables. Existing .env/bindings must be preserved. See FRONTEND_MIGRATION.md for the full checklist, legacy negotiation, screenshots and explicitly pending live/deployment checks.

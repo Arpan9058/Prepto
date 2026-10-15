@@ -127,6 +127,7 @@ ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
     }
 };
 
+const { renderResponse, redirectResponse } = require('../utils/legacyResponse');
 const express = require('express');
 const { ensureAuthenticated } = require('../middleware/auth');
 const { asyncHandler, httpError } = require('../middleware/errors');
@@ -134,19 +135,19 @@ const { attempts, answerReport } = require('../utils/reports');
 function createCodingRouter() {
   const router = express.Router();
   router.use(ensureAuthenticated);
-  router.get('/', (_req, res) => res.render('CodingTestFront', { languages: ['Java', 'C', 'C++', 'Python'] }));
+  router.get('/', (req, res) => renderResponse(req, res, 'CodingTestFront', { languages: ['Java', 'C', 'C++', 'Python'] }));
   router.post('/start-test', (req, res, next) => {
     const { language } = req.body;
     if (!['Java', 'C', 'C++', 'Python'].includes(language)) return next(httpError(400, 'Invalid language'));
     req.session.coding = { language, answers: {}, startTime: Date.now() };
-    res.redirect('/coding-test/question/1');
+    redirectResponse(req, res, '/coding-test/question/1');
   });
   router.get('/question/:id', (req, res, next) => {
     const state = req.session.coding;
     const q = codingQuestions[req.params.id];
     if (!state) return res.redirect('/coding-test');
     if (!q) return next(httpError(404, 'Question not found'));
-    res.render('question', { question: q, language: state.language, skeletonCode: q.skeletonCode[state.language].trim(), testCases: q.testCases, questionNumber: q.id, timeRemaining: Math.max(0, 2700 - (Date.now() - state.startTime) / 1000) });
+    renderResponse(req, res, 'question', { question: q, language: state.language, skeletonCode: q.skeletonCode[state.language].trim(), testCases: q.testCases, questionNumber: q.id, timeRemaining: Math.max(0, 2700 - (Date.now() - state.startTime) / 1000) });
   });
   async function submit(req, id) {
     const state = req.session.coding;
@@ -155,20 +156,20 @@ function createCodingRouter() {
     if (Date.now() - state.startTime > 2700000) throw httpError(400, 'Time limit exceeded');
     if (typeof req.body.code !== 'string') throw httpError(400, 'Code is required');
     const q = codingQuestions[id];
-    const evaluation = await req.app.locals.gemini.generate(`Evaluate this ${state.language} code for ${q.description}. Test cases: ${JSON.stringify(q.testCases)}. Return JSON score (0-100), feedback with codeStructure, implementation, edgeCases, suggestions array. Code: ${req.body.code}`, { json: true });
+    const evaluation = await req.app.locals.gemini.generate(`Evaluate this ${state.language} code for ${q.description}. Illustrative examples (not executed): ${JSON.stringify(q.testCases)}. Do not execute code or claim tests passed; AI feedback only. Return JSON score (0-100), feedback with codeStructure, implementation, edgeCases, suggestions array. Code: ${req.body.code}`, { json: true });
     if (!Number.isFinite(evaluation.score) || evaluation.score < 0 || evaluation.score > 100) throw new Error('Invalid coding score');
     state.answers[id] = { code: req.body.code, question: q, evaluation, timeTaken: (Date.now() - state.startTime) / 1000 };
   }
   router.post('/submit-answer/:questionNumber', asyncHandler(async (req, res) => {
     const id = Number(req.params.questionNumber);
     await submit(req, id);
-    res.redirect(req.body.earlySubmit === 'true' || id === 3 ? '/coding-test/results' : `/coding-test/question/${id + 1}`);
+    redirectResponse(req, res, req.body.earlySubmit === 'true' || id === 3 ? '/coding-test/results' : `/coding-test/question/${id + 1}`);
   }));
   router.post('/submit-test', asyncHandler(async (req, res) => {
     const state = req.session.coding;
     if (!state) throw httpError(409, 'No active coding test');
     if (req.body.code !== undefined && Object.keys(state.answers).length < 3) await submit(req, Object.keys(state.answers).length + 1);
-    res.redirect('/coding-test/results');
+    redirectResponse(req, res, '/coding-test/results');
   }));
   router.get('/results', asyncHandler(async (req, res) => {
     const state = req.session.coding;
@@ -179,7 +180,7 @@ function createCodingRouter() {
       await attempts(req.app.locals.firebase.firestore(), req.user.uid, 'CodingTest').add({ score, maxScore: Object.keys(state.answers).length * 100, normalizedScore: Object.keys(state.answers).length ? score / Object.keys(state.answers).length : null, skillResults: Object.values(state.answers).map(a => ({ skill: state.language, score: a.evaluation.score, nextStep: 'Review edge cases and implement a different solution.' })), fullReport, submittedAt: new Date() });
       state.completed = true;
     }
-    res.render('results', { score, answers: state.answers, language: state.language, fullReport });
+    renderResponse(req, res, 'results', { score, answers: state.answers, language: state.language, fullReport });
   }));
   return router;
 }

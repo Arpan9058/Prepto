@@ -23,6 +23,7 @@ const navigation: { href: string; label: string; icon: IconName }[] = [
 ];
 export function Workspace({ children, demo }: { children: ReactNode; demo: boolean }) {
   const [open, setOpen] = useState(false), toggle = useRef<HTMLButtonElement>(null), panel = useRef<HTMLElement>(null);
+  useEffect(() => { const wide = matchMedia('(min-width: 801px)'); const close = () => { if (wide.matches) setOpen(false); }; wide.addEventListener('change', close); return () => wide.removeEventListener('change', close); }, []);
   useEffect(() => {
     if (!open) return;
     Array.from(panel.current?.querySelectorAll<HTMLElement>('a,button') || []).find(item => item.offsetParent !== null)?.focus();

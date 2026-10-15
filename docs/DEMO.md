@@ -8,6 +8,7 @@ Use Node 24.19.0 (pinned in `.nvmrc`), npm and installed Chromium. From the repo
 
 ```sh
 npm ci
+npm run build
 NODE_ENV=development HOST=127.0.0.1 PORT=8080 npm run demo
 ```
 
@@ -56,7 +57,7 @@ The shared in-memory adapter is also used by offline test doubles. It implements
 
 ## Screenshots
 
-These are real Chromium captures from a fresh synthetic demo, not mockups or live user data.
+The images below document the pre-React demo. Current actual React captures and migration notes are in [FRONTEND_MIGRATION.md](FRONTEND_MIGRATION.md); all signed-in data is synthetic, not live user data.
 
 ![Desktop workspace and shared navigation](screenshots/dashboard-desktop.png)
 ![Graph problem, examples, edge cases and editor](screenshots/coding-desktop.png)
@@ -97,3 +98,5 @@ CI runs npm ci, check, real emulator tests and the production audit gate. All te
 - Demo storage is volatile, bounded to local sessions and uses no durable backups; upload only synthetic content. Exit/restart, not a production deletion job, clears demo data.
 
 See [OPERATIONS.md](OPERATIONS.md) for deployment commands, [API.md](API.md) for authenticated API behavior and [CODING_LIBRARY.md](CODING_LIBRARY.md) for the content review.
+
+The default demo now uses the same React production build as the product. `npm run demo:dev` provides the same loopback isolation with Vite middleware. The legacy screenshot helper intentionally uses the compatibility renderer to retain historical visual references.
