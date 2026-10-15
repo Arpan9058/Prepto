@@ -74,7 +74,7 @@ jobs:
             node <<'JS'
           const fs = require('node:fs');
           const lines = fs.readFileSync('docker-output.log', 'utf8').split('\n');
-          for (const line of lines.filter(s => /ERROR|Error|error|failed|FAIL|Assertion|E:/.test(s)).slice(-25)) {
+          for (const line of lines.filter(s => s.trim()).slice(-30)) {
             console.log('::error title=Docker smoke::' + line.replaceAll('%', '%25').replaceAll('\r', '%0D'));
           }
           JS

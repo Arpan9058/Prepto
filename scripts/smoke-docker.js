@@ -64,6 +64,9 @@ async function smoke() {
       })();
     `,
     ]);
+  } catch (error) {
+    spawnSync('docker', ['logs', name], { stdio: 'inherit', env: process.env });
+    throw error;
   } finally {
     run(['rm', '-f', name]);
   }
@@ -82,7 +85,8 @@ async function smoke() {
   ]);
 }
 if (require.main === module)
-  smoke().catch(() => {
+  smoke().catch((error) => {
+    console.error(error.message);
     console.error('Docker smoke failed; see build/runtime diagnostics above');
     process.exitCode = 1;
   });
