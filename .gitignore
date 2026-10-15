@@ -22,3 +22,5 @@ temp/
 
 *-debug.log
 firebase-debug.log
+
+frontend/dist/

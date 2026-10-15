@@ -20,7 +20,7 @@ before(async () => {
   adminApp = initializeApp({ projectId: 'demo-prepto' }, 'prepto-emulator-tests'); db = getFirestore(adminApp);
   const firebase = { firestore: () => db, auth: () => ({ verifyIdToken: async token => { if (!['alice', 'bob', 'admin'].includes(token)) throw new Error('Invalid offline test token'); return { uid: token, admin: token === 'admin' }; } }) };
   const gemini = { generate: async prompt => prompt.startsWith('Review coding practice') ? { score: 70, summary: 'Review boundary inputs', improvements: ['Handle empty arrays'] } : prompt.startsWith('Match resume version') ? { score: 80, summary: 'SQL evidence', matchedSkills: ['SQL'], missingSkills: [], recommendations: ['Describe project impact'] } : ({ score: 80, feedback: 'A clear example.', nextStep: 'Explain the tradeoff.' }) };
-  app = createApp({ env: { SESSION_SECRET: 'emulator-only-session-secret-32-characters' }, firebase, gemini, logger: pino({ level: 'silent' }) });
+  app = createApp({ frontend: false, env: { SESSION_SECRET: 'emulator-only-session-secret-32-characters' }, firebase, gemini, logger: pino({ level: 'silent' }) });
 });
 after(async () => { await rules?.cleanup(); await db?.terminate(); if (adminApp) await deleteApp(adminApp); });
 beforeEach(async () => { await rules.clearFirestore(); });

@@ -9,7 +9,7 @@ const auth = (req, uid = 'alice') => req.set('Authorization', `Bearer ${uid}`);
 function seedHistory(uid = 'alice') {
   for (const sample of fixtures) store.records.set(`users/${uid}/progress/${sample.type}/attempts/${sample.id}`, { ...sample.raw, title: sample.title, submittedAt: new Date(Date.now() - sample.daysAgo * 86400000) });
 }
-beforeEach(() => { store = createFirebaseDouble(); app = createApp({ env: { SESSION_SECRET: 'offline-progress-tests-session-secret' }, firebase: store.firebase, gemini: createGeminiDouble(), logger: pino({ level: 'silent' }) }); });
+beforeEach(() => { store = createFirebaseDouble(); app = createApp({ frontend: false, env: { SESSION_SECRET: 'offline-progress-tests-session-secret' }, firebase: store.firebase, gemini: createGeminiDouble(), logger: pino({ level: 'silent' }) }); });
 test('normalization respects known scales and never invents historical coding denominators', () => {
   const row = (type, raw) => ({ id: 'r1', type, subTest: null, submittedAt: '2026-10-10T12:00:00.000Z', raw });
   expect(normalize(row('MockTest', { score: 3, total: 5 })).score).toBe(60);

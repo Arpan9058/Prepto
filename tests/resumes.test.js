@@ -6,7 +6,7 @@ const fixtures = require('./documentFixtures');
 const sample = require('../fixtures/resume-version.json');
 let app, store, pdf;
 const auth = (req, uid = 'alice') => req.set('Authorization', `Bearer ${uid}`);
-function makeApp() { return createApp({ env: { SESSION_SECRET: 'resume-versions-offline-session-secret' }, firebase: store.firebase, gemini: createGeminiDouble(), pdf, logger: pino({ level: 'silent' }) }); }
+function makeApp() { return createApp({ frontend: false, env: { SESSION_SECRET: 'resume-versions-offline-session-secret' }, firebase: store.firebase, gemini: createGeminiDouble(), pdf, logger: pino({ level: 'silent' }) }); }
 async function create(overrides = {}) { return (await auth(request(app).post('/api/resumes')).send({ ...sample, requestId: 'resume-create-request', ...overrides }).expect(201)).body; }
 beforeEach(() => { store = createFirebaseDouble(); pdf = jest.fn(async () => Buffer.from('%PDF-test-export')); app = makeApp(); });
 test('versions are immutable, survive app recreation and use optimistic concurrency', async () => {

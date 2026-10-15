@@ -107,7 +107,7 @@ test('Pino request logs omit bearer, cookies, query secrets and SDK messages', a
   const store = createFirebaseDouble();
   const gemini = createGeminiDouble();
   gemini.generate.mockRejectedValue(new Error('private-sdk-secret'));
-  const app = createApp({ env: { SESSION_SECRET: 'offline-test-session-secret-32-chars' }, firebase: store.firebase, gemini, logger: pino(sink) });
+  const app = createApp({ frontend: false, env: { SESSION_SECRET: 'offline-test-session-secret-32-chars' }, firebase: store.firebase, gemini, logger: pino(sink) });
   await request(app).post('/career-guidance?key=private-query-secret').set('Authorization', 'Bearer alice').set('Cookie', 'session_token=private-cookie-secret').send({ skills: 'private-body-secret' }).expect(500);
   expect(output).toContain('Request failed');
   for (const value of ['Bearer alice', 'private-sdk-secret', 'private-query-secret', 'private-cookie-secret', 'private-body-secret']) expect(output).not.toContain(value);

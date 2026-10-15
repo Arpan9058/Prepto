@@ -10,7 +10,7 @@ afterAll(async () => { await browser?.close(); });
 beforeEach(async () => {
   store = createFirebaseDouble(); await seed(store.db);
   gemini = createGeminiDouble();
-  const app = createApp({ env: { SESSION_SECRET: 'offline-browser-tests-session-secret' }, firebase: store.firebase, gemini, logger: pino({ level: 'silent' }) });
+  const app = createApp({ frontend: false, env: { SESSION_SECRET: 'offline-browser-tests-session-secret' }, firebase: store.firebase, gemini, logger: pino({ level: 'silent' }) });
   server = app.listen(0, '127.0.0.1'); await new Promise(resolve => server.once('listening', resolve)); base = `http://127.0.0.1:${server.address().port}`;
   page = await browser.newPage(); await page.setCookie({ name: 'session_token', value: 'alice', url: base, httpOnly: true });
 });
@@ -265,7 +265,7 @@ test('resume browser recovers from non-JSON errors and announces loading and emp
 });
 test('isolated demo browser completes the product journey with no external requests or real login', async () => {
   await new Promise(resolve => { server.close(resolve); server.closeAllConnections(); });
-  const demo = await require('../demo/app').createDemoApp({ env: {} });
+  const demo = await require('../demo/app').createDemoApp({ frontend: false, env: {} });
   server = demo.app.listen(0, '127.0.0.1'); await new Promise(r => server.once('listening', r)); base = `http://127.0.0.1:${server.address().port}`;
   await page.deleteCookie(...await page.cookies()); const external = [];
   await page.setRequestInterception(true); page.on('request', r => { if (new URL(r.url()).origin !== base) { external.push(r.url()); r.abort(); } else r.continue(); });

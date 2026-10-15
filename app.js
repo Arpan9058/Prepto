@@ -20,7 +20,7 @@ const { createTechnicalRouter } = require('./routes/Technical');
 const { createCodingRouter } = require('./routes/codingTest');
 const { FirestoreSessionStore } = require('./adapters/sessionStore');
 function createApp({ env = process.env, firebase = firebaseDefault, gemini = createGemini({ env }),
-  pdf = exportPdf, sessionStore, sessionName = 'prepto.sid', authCookieName = 'session_token', logger = pino({ level: env.LOG_LEVEL || 'info' }) } = {}) {
+  frontend = true, pdf = exportPdf, sessionStore, sessionName = 'prepto.sid', authCookieName = 'session_token', logger = pino({ level: env.LOG_LEVEL || 'info' }) } = {}) {
   if (!env.SESSION_SECRET || env.SESSION_SECRET.length < 32) throw new Error('SESSION_SECRET must contain at least 32 characters');
   const app = express();
   app.disable('x-powered-by');
@@ -52,6 +52,13 @@ function createApp({ env = process.env, firebase = firebaseDefault, gemini = cre
     }
     next();
   });
+  const renderFrontend = require('./middleware/frontend').frontendRenderer(app, frontend);
+  app.locals.renderFrontend = renderFrontend;
+  app.use('/api', require('./routes/workspace').createWorkspaceRouter({ env }));
+  if (renderFrontend) {
+    app.get(['/', '/login', '/register', '/forgot-password'], asyncHandler(renderFrontend));
+    app.get(['/dashboard', '/onboarding', '/question-bank', '/interviews', '/interviews/:id', '/resumes', '/resumes/:id', '/resume-matches', '/coding-practice', '/progress', '/reports', '/reports/view/:id'], ensureAuthenticated, asyncHandler(renderFrontend));
+  }
   app.use(express.static(path.join(__dirname, 'public')));
   app.get('/health', (_req, res) => res.json({ status: 'ok' }));
   for (const [url, view] of [['/', 'index'], ['/login', 'login'], ['/register', 'register'], ['/forgot-password', 'forgotPassword']]) app.get(url, (_req, res) => res.render(view));

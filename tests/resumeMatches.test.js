@@ -8,7 +8,7 @@ const post = (data = body, uid) => auth(request(app).post('/api/resume-matches')
 const result = { score: 60, summary: 'Evidence based estimate', matchedSkills: ['Node.js'], missingSkills: ['SQL'], recommendations: ['Add a SQL project'] };
 beforeEach(async () => {
   store = createFirebaseDouble(); gemini = createGeminiDouble();
-  app = createApp({ env: { SESSION_SECRET: 'offline-matching-only-session-secret' }, firebase: store.firebase, gemini, logger: pino({ level: 'silent' }) });
+  app = createApp({ frontend: false, env: { SESSION_SECRET: 'offline-matching-only-session-secret' }, firebase: store.firebase, gemini, logger: pino({ level: 'silent' }) });
   source = (await auth(request(app).post('/api/resumes')).send(require('../fixtures/resume-version.json')).expect(201)).body;
   body = { resumeId: source.resume.id, resumeVersionId: source.version.id, jobTitle: 'Engineer', jobDescription: 'Node.js and SQL required', requestId: 'match-one' };
 });

@@ -4,8 +4,8 @@
   "main": "app.js",
   "scripts": {
     "start": "node --use-env-proxy server.js",
-    "dev": "node --use-env-proxy --watch server.js",
-    "build": "node scripts/build.js",
+    "dev": "node --use-env-proxy scripts/dev-server.js",
+    "build": "node scripts/build.js && npm run frontend:typecheck && npm run frontend:build",
     "lint": "eslint .",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --coverage",
     "check": "npm run build && npm run lint && npm test",
@@ -15,7 +15,12 @@
     "test:emulator": "node scripts/test-emulator.js",
     "verify:live": "node --use-env-proxy scripts/verify-live.js",
     "demo": "node scripts/demo-server.js",
-    "demo:screenshots": "node scripts/demo-screenshots.js"
+    "demo:screenshots": "node scripts/demo-screenshots.js",
+    "frontend:typecheck": "tsc -p frontend/tsconfig.json",
+    "frontend:build": "vite build --config frontend/vite.config.mjs",
+    "demo:dev": "node scripts/dev-server.js --demo",
+    "frontend:screenshots": "node scripts/react-screenshots.js",
+    "test:react": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/react.test.js"
   },
   "keywords": [],
   "author": "",
@@ -38,6 +43,8 @@
     "pino": "^10.1.0",
     "pino-http": "^11.0.0",
     "puppeteer-core": "^25.13.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "sanitize-html": "^2.17.0"
   },
   "engines": {
@@ -46,13 +53,18 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@firebase/rules-unit-testing": "^6.0.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "eslint": "^10.12.0",
     "firebase": "^13.0.0",
     "firebase-tools": "^15.33.0",
     "globals": "^16.5.0",
     "jest": "^30.2.0",
     "jszip": "^3.10.1",
-    "supertest": "^7.1.4"
+    "supertest": "^7.1.4",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.2",
+    "vite": "^8.3.4"
   },
   "jest": {
     "testEnvironment": "node",

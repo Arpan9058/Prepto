@@ -6,7 +6,7 @@ const { seed } = require('../scripts/seed-question-bank');
 const { transition } = require('../services/interviews');
 let app, store;
 const auth = (req, uid = 'alice') => req.set('Authorization', `Bearer ${uid}`);
-beforeEach(async () => { store = createFirebaseDouble(); await seed(store.db); app = createApp({ env: { SESSION_SECRET: 'authorization-regression-offline-secret' }, firebase: store.firebase, gemini: createGeminiDouble(), logger: pino({ level: 'silent' }) }); });
+beforeEach(async () => { store = createFirebaseDouble(); await seed(store.db); app = createApp({ frontend: false, env: { SESSION_SECRET: 'authorization-regression-offline-secret' }, firebase: store.firebase, gemini: createGeminiDouble(), logger: pino({ level: 'silent' }) }); });
 test.each([undefined, false, 'true', 1, {}, null])('invalid/missing admin claim %p cannot manage content', async claim => {
   store.verifyIdToken.mockResolvedValue({ uid: 'alice', admin: claim });
   const payload = { ...require('../fixtures/question-bank.json')[0], admin: true, ownerUid: 'admin' };

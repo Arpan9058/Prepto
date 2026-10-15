@@ -4,7 +4,7 @@ const puppeteer = require('puppeteer-core');
 const { chromiumPath } = require('../resumeGenerator');
 const { createDemoApp } = require('../demo/app');
 async function capture() {
-  const { app } = await createDemoApp({ env: {} });
+  const { app } = await createDemoApp({ frontend: false, env: {} });
   const server = app.listen(0, '127.0.0.1'); await new Promise(r => server.once('listening', r));
   let browser;
   try {

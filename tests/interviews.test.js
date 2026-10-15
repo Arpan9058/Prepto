@@ -5,7 +5,7 @@ const { createFirebaseDouble, createGeminiDouble } = require('./doubles');
 const { seed } = require('../scripts/seed-question-bank');
 let app, store, gemini;
 const auth = (req, uid = 'alice') => req.set('Authorization', `Bearer ${uid}`);
-function makeApp() { return createApp({ env: { SESSION_SECRET: 'offline-persistent-interview-secret' }, firebase: store.firebase, gemini, logger: pino({ level: 'silent' }) }); }
+function makeApp() { return createApp({ frontend: false, env: { SESSION_SECRET: 'offline-persistent-interview-secret' }, firebase: store.firebase, gemini, logger: pino({ level: 'silent' }) }); }
 async function start(ids = require('../fixtures/interview-start.json').questionIds) { return (await auth(request(app).post('/api/interviews')).send({ questionIds: ids, ownerUid: 'bob' }).expect(201)).body; }
 function answer(session, text = 'GET', requestId = 'answer-request-1') { return auth(request(app).post(`/api/interviews/${session.id}/answers`)).send({ questionId: session.currentQuestionId, text, requestId, version: session.version }); }
 beforeEach(async () => { store = createFirebaseDouble(); await seed(store.db); gemini = createGeminiDouble(); app = makeApp(); });

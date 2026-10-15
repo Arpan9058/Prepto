@@ -9,7 +9,7 @@ beforeEach(async () => {
   fetchSpy = jest.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Network forbidden in offline demo'));
   authSpy = jest.spyOn(defaults, 'auth').mockImplementation(() => { throw new Error('Production auth forbidden'); });
   dbSpy = jest.spyOn(defaults, 'firestore').mockImplementation(() => { throw new Error('Production storage forbidden'); });
-  demo = await createDemoApp({ env: { FIREBASE_SERVICE_ACCOUNT_JSON: 'synthetic-unused-binding', GEMINI_API_KEY: 'synthetic-unused-binding' } });
+  demo = await createDemoApp({ frontend: false, env: { FIREBASE_SERVICE_ACCOUNT_JSON: 'synthetic-unused-binding', GEMINI_API_KEY: 'synthetic-unused-binding' } });
   first = request.agent(demo.app); second = request.agent(demo.app);
 });
 afterEach(() => { expect(fetchSpy).not.toHaveBeenCalled(); expect(authSpy).not.toHaveBeenCalled(); expect(dbSpy).not.toHaveBeenCalled(); jest.restoreAllMocks(); });
@@ -41,13 +41,13 @@ test('separate demo sessions cannot read each other’s private interviews, vers
 test('demo tokens do not authenticate production app, and production flags never enable demo routes', async () => {
   const result = await enter(first), tokenCookie = result.headers['set-cookie'].find(c => c.startsWith('prepto_demo_token=')).split(';')[0];
   const store = createFirebaseDouble();
-  const app = createApp({ env: { SESSION_SECRET: 'production-shaped-test-session-secret', DEMO_MODE: 'true' }, firebase: store.firebase, gemini: createGeminiDouble(), logger: pino({ level: 'silent' }) });
+  const app = createApp({ frontend: false, env: { SESSION_SECRET: 'production-shaped-test-session-secret', DEMO_MODE: 'true' }, firebase: store.firebase, gemini: createGeminiDouble(), logger: pino({ level: 'silent' }) });
   await request(app).get('/api/resumes').set('Cookie', tokenCookie).expect(401);
   expect(store.verifyIdToken).not.toHaveBeenCalled();
   await request(app).get('/api/resumes').set('Authorization', 'Bearer ' + tokenCookie.split('=')[1]).expect(401);
   expect(store.verifyIdToken).toHaveBeenCalled(); expect(store.records.size).toBe(0);
   await request(app).post('/demo/start').expect(404); await request(app).get('/demo').expect(404);
-  await expect(createDemoApp({ env: { NODE_ENV: 'production' } })).rejects.toThrow('cannot run in production');
+  await expect(createDemoApp({ frontend: false, env: { NODE_ENV: 'production' } })).rejects.toThrow('cannot run in production');
 });
 test('demo rejects cross-origin starts/exits and untrusted hosts; live login/token routes remain absent', async () => {
   await first.post('/demo/start').set('Origin', 'https://evil.example').expect(403);
@@ -65,7 +65,7 @@ test('exit and process recreation clear synthetic data and invalidate old sessio
   const initialKeys = [...demo.store.records.keys()].filter(k => k.startsWith('users/')); expect(initialKeys.length).toBeGreaterThan(0);
   await first.post('/demo/exit').expect(302); await first.get('/api/resumes').expect(401);
   expect([...demo.store.records.keys()].filter(k => k.startsWith('users/'))).toEqual([]);
-  const fresh = await createDemoApp({ env: {} }); await request(fresh.app).get('/api/resumes').set('Cookie', cookie).expect(401);
+  const fresh = await createDemoApp({ frontend: false, env: {} }); await request(fresh.app).get('/api/resumes').set('Cookie', cookie).expect(401);
 });
 test('demo sessions expire and cannot be elevated with a forged bearer identity', async () => {
   const now = Date.now(), start = await enter(first), cookie = start.headers['set-cookie'].find(c => c.startsWith('prepto_demo_token=')).split(';')[0];

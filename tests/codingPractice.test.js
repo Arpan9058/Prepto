@@ -6,7 +6,7 @@ let store, app, gemini;
 const auth = (r, uid = 'alice') => r.set('Authorization', `Bearer ${uid}`);
 const input = { problemId: 'two-sum', language: 'javascript', code: 'function pairSum(v,t) { return null; }', requestId: 'coding-one' };
 const submit = (body = input, uid) => auth(request(app).post('/api/coding/submissions'), uid).send(body);
-beforeEach(() => { store = createFirebaseDouble(); gemini = createGeminiDouble(); app = createApp({ env: { SESSION_SECRET: 'offline-coding-practice-session-secret' }, firebase: store.firebase, gemini, logger: pino({ level: 'silent' }) }); });
+beforeEach(() => { store = createFirebaseDouble(); gemini = createGeminiDouble(); app = createApp({ frontend: false, env: { SESSION_SECRET: 'offline-coding-practice-session-secret' }, firebase: store.firebase, gemini, logger: pino({ level: 'silent' }) }); });
 test('library search, filters, cursor validation and reference answer hiding', async () => {
   const first = (await auth(request(app).get('/api/coding/problems?pageSize=1')).expect(200)).body;
   const detail = (await auth(request(app).get('/api/coding/problems/two-sum')).expect(200)).body; expect(detail.starter.python).toContain('def pair_sum'); expect(detail.solution).toBeUndefined();

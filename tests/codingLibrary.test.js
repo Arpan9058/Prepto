@@ -50,7 +50,7 @@ test.each(problems.map(p => [p.id, p]))('%s has reviewed contracts, starters and
   for (const [args, expected] of cases[id]) { const before = structuredClone(args); expect(oracles[id](...args)).toEqual(expected); expect(args).toEqual(before); }
 });
 test('library pages cover 18 unique problems and topic/difficulty filters do not expose solutions', async () => {
-  const store = createFirebaseDouble(), app = createApp({ env: { SESSION_SECRET: 'library-review-offline-session-secret' }, firebase: store.firebase, gemini: createGeminiDouble(), logger: pino({ level: 'silent' }) });
+  const store = createFirebaseDouble(), app = createApp({ frontend: false, env: { SESSION_SECRET: 'library-review-offline-session-secret' }, firebase: store.firebase, gemini: createGeminiDouble(), logger: pino({ level: 'silent' }) });
   let cursor, found = [];
   do { const r = await request(app).get(`/api/coding/problems?pageSize=5${cursor ? '&after=' + cursor : ''}`).set('Authorization', 'Bearer alice').expect(200); found.push(...r.body.items); cursor = r.body.nextCursor; } while (cursor);
   expect(found).toHaveLength(18); expect(new Set(found.map(p => p.id)).size).toBe(18); expect(found.every(p => !p.solution)).toBe(true);

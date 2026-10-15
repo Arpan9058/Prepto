@@ -13,3 +13,5 @@ pdfs
 data
 utils/analysis.json
 tests
+
+frontend/dist

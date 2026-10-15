@@ -24,11 +24,11 @@ beforeEach(() => {
   store = createFirebaseDouble({ 'questions/aptitude/data/q1': { question: 'Two plus two?', options: ['4', '5'], answer: '4' }, 'questions/aptitude/data/q2': { question: '<script>attack()</script>Three plus two?', options: ['4', '5'], answer: '5' } });
   gemini = createGeminiDouble();
   pdf = jest.fn(async () => Buffer.from('%PDF-offline-double'));
-  app = createApp({ env: { SESSION_SECRET: secret, NODE_ENV: 'test' }, firebase: store.firebase, gemini, pdf, logger: pino({ level: 'silent' }) });
+  app = createApp({ frontend: false, env: { SESSION_SECRET: secret, NODE_ENV: 'test' }, firebase: store.firebase, gemini, pdf, logger: pino({ level: 'silent' }) });
 });
 test('factory imports without credentials and requires an explicit strong secret', async () => {
-  expect(() => createApp({ env: {} })).toThrow('SESSION_SECRET');
-  expect(() => createApp({ env: { SESSION_SECRET: 'short' } })).toThrow('SESSION_SECRET');
+  expect(() => createApp({ frontend: false, env: {} })).toThrow('SESSION_SECRET');
+  expect(() => createApp({ frontend: false, env: { SESSION_SECRET: 'short' } })).toThrow('SESSION_SECRET');
   await request(app).get('/health').expect(200, { status: 'ok' });
   await request(app).get('/').expect(200);
   expect(store.verifyIdToken).not.toHaveBeenCalled();
@@ -219,7 +219,7 @@ test('technical interview ends after a failed skill and rejects invalid model sk
 });
 test('production cookies are Secure behind an explicitly trusted TLS proxy', async () => {
   const session = require('express-session');
-  const production = createApp({ env: { SESSION_SECRET: secret, NODE_ENV: 'production', TRUST_PROXY: 'true' }, firebase: store.firebase, gemini, sessionStore: new session.MemoryStore(), logger: pino({ level: 'silent' }) });
+  const production = createApp({ frontend: false, env: { SESSION_SECRET: secret, NODE_ENV: 'production', TRUST_PROXY: 'true' }, firebase: store.firebase, gemini, sessionStore: new session.MemoryStore(), logger: pino({ level: 'silent' }) });
   const r = await auth(request(production).post('/api/set-token')).set('X-Forwarded-Proto', 'https').expect(200);
   for (const cookie of r.headers['set-cookie']) expect(cookie).toContain('Secure');
 });

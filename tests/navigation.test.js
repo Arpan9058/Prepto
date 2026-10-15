@@ -3,7 +3,7 @@ const pino = require('pino');
 const { createApp } = require('../app');
 const { createFirebaseDouble, createGeminiDouble } = require('./doubles');
 let app;
-beforeEach(() => { app = createApp({ env: { SESSION_SECRET: 'navigation-offline-only-session-secret' }, firebase: createFirebaseDouble().firebase, gemini: createGeminiDouble(), logger: pino({ level: 'silent' }) }); });
+beforeEach(() => { app = createApp({ frontend: false, env: { SESSION_SECRET: 'navigation-offline-only-session-secret' }, firebase: createFirebaseDouble().firebase, gemini: createGeminiDouble(), logger: pino({ level: 'silent' }) }); });
 test.each(['/dashboard', '/question-bank', '/interviews', '/resumes', '/resume-matches', '/coding-practice', '/progress', '/reports'])('%s has the same accessible navigation, active link and skip target', async path => {
   const r = await request(app).get(path).set('Authorization', 'Bearer alice').expect(200);
   for (const href of ['/dashboard', '/question-bank', '/interviews', '/resumes', '/resume-matches', '/coding-practice', '/progress', '/reports']) expect(r.text).toContain(`href="${href}"`);

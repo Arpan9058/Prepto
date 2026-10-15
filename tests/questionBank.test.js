@@ -8,7 +8,7 @@ const auth = (req, uid = 'alice') => req.set('Authorization', `Bearer ${uid}`);
 const sample = require('../fixtures/question-bank.json')[0];
 beforeEach(async () => {
   store = createFirebaseDouble(); await seed(store.db);
-  app = createApp({ env: { SESSION_SECRET: 'offline-question-bank-session-secret' }, firebase: store.firebase, gemini: createGeminiDouble(), logger: pino({ level: 'silent' }) });
+  app = createApp({ frontend: false, env: { SESSION_SECRET: 'offline-question-bank-session-secret' }, firebase: store.firebase, gemini: createGeminiDouble(), logger: pino({ level: 'silent' }) });
 });
 test('bank search, combined filters and cursor pagination return only public fields', async () => {
   const response = await auth(request(app).get('/api/questions?q=NODE&category=technical&difficulty=easy')).expect(200);

@@ -10,7 +10,7 @@ const { seed } = require('../scripts/seed-question-bank');
 const { seedUser } = require('./seed');
 const { asyncHandler, errorHandler } = require('../middleware/errors');
 const loopback = host => ['localhost', '127.0.0.1', '[::1]', '::1', '::ffff:127.0.0.1'].includes(host);
-async function createDemoApp({ env = process.env, logger = pino({ level: 'silent' }) } = {}) {
+async function createDemoApp({ frontend = true, env = process.env, logger = pino({ level: 'silent' }) } = {}) {
   if (env.NODE_ENV === 'production') throw new Error('Offline demo cannot run in production mode');
   const store = createMemoryStore(), tokens = new Map(), gemini = createDemoGemini();
   await seed(store.db);
@@ -24,7 +24,7 @@ async function createDemoApp({ env = process.env, logger = pino({ level: 'silent
     return { uid: identity.uid, admin: false, email: 'synthetic@example.test' };
   } }) };
   // Pass only an explicit safe runtime configuration. Never load .env, credentials or production adapters.
-  const product = createApp({ env: { NODE_ENV: 'development', SESSION_SECRET: randomBytes(48).toString('hex'), CHROMIUM_EXECUTABLE_PATH: env.CHROMIUM_EXECUTABLE_PATH, CHROMIUM_NO_SANDBOX: env.CHROMIUM_NO_SANDBOX }, firebase, gemini, logger, sessionName: 'prepto.demo.sid', authCookieName: 'prepto_demo_token' });
+  const product = createApp({ env: { NODE_ENV: 'development', SESSION_SECRET: randomBytes(48).toString('hex'), CHROMIUM_EXECUTABLE_PATH: env.CHROMIUM_EXECUTABLE_PATH, CHROMIUM_NO_SANDBOX: env.CHROMIUM_NO_SANDBOX }, frontend, firebase, gemini, logger, sessionName: 'prepto.demo.sid', authCookieName: 'prepto_demo_token' });
   product.locals.demoMode = true;
   const app = express(); app.locals.logger = logger;
   app.set('views', path.join(__dirname, '../views')); app.set('view engine', 'ejs');
@@ -40,8 +40,9 @@ async function createDemoApp({ env = process.env, logger = pino({ level: 'silent
     next();
   });
   app.use(cookieParser());
-  app.get(['/','/login','/register','/forgot-password'], (_req, res) => res.redirect('/demo'));
-  app.get('/demo', (_req, res) => res.render('demo', { demoMode: true, currentPath: '/demo' }));
+  app.get(['/login','/register','/forgot-password'], (_req, res) => res.redirect('/demo'));
+  app.get('/', (req, res, next) => frontend === false ? res.redirect('/demo') : next());
+  app.get('/demo', (req, res, next) => product.locals.renderFrontend ? Promise.resolve(product.locals.renderFrontend(req, res)).catch(next) : res.render('demo', { demoMode: true, currentPath: '/demo' }));
   app.post('/demo/start', express.urlencoded({ extended: false, limit: '1kb' }), asyncHandler(async (req, res) => {
     remove(req.cookies.prepto_demo_token);
     for (const [token, identity] of tokens) if (identity.expiresAt <= Date.now()) remove(token);
@@ -56,9 +57,10 @@ async function createDemoApp({ env = process.env, logger = pino({ level: 'silent
   // Restrict demo to the reviewed offline product flows. No production login/token exchange, profiles or legacy remote tools.
   app.use((req, res, next) => {
     const allowedPage = /^\/(dashboard|question-bank|interviews|resumes|resume-matches|coding-practice|progress|reports)(\/|$)/.test(req.path) && req.path !== '/progress/legacy';
-    const allowedApi = /^\/api\/(questions|bookmarks|interviews|resumes|resume-matches|coding|progress|admin)(\/|$)/.test(req.path);
+    const allowedApi = /^\/api\/(runtime|session|profile|questions|bookmarks|interviews|resumes|resume-matches|coding|progress|admin|reports)(\/|$)/.test(req.path);
     const asset = /^\/(stylesheet\/product\.css|productCommon\.js|questionBank\.js|interviews\.js|interviewSession\.js|resumes\.js|resumeVersions\.js|resumeMatches\.js|codingPractice\.js|progressProduct\.js|health)$/.test(req.path);
-    if (!allowedPage && !allowedApi && !asset) return res.status(404).send('This route is not part of the isolated offline demo. Return to /demo.');
+    const frontendAsset = frontend !== false && (/^\/assets\/[a-zA-Z0-9_.-]+$/.test(req.path) || (frontend?.vite && /^\/(src\/|@vite\/|@fs\/|node_modules\/|@id\/)/.test(req.path)));
+    if (req.path !== '/' && !allowedPage && !allowedApi && !asset && !frontendAsset) return res.status(404).send('This route is not part of the isolated offline demo. Return to /demo.');
     next();
   });
   app.use(product); app.use(errorHandler);
