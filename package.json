@@ -31,7 +31,7 @@
     "firebase-admin": "^14.5.0",
     "https-proxy-agent": "^7.0.6",
     "mammoth": "^1.11.0",
-    "marked": "^15.0.12",
+    "marked": "^18.1.0",
     "multer": "^2.0.2",
     "pdf-parse": "2.4.5",
     "pdfkit": "^0.17.2",
