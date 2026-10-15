@@ -2,26 +2,383 @@ import { useEffect, useState } from 'react';
 import { api } from './api';
 import type { Resume } from './api';
 import type { Match, ResumeDetail, Version } from './domain';
-import { Action, AsyncForm, Empty, LoadState, More, Screen, json, usePages, useResource, value } from './ui';
-function resumeForm(form: FormData, requestId: string, revision?: number): FormData { const data = new FormData(); for (const name of ['title', 'label', 'text']) data.set(name, value(form, name)); const file = form.get('resume'); if (file instanceof File && file.size) { data.set('resume', file); data.delete('text'); } data.set('requestId', requestId); if (revision != null) data.set('expectedRevision', String(revision)); return data; }
+import {
+  Action,
+  AsyncForm,
+  Empty,
+  LoadState,
+  More,
+  Screen,
+  json,
+  usePages,
+  useResource,
+  value,
+} from './ui';
+function resumeForm(form: FormData, requestId: string, revision?: number): FormData {
+  const data = new FormData();
+  for (const name of ['title', 'label', 'text']) data.set(name, value(form, name));
+  const file = form.get('resume');
+  if (file instanceof File && file.size) {
+    data.set('resume', file);
+    data.delete('text');
+  }
+  data.set('requestId', requestId);
+  if (revision != null) data.set('expectedRevision', String(revision));
+  return data;
+}
 export function Resumes() {
   const rows = usePages<Resume>('/api/resumes');
-  return <Screen title="Your experience. Better presented." intro="Keep private versions for each opportunity. Preserve the original; improve the next."><section className="content-card"><h2>Save a resume</h2><AsyncForm label="Save private resume" save={async (form, requestId) => { const r = await api<{ resume: Resume }>('/api/resumes', { method: 'POST', body: resumeForm(form, requestId) }); location.assign(`/resumes/${r.resume.id}`); }}><label>Resume title<input name="title" maxLength={120} required /></label><label>Version label<input name="label" maxLength={100} /></label><label>Resume text<textarea name="text" maxLength={50000} /></label><label>Or upload PDF / DOCX (5 MiB maximum)<input type="file" name="resume" accept=".pdf,.docx" /></label><p>Uploads are stored as extracted text. PDF exports regenerate a readable layout.</p></AsyncForm></section><h2>Your saved resumes</h2><LoadState resource={rows} /><div className="cards-grid">{rows.items.map(r => <article className="content-card" key={r.id}><h3>{r.title}</h3><p>{r.versionCount} immutable versions</p><a className="button" href={`/resumes/${r.id}`}>Open versions</a></article>)}</div>{!rows.loading && !rows.items.length && <Empty>No saved resumes yet. Paste your experience or upload a document to begin.</Empty>}<More run={rows.more} /></Screen>;
+  return (
+    <Screen
+      title="Your experience. Better presented."
+      intro="Keep private versions for each opportunity. Preserve the original; improve the next."
+    >
+      <section className="content-card">
+        <h2>Save a resume</h2>
+        <AsyncForm
+          label="Save private resume"
+          save={async (form, requestId) => {
+            const r = await api<{ resume: Resume }>('/api/resumes', {
+              method: 'POST',
+              body: resumeForm(form, requestId),
+            });
+            location.assign(`/resumes/${r.resume.id}`);
+          }}
+        >
+          <label>
+            Resume title
+            <input name="title" maxLength={120} required />
+          </label>
+          <label>
+            Version label
+            <input name="label" maxLength={100} />
+          </label>
+          <label>
+            Resume text
+            <textarea name="text" maxLength={50000} />
+          </label>
+          <label>
+            Or upload PDF / DOCX (5 MiB maximum)
+            <input type="file" name="resume" accept=".pdf,.docx" />
+          </label>
+          <p>Uploads are stored as extracted text. PDF exports regenerate a readable layout.</p>
+        </AsyncForm>
+      </section>
+      <h2>Your saved resumes</h2>
+      <LoadState resource={rows} />
+      <div className="cards-grid">
+        {rows.items.map((r) => (
+          <article className="content-card" key={r.id}>
+            <h3>{r.title}</h3>
+            <p>{r.versionCount} immutable versions</p>
+            <a className="button" href={`/resumes/${r.id}`}>
+              Open versions
+            </a>
+          </article>
+        ))}
+      </div>
+      {!rows.loading && !rows.items.length && (
+        <Empty>No saved resumes yet. Paste your experience or upload a document to begin.</Empty>
+      )}
+      <More run={rows.more} />
+    </Screen>
+  );
 }
 export function ResumeVersions({ id }: { id: string }) {
-  const root = `/api/resumes/${id}`, resume = useResource<ResumeDetail>(root), versions = usePages<Version>(root + '/versions');
-  const [selectedId, select] = useState(''), [text, setText] = useState(''), [match, setMatch] = useState<Match | null>(null);
-  const selected = useResource<Version>(`${root}/versions/${selectedId || resume.data?.currentVersionId || 'pending'}`);
-  useEffect(() => { if (selected.data) setText(selected.data.text); }, [selected.data]);
-  if (!resume.data) return <Screen title="Resume versions" intro="Your documents are private."><LoadState resource={resume} /></Screen>;
+  const root = `/api/resumes/${id}`,
+    resume = useResource<ResumeDetail>(root),
+    versions = usePages<Version>(root + '/versions');
+  const [selectedId, select] = useState(''),
+    [text, setText] = useState(''),
+    [match, setMatch] = useState<Match | null>(null);
+  const selected = useResource<Version>(
+    `${root}/versions/${selectedId || resume.data?.currentVersionId || 'pending'}`,
+  );
+  useEffect(() => {
+    if (selected.data) setText(selected.data.text);
+  }, [selected.data]);
+  if (!resume.data)
+    return (
+      <Screen title="Resume versions" intro="Your documents are private.">
+        <LoadState resource={resume} />
+      </Screen>
+    );
   const r = resume.data;
-  return <Screen title={r.title} intro="Saving creates an immutable version. Selecting an older version never overwrites the newer ones."><a href="/resumes">All resumes</a><LoadState resource={versions} /><div className="cards-grid">{versions.items.map(v => <article className="content-card" key={v.id}><h3>Version {v.number} · {v.label}</h3><p>{v.characterCount} characters {v.id === r.currentVersionId ? '· Current' : ''}</p><button className="button button-secondary" onClick={() => { select(v.id); setMatch(null); }}>Preview version</button></article>)}</div><More run={versions.more} /><LoadState resource={selected} />{selected.data && <><section className="content-card"><h2>Version {selected.data.number} · {selected.data.label}</h2><pre>{selected.data.text}</pre><div className="toolbar"><a className="button" href={`${root}/versions/${selected.data.id}/pdf`}>Download this version as PDF</a>{selected.data.id !== r.currentVersionId && <Action run={async () => { await api(root + '/current', json({ versionId: selected.data!.id, expectedRevision: r.revision }, 'PUT')); resume.reload(); versions.reload(); }}>Use as current</Action>}</div></section>
-  <section className="content-card"><h2>Save an improved version</h2><AsyncForm label="Save as new version" save={async (form, requestId) => { const saved = await api<{ version: Version }>(root + '/versions', { method: 'POST', body: resumeForm(form, requestId, r.revision) }); select(saved.version.id); resume.reload(); versions.reload(); }}><label>Version label<input name="label" maxLength={100} /></label><label>Edit the selected text<textarea name="text" value={text} onChange={e => setText(e.target.value)} maxLength={50000} rows={12} /></label><label>Or upload updated PDF / DOCX<input name="resume" type="file" accept=".pdf,.docx" /></label></AsyncForm></section>
-  <section className="content-card"><h2>Match this version to a job</h2><p>Compatibility is an AI estimate, not a hiring prediction.</p><AsyncForm key={selected.data.id} label="Match and save feedback" save={async (form, requestId) => { const result = await api<{ match: Match }>('/api/resume-matches', json({ resumeId: id, resumeVersionId: selected.data!.id, jobTitle: value(form, 'jobTitle'), jobDescription: value(form, 'jobDescription'), requestId })); setMatch(result.match); }}><label>Job title<input name="jobTitle" maxLength={120} required /></label><label>Job description<textarea name="jobDescription" maxLength={15000} required /></label></AsyncForm>{match && <p role="status">Version {match.versionNumber}: {match.score}% AI compatibility estimate. {match.summary}</p>}<a href="/resume-matches">Open matching history and retry failed matches</a></section></>}</Screen>;
+  return (
+    <Screen
+      title={r.title}
+      intro="Saving creates an immutable version. Selecting an older version never overwrites the newer ones."
+    >
+      <a href="/resumes">All resumes</a>
+      <LoadState resource={versions} />
+      <div className="cards-grid">
+        {versions.items.map((v) => (
+          <article className="content-card" key={v.id}>
+            <h3>
+              Version {v.number} · {v.label}
+            </h3>
+            <p>
+              {v.characterCount} characters {v.id === r.currentVersionId ? '· Current' : ''}
+            </p>
+            <button
+              className="button button-secondary"
+              onClick={() => {
+                select(v.id);
+                setMatch(null);
+              }}
+            >
+              Preview version
+            </button>
+          </article>
+        ))}
+      </div>
+      <More run={versions.more} />
+      <LoadState resource={selected} />
+      {selected.data && (
+        <>
+          <section className="content-card">
+            <h2>
+              Version {selected.data.number} · {selected.data.label}
+            </h2>
+            <pre>{selected.data.text}</pre>
+            <div className="toolbar">
+              <a className="button" href={`${root}/versions/${selected.data.id}/pdf`}>
+                Download this version as PDF
+              </a>
+              {selected.data.id !== r.currentVersionId && (
+                <Action
+                  run={async () => {
+                    await api(
+                      root + '/current',
+                      json({ versionId: selected.data!.id, expectedRevision: r.revision }, 'PUT'),
+                    );
+                    resume.reload();
+                    versions.reload();
+                  }}
+                >
+                  Use as current
+                </Action>
+              )}
+            </div>
+          </section>
+          <section className="content-card">
+            <h2>Save an improved version</h2>
+            <AsyncForm
+              label="Save as new version"
+              save={async (form, requestId) => {
+                const saved = await api<{ version: Version }>(root + '/versions', {
+                  method: 'POST',
+                  body: resumeForm(form, requestId, r.revision),
+                });
+                select(saved.version.id);
+                resume.reload();
+                versions.reload();
+              }}
+            >
+              <label>
+                Version label
+                <input name="label" maxLength={100} />
+              </label>
+              <label>
+                Edit the selected text
+                <textarea
+                  name="text"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  maxLength={50000}
+                  rows={12}
+                />
+              </label>
+              <label>
+                Or upload updated PDF / DOCX
+                <input name="resume" type="file" accept=".pdf,.docx" />
+              </label>
+            </AsyncForm>
+          </section>
+          <section className="content-card">
+            <h2>Match this version to a job</h2>
+            <p>Compatibility is an AI estimate, not a hiring prediction.</p>
+            <AsyncForm
+              key={selected.data.id}
+              label="Match and save feedback"
+              save={async (form, requestId) => {
+                const result = await api<{ match: Match }>(
+                  '/api/resume-matches',
+                  json({
+                    resumeId: id,
+                    resumeVersionId: selected.data!.id,
+                    jobTitle: value(form, 'jobTitle'),
+                    jobDescription: value(form, 'jobDescription'),
+                    requestId,
+                  }),
+                );
+                setMatch(result.match);
+              }}
+            >
+              <label>
+                Job title
+                <input name="jobTitle" maxLength={120} required />
+              </label>
+              <label>
+                Job description
+                <textarea name="jobDescription" maxLength={15000} required />
+              </label>
+            </AsyncForm>
+            {match && (
+              <p role="status">
+                Version {match.versionNumber}: {match.score}% AI compatibility estimate.{' '}
+                {match.summary}
+              </p>
+            )}
+            <a href="/resume-matches">Open matching history and retry failed matches</a>
+          </section>
+        </>
+      )}
+    </Screen>
+  );
 }
 export function Matching() {
-  const rows = usePages<Match>('/api/resume-matches'), [selected, setSelected] = useState<string[]>([]), [detail, setDetail] = useState<Match | null>(null), [comparison, setComparison] = useState<{ scoreChange: number; newlyMatchedSkills: string[]; remainingMissingSkills: string[] } | null>(null);
-  return <Screen title="The right context for your experience." intro="Review saved job descriptions and compare completed matches for the exact same job. Scores are AI estimates."><LoadState resource={rows} /><div className="toolbar"><Action run={async () => { if (selected.length !== 2) throw new Error('Select exactly two completed matches.'); const result = await api<{ scoreChange: number; newlyMatchedSkills: string[]; remainingMissingSkills: string[] }>('/api/resume-matches/compare', json({ firstId: selected[0], secondId: selected[1] })); setComparison(result); }}>Compare selected matches</Action><button className="button button-secondary" onClick={() => { rows.reload(); setSelected([]); setComparison(null); }}>Refresh history</button></div>{comparison && <section className="content-card" role="status"><h2>Comparison</h2><p>{comparison.scoreChange >= 0 ? '+' : ''}{comparison.scoreChange} points · AI estimates</p><p>Newly matched: {comparison.newlyMatchedSkills.join(', ') || 'No new skills'}</p><p>Remaining gaps: {comparison.remainingMissingSkills.join(', ') || 'No reported gaps'}</p></section>}
-  <div className="cards-grid">{rows.items.map(m => <article className="content-card" key={m.id}><label className="check-label"><input type="checkbox" disabled={m.status !== 'completed'} checked={selected.includes(m.id)} onChange={e => setSelected(old => e.target.checked ? [...old, m.id] : old.filter(id => id !== m.id))} />Compare {m.jobTitle}, version {m.versionNumber}</label><h2>{m.jobTitle}</h2><p>{m.resumeTitle} · Version {m.versionNumber} · {m.score == null ? m.status : m.score + '% estimate'}</p><p>{m.summary}</p><Action run={async () => setDetail(await api<Match>('/api/resume-matches/' + m.id))}>Review match</Action></article>)}</div>{!rows.loading && !rows.items.length && <Empty>No saved matches. Open a resume version and add a job description.</Empty>}<More run={rows.more} />
-  {detail && <section className="content-card" aria-labelledby="match-review"><h2 id="match-review">{detail.jobTitle} · Version {detail.versionNumber}</h2><p>{detail.status} · Model: {detail.modelId}</p><h3>Saved job description</h3><p>{detail.jobDescription}</p>{detail.result && <><p className="score-label">{detail.score}% compatibility estimate</p><p>{detail.summary}</p>{(['matchedSkills', 'missingSkills', 'recommendations'] as const).map(key => <div key={key}><h3>{key === 'matchedSkills' ? 'Matched skills' : key === 'missingSkills' ? 'Skill gaps' : 'Next improvements'}</h3><ul>{detail.result![key].map(s => <li key={s}>{s}</li>)}</ul></div>)}</>}{detail.canRetry && <Action run={async () => { const result = await api<{ match: Match }>('/api/resume-matches', json({ resumeId: detail.resumeId, resumeVersionId: detail.resumeVersionId, jobTitle: detail.jobTitle, jobDescription: detail.jobDescription, requestId: detail.id })); setDetail(result.match); rows.reload(); }}>Retry saved match</Action>}</section>}</Screen>;
+  const rows = usePages<Match>('/api/resume-matches'),
+    [selected, setSelected] = useState<string[]>([]),
+    [detail, setDetail] = useState<Match | null>(null),
+    [comparison, setComparison] = useState<{
+      scoreChange: number;
+      newlyMatchedSkills: string[];
+      remainingMissingSkills: string[];
+    } | null>(null);
+  return (
+    <Screen
+      title="The right context for your experience."
+      intro="Review saved job descriptions and compare completed matches for the exact same job. Scores are AI estimates."
+    >
+      <LoadState resource={rows} />
+      <div className="toolbar">
+        <Action
+          run={async () => {
+            if (selected.length !== 2) throw new Error('Select exactly two completed matches.');
+            const result = await api<{
+              scoreChange: number;
+              newlyMatchedSkills: string[];
+              remainingMissingSkills: string[];
+            }>(
+              '/api/resume-matches/compare',
+              json({ firstId: selected[0], secondId: selected[1] }),
+            );
+            setComparison(result);
+          }}
+        >
+          Compare selected matches
+        </Action>
+        <button
+          className="button button-secondary"
+          onClick={() => {
+            rows.reload();
+            setSelected([]);
+            setComparison(null);
+          }}
+        >
+          Refresh history
+        </button>
+      </div>
+      {comparison && (
+        <section className="content-card" role="status">
+          <h2>Comparison</h2>
+          <p>
+            {comparison.scoreChange >= 0 ? '+' : ''}
+            {comparison.scoreChange} points · AI estimates
+          </p>
+          <p>Newly matched: {comparison.newlyMatchedSkills.join(', ') || 'No new skills'}</p>
+          <p>
+            Remaining gaps: {comparison.remainingMissingSkills.join(', ') || 'No reported gaps'}
+          </p>
+        </section>
+      )}
+      <div className="cards-grid">
+        {rows.items.map((m) => (
+          <article className="content-card" key={m.id}>
+            <label className="check-label">
+              <input
+                type="checkbox"
+                disabled={m.status !== 'completed'}
+                checked={selected.includes(m.id)}
+                onChange={(e) =>
+                  setSelected((old) =>
+                    e.target.checked ? [...old, m.id] : old.filter((id) => id !== m.id),
+                  )
+                }
+              />
+              Compare {m.jobTitle}, version {m.versionNumber}
+            </label>
+            <h2>{m.jobTitle}</h2>
+            <p>
+              {m.resumeTitle} · Version {m.versionNumber} ·{' '}
+              {m.score == null ? m.status : m.score + '% estimate'}
+            </p>
+            <p>{m.summary}</p>
+            <Action run={async () => setDetail(await api<Match>('/api/resume-matches/' + m.id))}>
+              Review match
+            </Action>
+          </article>
+        ))}
+      </div>
+      {!rows.loading && !rows.items.length && (
+        <Empty>No saved matches. Open a resume version and add a job description.</Empty>
+      )}
+      <More run={rows.more} />
+      {detail && (
+        <section className="content-card" aria-labelledby="match-review">
+          <h2 id="match-review">
+            {detail.jobTitle} · Version {detail.versionNumber}
+          </h2>
+          <p>
+            {detail.status} · Model: {detail.modelId}
+          </p>
+          <h3>Saved job description</h3>
+          <p>{detail.jobDescription}</p>
+          {detail.result && (
+            <>
+              <p className="score-label">{detail.score}% compatibility estimate</p>
+              <p>{detail.summary}</p>
+              {(['matchedSkills', 'missingSkills', 'recommendations'] as const).map((key) => (
+                <div key={key}>
+                  <h3>
+                    {key === 'matchedSkills'
+                      ? 'Matched skills'
+                      : key === 'missingSkills'
+                        ? 'Skill gaps'
+                        : 'Next improvements'}
+                  </h3>
+                  <ul>
+                    {detail.result![key].map((s) => (
+                      <li key={s}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </>
+          )}
+          {detail.canRetry && (
+            <Action
+              run={async () => {
+                const result = await api<{ match: Match }>(
+                  '/api/resume-matches',
+                  json({
+                    resumeId: detail.resumeId,
+                    resumeVersionId: detail.resumeVersionId,
+                    jobTitle: detail.jobTitle,
+                    jobDescription: detail.jobDescription,
+                    requestId: detail.id,
+                  }),
+                );
+                setDetail(result.match);
+                rows.reload();
+              }}
+            >
+              Retry saved match
+            </Action>
+          )}
+        </section>
+      )}
+    </Screen>
+  );
 }

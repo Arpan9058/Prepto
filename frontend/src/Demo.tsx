@@ -1,2 +1,51 @@
 import { Brand, ButtonLink, DemoBanner } from './components';
-export function Demo() { return <div className="landing"><header className="landing-header"><Brand /><a href="/dashboard">Return to your workspace</a></header><DemoBanner /><main id="main-content" tabIndex={-1} className="product-main"><p className="eyebrow">ISOLATED OFFLINE WORKSPACE</p><h1>Explore the product.<br /><em>Keep it synthetic.</em></h1><p className="screen-intro">No real accounts or Firebase/Gemini calls. Scores and feedback are fixed illustrations, not assessments. Code execution stays disabled.</p><section className="content-card"><h2>A preparation journey in five minutes.</h2><ol><li>Browse the question bank and start an interview.</li><li>Save a coding draft and request simulated feedback.</li><li>Compare two immutable resume versions.</li><li>Review synthetic job-matching history.</li><li>Inspect progress and saved reports.</li></ol><form action="/demo/start" method="post"><button className="button">Start a private demo workspace</button></form></section><section className="content-card"><h2>Your own isolated space</h2><p>Every start creates a separate, non-admin synthetic learner. Real product cookies are not accepted or overwritten. Use fictional input only. Restart clears all data; demo sessions expire after one hour.</p><form action="/demo/exit" method="post"><button className="button button-secondary">Exit and clear this workspace</button></form></section><ButtonLink href="/dashboard" secondary>Return to an existing demo</ButtonLink></main></div>; }
+export function Demo() {
+  return (
+    <div className="landing">
+      <header className="landing-header">
+        <Brand />
+        <a href="/dashboard">Return to your workspace</a>
+      </header>
+      <DemoBanner />
+      <main id="main-content" tabIndex={-1} className="product-main">
+        <p className="eyebrow">ISOLATED OFFLINE WORKSPACE</p>
+        <h1>
+          Explore the product.
+          <br />
+          <em>Keep it synthetic.</em>
+        </h1>
+        <p className="screen-intro">
+          No real accounts or Firebase/Gemini calls. Scores and feedback are fixed illustrations,
+          not assessments. Code execution stays disabled.
+        </p>
+        <section className="content-card">
+          <h2>A preparation journey in five minutes.</h2>
+          <ol>
+            <li>Browse the question bank and start an interview.</li>
+            <li>Save a coding draft and request simulated feedback.</li>
+            <li>Compare two immutable resume versions.</li>
+            <li>Review synthetic job-matching history.</li>
+            <li>Inspect progress and saved reports.</li>
+          </ol>
+          <form action="/demo/start" method="post">
+            <button className="button">Start a private demo workspace</button>
+          </form>
+        </section>
+        <section className="content-card">
+          <h2>Your own isolated space</h2>
+          <p>
+            Every start creates a separate, non-admin synthetic learner. Real product cookies are
+            not accepted or overwritten. Use fictional input only. Restart clears all data; demo
+            sessions expire after one hour.
+          </p>
+          <form action="/demo/exit" method="post">
+            <button className="button button-secondary">Exit and clear this workspace</button>
+          </form>
+        </section>
+        <ButtonLink href="/dashboard" secondary>
+          Return to an existing demo
+        </ButtonLink>
+      </main>
+    </div>
+  );
+}

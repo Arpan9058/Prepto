@@ -97,3 +97,5 @@ Clean `npm ci`, frontend typecheck/production build, ESLint and full check passe
 ## Subsequent hardening
 
 React source coverage, mobile page-content scans, shared validation, default Node-only tests and actual Docker smoke have since been added. Historical test counts above describe the migration commit; use [VERIFICATION.md](VERIFICATION.md) and the latest CI artifacts for current results.
+
+The bootstrap is now separated into `main.tsx` and the testable `App.tsx` root. Integration coverage includes authentication initialization retries, reset privacy, persistent completion/review, administrative conflicts, legacy timers/dictation and saved matching. No route or EJS/PDF compatibility path was removed.

@@ -1,35 +1,459 @@
 import { useEffect, useRef, useState } from 'react';
 import { Dictation } from './Dictation';
 import { api } from './api';
-import { Action, AsyncForm, Empty, LoadState, Screen, Select, json, useResource, value } from './ui';
-export function LegacyHub() { return <Screen title="Your guided preparation tools." intro="The familiar workflows, now in React. For persistent sessions and saved question snapshots, use Interviews."><div className="cards-grid">{[['/hr-round','HR guided round','Practice behavioral answers.'],['/technical-round','Technical guided round','Start with your skills; follow the technical questions.'],['/coding-test','Legacy coding round','Timed AI code review. Code is never executed.'],['/api/mockTest','Category mock tests','Grade multiple-choice answers against saved questions.'],['/resume-builder','Resume builder','Build and download a readable PDF.'],['/analyze','One-off ATS analysis','AI job-description feedback for your document.'],['/resume-interview','Resume questions','Generate questions from your experience.'],['/careerguidance','Career guidance','Explore suggestions based on your skills.']].map(([href,title,copy]) => <article className="content-card" key={href}><h2>{title}</h2><p>{copy}</p><a className="button" href={href}>Open tool</a></article>)}</div></Screen>; }
-export function GuidedRound({ kind }: { kind: 'hr' | 'technical' }) {
-  const state = useResource<{ started: boolean; completed: boolean; question: string; counter: number }>(`/api/legacy/rounds/${kind}`), [question, setQuestion] = useState(''), [answer, setAnswer] = useState(''), [feedback, setFeedback] = useState<{ analysis?: string; recommendation?: string; score?: number; totalScore?: number } | null>(null), [complete, setComplete] = useState(false);
-  return <Screen title={kind === 'hr' ? 'A focused HR conversation.' : 'Explain the technical thinking.'} intro="Legacy guided round. This browser session tracks your place; completed reports are saved privately."><LoadState resource={state} /><Action run={async () => { const first = await api<{ question: string }>(`/api/legacy/rounds/${kind}/start`, json({})); setQuestion(first.question); setComplete(false); setFeedback(null); state.reload(); }}>Start or restart round</Action>{state.data && (state.data.started || question) && !(complete || state.data.completed) && <section className="content-card"><h2>{question || state.data.question}</h2><AsyncForm key={question || state.data.question} label="Save answer and continue" save={async f => {
-    const response = await api<{ analysis: { analysis?: string; recommendation?: string; score?: number; totalScore?: number; followUpQuestion?: string }; interviewComplete?: boolean; followUpQuestion?: { question: string } }>(kind === 'hr' ? '/hr-round/analyze-text' : '/technical-round/analyze-text', json({ text: value(f, 'text'), ...(kind === 'hr' ? { questionCounter: state.data!.counter } : {}) }));
-    setAnswer(''); setFeedback(response.analysis); setComplete(!!response.interviewComplete); setQuestion(response.followUpQuestion?.question || response.analysis.followUpQuestion || ''); state.reload();
-  }}><label>Your answer<textarea name="text" value={answer} onChange={e => setAnswer(e.target.value)} maxLength={12000} required /></label><Dictation text={answer} setText={setAnswer} /></AsyncForm></section>}{feedback && <section className="content-card" role="status"><h2>Saved feedback</h2><p>{feedback.analysis}</p><p>{feedback.recommendation}</p><p>AI score: {feedback.score ?? feedback.totalScore ?? 'Introduction recorded'}</p></section>}{(complete || state.data?.completed) && <p className="notice">Round complete. <a href="/reports">Open saved reports</a>.</p>}</Screen>;
+import {
+  Action,
+  AsyncForm,
+  Empty,
+  LoadState,
+  Screen,
+  Select,
+  json,
+  useResource,
+  value,
+} from './ui';
+export function LegacyHub() {
+  return (
+    <Screen
+      title="Your guided preparation tools."
+      intro="The familiar workflows, now in React. For persistent sessions and saved question snapshots, use Interviews."
+    >
+      <div className="cards-grid">
+        {[
+          ['/hr-round', 'HR guided round', 'Practice behavioral answers.'],
+          [
+            '/technical-round',
+            'Technical guided round',
+            'Start with your skills; follow the technical questions.',
+          ],
+          ['/coding-test', 'Legacy coding round', 'Timed AI code review. Code is never executed.'],
+          [
+            '/api/mockTest',
+            'Category mock tests',
+            'Grade multiple-choice answers against saved questions.',
+          ],
+          ['/resume-builder', 'Resume builder', 'Build and download a readable PDF.'],
+          ['/analyze', 'One-off ATS analysis', 'AI job-description feedback for your document.'],
+          ['/resume-interview', 'Resume questions', 'Generate questions from your experience.'],
+          ['/careerguidance', 'Career guidance', 'Explore suggestions based on your skills.'],
+        ].map(([href, title, copy]) => (
+          <article className="content-card" key={href}>
+            <h2>{title}</h2>
+            <p>{copy}</p>
+            <a className="button" href={href}>
+              Open tool
+            </a>
+          </article>
+        ))}
+      </div>
+    </Screen>
+  );
 }
-interface LegacyCodingData { view: string; question?: { title: string; description: string }; skeletonCode?: string; questionNumber?: number; language?: string; timeRemaining?: number; testCases?: { input: string; expectedOutput: string }[]; score?: number; answers?: Record<string, { code: string; question: { title: string }; evaluation: { score: number; feedback?: { implementation?: string; suggestions?: string[] } } }> }
+export function GuidedRound({ kind }: { kind: 'hr' | 'technical' }) {
+  const state = useResource<{
+      started: boolean;
+      completed: boolean;
+      question: string;
+      counter: number;
+    }>(`/api/legacy/rounds/${kind}`),
+    [question, setQuestion] = useState(''),
+    [answer, setAnswer] = useState(''),
+    [feedback, setFeedback] = useState<{
+      analysis?: string;
+      recommendation?: string;
+      score?: number;
+      totalScore?: number;
+    } | null>(null),
+    [complete, setComplete] = useState(false);
+  return (
+    <Screen
+      title={kind === 'hr' ? 'A focused HR conversation.' : 'Explain the technical thinking.'}
+      intro="Legacy guided round. This browser session tracks your place; completed reports are saved privately."
+    >
+      <LoadState resource={state} />
+      <Action
+        run={async () => {
+          const first = await api<{ question: string }>(
+            `/api/legacy/rounds/${kind}/start`,
+            json({}),
+          );
+          setQuestion(first.question);
+          setComplete(false);
+          setFeedback(null);
+          state.reload();
+        }}
+      >
+        Start or restart round
+      </Action>
+      {state.data && (state.data.started || question) && !(complete || state.data.completed) && (
+        <section className="content-card">
+          <h2>{question || state.data.question}</h2>
+          <AsyncForm
+            key={question || state.data.question}
+            label="Save answer and continue"
+            save={async (f) => {
+              const response = await api<{
+                analysis: {
+                  analysis?: string;
+                  recommendation?: string;
+                  score?: number;
+                  totalScore?: number;
+                  followUpQuestion?: string;
+                };
+                interviewComplete?: boolean;
+                followUpQuestion?: { question: string };
+              }>(
+                kind === 'hr' ? '/hr-round/analyze-text' : '/technical-round/analyze-text',
+                json({
+                  text: value(f, 'text'),
+                  ...(kind === 'hr' ? { questionCounter: state.data!.counter } : {}),
+                }),
+              );
+              setAnswer('');
+              setFeedback(response.analysis);
+              setComplete(!!response.interviewComplete);
+              setQuestion(
+                response.followUpQuestion?.question || response.analysis.followUpQuestion || '',
+              );
+              state.reload();
+            }}
+          >
+            <label>
+              Your answer
+              <textarea
+                name="text"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                maxLength={12000}
+                required
+              />
+            </label>
+            <Dictation text={answer} setText={setAnswer} />
+          </AsyncForm>
+        </section>
+      )}
+      {feedback && (
+        <section className="content-card" role="status">
+          <h2>Saved feedback</h2>
+          <p>{feedback.analysis}</p>
+          <p>{feedback.recommendation}</p>
+          <p>AI score: {feedback.score ?? feedback.totalScore ?? 'Introduction recorded'}</p>
+        </section>
+      )}
+      {(complete || state.data?.completed) && (
+        <p className="notice">
+          Round complete. <a href="/reports">Open saved reports</a>.
+        </p>
+      )}
+    </Screen>
+  );
+}
+interface LegacyCodingData {
+  view: string;
+  question?: { title: string; description: string };
+  skeletonCode?: string;
+  questionNumber?: number;
+  language?: string;
+  timeRemaining?: number;
+  testCases?: { input: string; expectedOutput: string }[];
+  score?: number;
+  answers?: Record<
+    string,
+    {
+      code: string;
+      question: { title: string };
+      evaluation: { score: number; feedback?: { implementation?: string; suggestions?: string[] } };
+    }
+  >;
+}
 function CodingTimer({ remaining }: { remaining: number }) {
-  const [left, setLeft] = useState(Math.max(0, Math.floor(Math.min(900, remaining)))), submitted = useRef(false);
-  useEffect(() => { const deadline = Date.now() + Math.min(900, remaining) * 1000; const timer = setInterval(() => { const seconds = Math.max(0, Math.floor((deadline - Date.now()) / 1000)); setLeft(seconds); if (!seconds && !submitted.current) { submitted.current = true; (document.getElementById('legacy-code-answer') as HTMLFormElement | null)?.requestSubmit(); } }, 1000); return () => clearInterval(timer); }, [remaining]);
-  return <p className="coding-timer" role="timer" aria-live="off">{Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')} remaining for this question. It submits automatically; the server also enforces the total round limit.</p>;
+  const [left, setLeft] = useState(Math.max(0, Math.floor(Math.min(900, remaining)))),
+    submitted = useRef(false);
+  useEffect(() => {
+    const deadline = Date.now() + Math.min(900, remaining) * 1000;
+    const timer = setInterval(() => {
+      const seconds = Math.max(0, Math.floor((deadline - Date.now()) / 1000));
+      setLeft(seconds);
+      if (!seconds && !submitted.current) {
+        submitted.current = true;
+        (document.getElementById('legacy-code-answer') as HTMLFormElement | null)?.requestSubmit();
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [remaining]);
+  return (
+    <p className="coding-timer" role="timer" aria-live="off">
+      {Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')} remaining for this question. It
+      submits automatically; the server also enforces the total round limit.
+    </p>
+  );
 }
 export function LegacyCoding() {
-  const request = useResource<LegacyCodingData>(location.pathname), actual = request.data;
-  return <Screen title="A guided coding round." intro="AI review only. Code is never executed and examples are not executable test results."><LoadState resource={request} />{actual?.view === 'CodingTestFront' && <AsyncForm label="Start coding round" save={async f => { const r = await api<{ redirect: string }>('/coding-test/start-test', { ...json({ language: value(f, 'language') }), headers: { Accept: 'application/json', 'Content-Type': 'application/json' } }); location.assign(r.redirect); }}><Select label="Language" name="language" choices={['Java', 'C', 'C++', 'Python']} /></AsyncForm>}{actual?.view === 'question' && <section className="content-card"><h2>{actual.question?.title}</h2><p>{actual.question?.description}</p><CodingTimer key={actual.questionNumber} remaining={actual.timeRemaining || 0} /><h3>Illustrative examples (not executed)</h3><ul>{actual.testCases?.map((c, i) => <li key={i}>{c.input} → {c.expectedOutput}</li>)}</ul><AsyncForm id="legacy-code-answer" label="Save and continue" save={async f => { const r = await api<{ redirect: string }>(`/coding-test/submit-answer/${actual.questionNumber}`, { ...json({ code: value(f, 'code'), earlySubmit: f.has('finish') ? 'true' : 'false' }), headers: { Accept: 'application/json', 'Content-Type': 'application/json' } }); location.assign(r.redirect); }}><label>Your code<textarea name="code" className="code-editor" defaultValue={actual.skeletonCode} rows={15} required /></label><label className="check-label"><input type="checkbox" name="finish" />Finish round after saving this answer</label></AsyncForm></section>}{actual?.view === 'results' && <section className="content-card"><h2>Saved AI review</h2><p>AI score total: {actual.score}. Execution disabled.</p>{Object.entries(actual.answers || {}).map(([id, a]) => <article key={id}><h3>{a.question.title}</h3><pre>{a.code}</pre><p>AI estimate: {a.evaluation.score}%</p><p>{a.evaluation.feedback?.implementation}</p><ul>{a.evaluation.feedback?.suggestions?.map(s => <li key={s}>{s}</li>)}</ul></article>)}<a href="/reports">Open saved reports</a></section>}</Screen>;
+  const request = useResource<LegacyCodingData>(location.pathname),
+    actual = request.data;
+  return (
+    <Screen
+      title="A guided coding round."
+      intro="AI review only. Code is never executed and examples are not executable test results."
+    >
+      <LoadState resource={request} />
+      {actual?.view === 'CodingTestFront' && (
+        <AsyncForm
+          label="Start coding round"
+          save={async (f) => {
+            const r = await api<{ redirect: string }>('/coding-test/start-test', {
+              ...json({ language: value(f, 'language') }),
+              headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+            });
+            location.assign(r.redirect);
+          }}
+        >
+          <Select label="Language" name="language" choices={['Java', 'C', 'C++', 'Python']} />
+        </AsyncForm>
+      )}
+      {actual?.view === 'question' && (
+        <section className="content-card">
+          <h2>{actual.question?.title}</h2>
+          <p>{actual.question?.description}</p>
+          <CodingTimer key={actual.questionNumber} remaining={actual.timeRemaining || 0} />
+          <h3>Illustrative examples (not executed)</h3>
+          <ul>
+            {actual.testCases?.map((c, i) => (
+              <li key={i}>
+                {c.input} → {c.expectedOutput}
+              </li>
+            ))}
+          </ul>
+          <AsyncForm
+            id="legacy-code-answer"
+            label="Save and continue"
+            save={async (f) => {
+              const r = await api<{ redirect: string }>(
+                `/coding-test/submit-answer/${actual.questionNumber}`,
+                {
+                  ...json({
+                    code: value(f, 'code'),
+                    earlySubmit: f.has('finish') ? 'true' : 'false',
+                  }),
+                  headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+                },
+              );
+              location.assign(r.redirect);
+            }}
+          >
+            <label>
+              Your code
+              <textarea
+                name="code"
+                className="code-editor"
+                defaultValue={actual.skeletonCode}
+                rows={15}
+                required
+              />
+            </label>
+            <label className="check-label">
+              <input type="checkbox" name="finish" />
+              Finish round after saving this answer
+            </label>
+          </AsyncForm>
+        </section>
+      )}
+      {actual?.view === 'results' && (
+        <section className="content-card">
+          <h2>Saved AI review</h2>
+          <p>AI score total: {actual.score}. Execution disabled.</p>
+          {Object.entries(actual.answers || {}).map(([id, a]) => (
+            <article key={id}>
+              <h3>{a.question.title}</h3>
+              <pre>{a.code}</pre>
+              <p>AI estimate: {a.evaluation.score}%</p>
+              <p>{a.evaluation.feedback?.implementation}</p>
+              <ul>
+                {a.evaluation.feedback?.suggestions?.map((s) => (
+                  <li key={s}>{s}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
+          <a href="/reports">Open saved reports</a>
+        </section>
+      )}
+    </Screen>
+  );
 }
 export function MockTests() {
-  const [category, setCategory] = useState('aptitude'), [session, setSession] = useState<{ sessionId: string; questions: { _id: string; question: string; options: string[] }[] } | null>(null), [score, setScore] = useState<{ score: number; total: number } | null>(null);
-  return <Screen title="One category. A focused check." intro="Multiple-choice answers are graded against saved questions; these are not AI coding tests."><Select label="Category" value={category} choices={['aptitude', 'reasoning', 'automata', 'englishComprehension', 'personality']} onChange={setCategory} /><Action run={async () => { setScore(null); setSession(await api('/api/sessions', json({ category }))); }}>Start mock test</Action>{session && !score && <AsyncForm label="Submit mock test" save={async f => { const answers = Object.fromEntries(session.questions.filter(q => f.has(q._id)).map(q => [q._id, value(f, q._id)])); setScore(await api('/api/sessions/submit', json({ sessionId: session.sessionId, answers }))); }}>{session.questions.map(q => <fieldset className="content-card" key={q._id}><legend>{q.question}</legend>{q.options.map(o => <label className="check-label" key={o}><input type="radio" name={q._id} value={o} />{o}</label>)}</fieldset>)}</AsyncForm>}{score && <section className="content-card" role="status"><h2>Saved score: {score.score}/{score.total}</h2><a href="/reports">Review your report</a></section>}{!session && <Empty>Select a category and start when ready.</Empty>}</Screen>;
+  const [category, setCategory] = useState('aptitude'),
+    [session, setSession] = useState<{
+      sessionId: string;
+      questions: { _id: string; question: string; options: string[] }[];
+    } | null>(null),
+    [score, setScore] = useState<{ score: number; total: number } | null>(null);
+  return (
+    <Screen
+      title="One category. A focused check."
+      intro="Multiple-choice answers are graded against saved questions; these are not AI coding tests."
+    >
+      <Select
+        label="Category"
+        value={category}
+        choices={['aptitude', 'reasoning', 'automata', 'englishComprehension', 'personality']}
+        onChange={setCategory}
+      />
+      <Action
+        run={async () => {
+          setScore(null);
+          setSession(await api('/api/sessions', json({ category })));
+        }}
+      >
+        Start mock test
+      </Action>
+      {session && !score && (
+        <AsyncForm
+          label="Submit mock test"
+          save={async (f) => {
+            const answers = Object.fromEntries(
+              session.questions.filter((q) => f.has(q._id)).map((q) => [q._id, value(f, q._id)]),
+            );
+            setScore(
+              await api('/api/sessions/submit', json({ sessionId: session.sessionId, answers })),
+            );
+          }}
+        >
+          {session.questions.map((q) => (
+            <fieldset className="content-card" key={q._id}>
+              <legend>{q.question}</legend>
+              {q.options.map((o) => (
+                <label className="check-label" key={o}>
+                  <input type="radio" name={q._id} value={o} />
+                  {o}
+                </label>
+              ))}
+            </fieldset>
+          ))}
+        </AsyncForm>
+      )}
+      {score && (
+        <section className="content-card" role="status">
+          <h2>
+            Saved score: {score.score}/{score.total}
+          </h2>
+          <a href="/reports">Review your report</a>
+        </section>
+      )}
+      {!session && <Empty>Select a category and start when ready.</Empty>}
+    </Screen>
+  );
 }
 export function OneOffTool({ kind }: { kind: 'ats' | 'resume-interview' | 'career' | 'builder' }) {
-  const [html, setHtml] = useState(''); const titles = { ats: 'A fresh look at your application.', 'resume-interview': 'Questions from your experience.', career: 'A direction worth exploring.', builder: 'Put your experience into words.' };
-  return <Screen title={titles[kind]} intro="Your familiar tool, in the new workspace. AI suggestions are guidance; uploads remain private."><section className="content-card"><AsyncForm label={kind === 'builder' ? 'Build resume' : 'Request feedback'} save={async f => {
-    const url = kind === 'ats' ? '/analyze' : kind === 'resume-interview' ? '/resume-interview' : kind === 'career' ? '/career-guidance' : '/generate-resume';
-    const options = kind === 'ats' || kind === 'resume-interview' ? { method: 'POST', body: f } : json(Object.fromEntries(f.entries()));
-    const result = await api<{ analysis?: string; questions?: string; careerGuidance?: string; resumeContent?: string }>(url, { ...options, headers: { Accept: 'application/json', ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }) } });
-    setHtml(result.analysis || result.questions || result.careerGuidance || result.resumeContent || '');
-  }}>{(kind === 'ats' || kind === 'resume-interview') && <label>PDF / DOCX (maximum 5 MiB)<input name="resume" type="file" accept=".pdf,.docx" required /></label>}{kind === 'ats' && <label>Job description<textarea name="jobDescription" maxLength={15000} required /></label>}{kind === 'career' && <label>Your skills<textarea name="skills" required maxLength={4000} /></label>}{kind === 'builder' && <>{['fullName','location','email','phone','links','objective','education','projects','skills','tools','core','experience','certifications','competitive'].map(name => <label key={name}>{name === 'fullName' ? 'Full name' : name.charAt(0).toUpperCase() + name.slice(1)}{['fullName','location','email','phone','links'].includes(name) ? <input name={name} required={name === 'fullName'} maxLength={4000} /> : <textarea name={name} maxLength={12000} />}</label>)}</>}</AsyncForm></section>{html && <section className="content-card"><h2>Your result</h2><div className="report-html" dangerouslySetInnerHTML={{ __html: html }} />{kind === 'builder' && <a className="button" href="/download-resume">Download resume PDF</a>}</section>}</Screen>;
+  const [html, setHtml] = useState('');
+  const titles = {
+    ats: 'A fresh look at your application.',
+    'resume-interview': 'Questions from your experience.',
+    career: 'A direction worth exploring.',
+    builder: 'Put your experience into words.',
+  };
+  return (
+    <Screen
+      title={titles[kind]}
+      intro="Your familiar tool, in the new workspace. AI suggestions are guidance; uploads remain private."
+    >
+      <section className="content-card">
+        <AsyncForm
+          label={kind === 'builder' ? 'Build resume' : 'Request feedback'}
+          save={async (f) => {
+            const url =
+              kind === 'ats'
+                ? '/analyze'
+                : kind === 'resume-interview'
+                  ? '/resume-interview'
+                  : kind === 'career'
+                    ? '/career-guidance'
+                    : '/generate-resume';
+            const options =
+              kind === 'ats' || kind === 'resume-interview'
+                ? { method: 'POST', body: f }
+                : json(Object.fromEntries(f.entries()));
+            const result = await api<{
+              analysis?: string;
+              questions?: string;
+              careerGuidance?: string;
+              resumeContent?: string;
+            }>(url, {
+              ...options,
+              headers: {
+                Accept: 'application/json',
+                ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+              },
+            });
+            setHtml(
+              result.analysis ||
+                result.questions ||
+                result.careerGuidance ||
+                result.resumeContent ||
+                '',
+            );
+          }}
+        >
+          {(kind === 'ats' || kind === 'resume-interview') && (
+            <label>
+              PDF / DOCX (maximum 5 MiB)
+              <input name="resume" type="file" accept=".pdf,.docx" required />
+            </label>
+          )}
+          {kind === 'ats' && (
+            <label>
+              Job description
+              <textarea name="jobDescription" maxLength={15000} required />
+            </label>
+          )}
+          {kind === 'career' && (
+            <label>
+              Your skills
+              <textarea name="skills" required maxLength={4000} />
+            </label>
+          )}
+          {kind === 'builder' && (
+            <>
+              {[
+                'fullName',
+                'location',
+                'email',
+                'phone',
+                'links',
+                'objective',
+                'education',
+                'projects',
+                'skills',
+                'tools',
+                'core',
+                'experience',
+                'certifications',
+                'competitive',
+              ].map((name) => (
+                <label key={name}>
+                  {name === 'fullName' ? 'Full name' : name.charAt(0).toUpperCase() + name.slice(1)}
+                  {['fullName', 'location', 'email', 'phone', 'links'].includes(name) ? (
+                    <input name={name} required={name === 'fullName'} maxLength={4000} />
+                  ) : (
+                    <textarea name={name} maxLength={12000} />
+                  )}
+                </label>
+              ))}
+            </>
+          )}
+        </AsyncForm>
+      </section>
+      {html && (
+        <section className="content-card">
+          <h2>Your result</h2>
+          <div className="report-html" dangerouslySetInnerHTML={{ __html: html }} />
+          {kind === 'builder' && (
+            <a className="button" href="/download-resume">
+              Download resume PDF
+            </a>
+          )}
+        </section>
+      )}
+    </Screen>
+  );
 }

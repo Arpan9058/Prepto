@@ -7,5 +7,9 @@ export default defineConfig({
   envPrefix: [],
   esbuild: { jsx: 'automatic' },
   build: { outDir: 'dist', emptyOutDir: true, sourcemap: false },
-  server: { host: '127.0.0.1', allowedHosts: ['localhost', '127.0.0.1'], fs: { strict: true, allow: [root, fileURLToPath(new URL('../node_modules', import.meta.url))] } }
+  server: {
+    host: '127.0.0.1',
+    allowedHosts: ['localhost', '127.0.0.1'],
+    fs: { strict: true, allow: [root, fileURLToPath(new URL('../node_modules', import.meta.url))] },
+  },
 });

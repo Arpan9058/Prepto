@@ -1,15 +1,312 @@
 import { useState } from 'react';
 import { api } from './api';
 import type { Attempt, Goal, Progress, Report, Trend } from './domain';
-import { Action, AsyncForm, Empty, LoadState, More, Screen, Select, json, percent, usePages, useResource, value } from './ui';
-function TrendCard({ trend, ai = false }: { trend: Trend; ai?: boolean }) { return <article className="content-card"><h3>{trend.skill}</h3><p>{ai ? 'AI estimate' : 'Latest score'} {percent(trend.latest)} · Previous {percent(trend.previous)}</p><p>{trend.sampleCount} samples</p><div className="trend-chart" role="img" aria-label={`${trend.skill} ${ai ? 'AI estimate' : 'score'} history: ${trend.history.map(p => p.score + '%').join(', ')}`}>{trend.history.map((p, i) => <span key={i} style={{ height: Math.max(2, p.score) + '%' }} title={`${p.score}% · ${p.submittedAt}`} />)}</div>{trend.nextStep && <p>{trend.nextStep}</p>}</article>; }
+import {
+  Action,
+  AsyncForm,
+  Empty,
+  LoadState,
+  More,
+  Screen,
+  Select,
+  json,
+  percent,
+  usePages,
+  useResource,
+  value,
+} from './ui';
+function TrendCard({ trend, ai = false }: { trend: Trend; ai?: boolean }) {
+  return (
+    <article className="content-card">
+      <h3>{trend.skill}</h3>
+      <p>
+        {ai ? 'AI estimate' : 'Latest score'} {percent(trend.latest)} · Previous{' '}
+        {percent(trend.previous)}
+      </p>
+      <p>{trend.sampleCount} samples</p>
+      <div
+        className="trend-chart"
+        role="img"
+        aria-label={`${trend.skill} ${ai ? 'AI estimate' : 'score'} history: ${trend.history.map((p) => p.score + '%').join(', ')}`}
+      >
+        {trend.history.map((p, i) => (
+          <span
+            key={i}
+            style={{ height: Math.max(2, p.score) + '%' }}
+            title={`${p.score}% · ${p.submittedAt}`}
+          />
+        ))}
+      </div>
+      {trend.nextStep && <p>{trend.nextStep}</p>}
+    </article>
+  );
+}
 export function ProgressScreen() {
-  const data = useResource<Progress>('/api/progress/overview'), [type, setType] = useState(''), history = usePages<Attempt>('/api/progress/attempts?' + (type ? 'type=' + type : '')), [editing, setEditing] = useState<Goal | null>(null);
-  return <Screen title="See what’s taking shape." intro="Return to your saved work, notice patterns and choose a useful next goal."><LoadState resource={data} />{data.data && <><p className="notice">{data.data.window.description}</p><div className="cards-grid"><article className="content-card"><h2>{data.data.summary.attempts}</h2><p>Attempts in this window</p></article><article className="content-card"><h2>{percent(data.data.summary.averageScore)}</h2><p>Normalized average in this window</p></article><article className="content-card"><h2>{data.data.summary.sessionsLast7Days}</h2><p>Completed in seven days</p></article></div><h2>Interview skill trends</h2><div className="cards-grid">{data.data.skills.map(s => <TrendCard trend={s} key={s.skill} />)}</div>{!data.data.skills.length && <Empty>Complete an interview with skill feedback to establish a trend.</Empty>}<h2>Compare your attempts</h2><div className="cards-grid">{data.data.comparisons.map(c => <article className="content-card" key={c.type}><h3>{c.type}</h3><p>{percent(c.previous)} → {percent(c.latest)}</p><p>{c.delta == null ? 'First scored attempt' : `${c.delta >= 0 ? '+' : ''}${c.delta} points`}</p></article>)}</div><h2>Coding practice · AI estimates only</h2><p>{data.data.codingPractice.description}</p><div className="cards-grid">{data.data.codingPractice.skills.map(s => <TrendCard trend={s} key={s.skill} ai />)}</div><h2>Your next study steps</h2><div className="cards-grid">{data.data.recommendations.map((r, i) => <article className="content-card" key={i}><h3>{r.skill || 'Begin with one focused session'}</h3><p>{r.message}</p><p>{r.nextStep}</p><a href="/question-bank">Find practice questions</a></article>)}</div><h2>Personal study goals</h2><div className="cards-grid">{data.data.goals.map(g => <article className="content-card" key={g.id}><h3>{g.skill}</h3><p>Target {g.targetScore}% · Current {percent(g.currentScore)}</p><p>{g.weekCompleted}/{g.weeklySessions} sessions this week · {g.achieved ? 'Goal met' : 'Keep practicing'}</p><div className="toolbar"><button className="button button-secondary" onClick={() => setEditing(g)}>Edit goal</button><Action run={async () => { await api(`/api/progress/goals/${g.id}`, json({ revision: g.revision }, 'DELETE')); data.reload(); }}>Remove goal</Action></div></article>)}</div><section className="content-card"><h3>{editing ? 'Edit study goal' : 'Choose a study goal'}</h3><AsyncForm key={editing?.id || 'new'} label="Save goal" save={async f => { const skill = value(f, 'skill'), existing = data.data!.goals.find(g => g.skill.toLowerCase() === skill.toLowerCase()); await api('/api/progress/goals', json({ skill, targetScore: Number(value(f, 'targetScore')), weeklySessions: Number(value(f, 'weeklySessions')), revision: existing?.revision }, 'PUT')); setEditing(null); data.reload(); }}><label>Skill<input name="skill" maxLength={60} required defaultValue={editing?.skill} /></label><label>Target score (%)<input name="targetScore" type="number" min={1} max={100} defaultValue={editing?.targetScore || 80} required /></label><label>Sessions per week<input name="weeklySessions" type="number" min={1} max={14} defaultValue={editing?.weeklySessions || 2} required /></label></AsyncForm></section></>}
-  <h2>Attempt history</h2><Select label="Practice type" choices={['', 'InterviewPractice', 'CodingPractice', 'CodingTest', 'HRInterview', 'TechnicalInterview', 'MockTest']} value={type} onChange={setType} /><LoadState resource={history} /><div className="table-region" role="region" aria-label="Attempt history" tabIndex={0}><table><thead><tr><th>Date</th><th>Practice</th><th>Score / estimate</th><th>Review</th></tr></thead><tbody>{history.items.map(a => <tr key={a.key}><td>{a.submittedAt ? new Date(a.submittedAt).toLocaleDateString() : 'Unknown'}</td><td>{a.title}</td><td>{a.aiScore != null ? `AI estimate ${a.aiScore}% · execution disabled` : percent(a.score)}</td><td><a href={a.reportUrl}>View report</a></td></tr>)}</tbody></table></div>{!history.loading && !history.items.length && <Empty>No attempts in this view yet.</Empty>}<More run={history.more} /></Screen>;
+  const data = useResource<Progress>('/api/progress/overview'),
+    [type, setType] = useState(''),
+    history = usePages<Attempt>('/api/progress/attempts?' + (type ? 'type=' + type : '')),
+    [editing, setEditing] = useState<Goal | null>(null);
+  return (
+    <Screen
+      title="See what’s taking shape."
+      intro="Return to your saved work, notice patterns and choose a useful next goal."
+    >
+      <LoadState resource={data} />
+      {data.data && (
+        <>
+          <p className="notice">{data.data.window.description}</p>
+          <div className="cards-grid">
+            <article className="content-card">
+              <h2>{data.data.summary.attempts}</h2>
+              <p>Attempts in this window</p>
+            </article>
+            <article className="content-card">
+              <h2>{percent(data.data.summary.averageScore)}</h2>
+              <p>Normalized average in this window</p>
+            </article>
+            <article className="content-card">
+              <h2>{data.data.summary.sessionsLast7Days}</h2>
+              <p>Completed in seven days</p>
+            </article>
+          </div>
+          <h2>Interview skill trends</h2>
+          <div className="cards-grid">
+            {data.data.skills.map((s) => (
+              <TrendCard trend={s} key={s.skill} />
+            ))}
+          </div>
+          {!data.data.skills.length && (
+            <Empty>Complete an interview with skill feedback to establish a trend.</Empty>
+          )}
+          <h2>Compare your attempts</h2>
+          <div className="cards-grid">
+            {data.data.comparisons.map((c) => (
+              <article className="content-card" key={c.type}>
+                <h3>{c.type}</h3>
+                <p>
+                  {percent(c.previous)} → {percent(c.latest)}
+                </p>
+                <p>
+                  {c.delta == null
+                    ? 'First scored attempt'
+                    : `${c.delta >= 0 ? '+' : ''}${c.delta} points`}
+                </p>
+              </article>
+            ))}
+          </div>
+          <h2>Coding practice · AI estimates only</h2>
+          <p>{data.data.codingPractice.description}</p>
+          <div className="cards-grid">
+            {data.data.codingPractice.skills.map((s) => (
+              <TrendCard trend={s} key={s.skill} ai />
+            ))}
+          </div>
+          <h2>Your next study steps</h2>
+          <div className="cards-grid">
+            {data.data.recommendations.map((r, i) => (
+              <article className="content-card" key={i}>
+                <h3>{r.skill || 'Begin with one focused session'}</h3>
+                <p>{r.message}</p>
+                <p>{r.nextStep}</p>
+                <a href="/question-bank">Find practice questions</a>
+              </article>
+            ))}
+          </div>
+          <h2>Personal study goals</h2>
+          <div className="cards-grid">
+            {data.data.goals.map((g) => (
+              <article className="content-card" key={g.id}>
+                <h3>{g.skill}</h3>
+                <p>
+                  Target {g.targetScore}% · Current {percent(g.currentScore)}
+                </p>
+                <p>
+                  {g.weekCompleted}/{g.weeklySessions} sessions this week ·{' '}
+                  {g.achieved ? 'Goal met' : 'Keep practicing'}
+                </p>
+                <div className="toolbar">
+                  <button className="button button-secondary" onClick={() => setEditing(g)}>
+                    Edit goal
+                  </button>
+                  <Action
+                    run={async () => {
+                      await api(
+                        `/api/progress/goals/${g.id}`,
+                        json({ revision: g.revision }, 'DELETE'),
+                      );
+                      data.reload();
+                    }}
+                  >
+                    Remove goal
+                  </Action>
+                </div>
+              </article>
+            ))}
+          </div>
+          <section className="content-card">
+            <h3>{editing ? 'Edit study goal' : 'Choose a study goal'}</h3>
+            <AsyncForm
+              key={editing?.id || 'new'}
+              label="Save goal"
+              save={async (f) => {
+                const skill = value(f, 'skill'),
+                  existing = data.data!.goals.find(
+                    (g) => g.skill.toLowerCase() === skill.toLowerCase(),
+                  );
+                await api(
+                  '/api/progress/goals',
+                  json(
+                    {
+                      skill,
+                      targetScore: Number(value(f, 'targetScore')),
+                      weeklySessions: Number(value(f, 'weeklySessions')),
+                      revision: existing?.revision,
+                    },
+                    'PUT',
+                  ),
+                );
+                setEditing(null);
+                data.reload();
+              }}
+            >
+              <label>
+                Skill
+                <input name="skill" maxLength={60} required defaultValue={editing?.skill} />
+              </label>
+              <label>
+                Target score (%)
+                <input
+                  name="targetScore"
+                  type="number"
+                  min={1}
+                  max={100}
+                  defaultValue={editing?.targetScore || 80}
+                  required
+                />
+              </label>
+              <label>
+                Sessions per week
+                <input
+                  name="weeklySessions"
+                  type="number"
+                  min={1}
+                  max={14}
+                  defaultValue={editing?.weeklySessions || 2}
+                  required
+                />
+              </label>
+            </AsyncForm>
+          </section>
+        </>
+      )}
+      <h2>Attempt history</h2>
+      <Select
+        label="Practice type"
+        choices={[
+          '',
+          'InterviewPractice',
+          'CodingPractice',
+          'CodingTest',
+          'HRInterview',
+          'TechnicalInterview',
+          'MockTest',
+        ]}
+        value={type}
+        onChange={setType}
+      />
+      <LoadState resource={history} />
+      <div className="table-region" role="region" aria-label="Attempt history" tabIndex={0}>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Practice</th>
+              <th>Score / estimate</th>
+              <th>Review</th>
+            </tr>
+          </thead>
+          <tbody>
+            {history.items.map((a) => (
+              <tr key={a.key}>
+                <td>{a.submittedAt ? new Date(a.submittedAt).toLocaleDateString() : 'Unknown'}</td>
+                <td>{a.title}</td>
+                <td>
+                  {a.aiScore != null
+                    ? `AI estimate ${a.aiScore}% · execution disabled`
+                    : percent(a.score)}
+                </td>
+                <td>
+                  <a href={a.reportUrl}>View report</a>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {!history.loading && !history.items.length && <Empty>No attempts in this view yet.</Empty>}
+      <More run={history.more} />
+    </Screen>
+  );
 }
 export function Reports() {
   const rows = useResource<{ items: Report[] }>('/api/reports');
-  return <Screen title="Your work, worth returning to." intro="Saved private reports. Coding estimates never indicate executable tests passed."><LoadState resource={rows} /><div className="cards-grid">{rows.data?.items.map(r => { const query = '?type=' + r.type + (r.subTest ? '&sub=' + r.subTest : ''); return <article className="content-card" key={r.type + (r.subTest || '') + r.id}><p className="eyebrow">{r.type}</p><h2>{r.title}</h2><p>Score / estimate: {r.score}</p><p>{r.submittedAt}</p><div className="toolbar"><a className="button" href={`/reports/view/${r.id}${query}`}>View report</a><a className="button button-secondary" href={`/reports/download/${r.id}${query}`}>Download JSON</a></div></article>; })}</div>{rows.data && !rows.data.items.length && <Empty>No saved reports yet. Complete an interview or request coding feedback to begin.</Empty>}</Screen>;
+  return (
+    <Screen
+      title="Your work, worth returning to."
+      intro="Saved private reports. Coding estimates never indicate executable tests passed."
+    >
+      <LoadState resource={rows} />
+      <div className="cards-grid">
+        {rows.data?.items.map((r) => {
+          const query = '?type=' + r.type + (r.subTest ? '&sub=' + r.subTest : '');
+          return (
+            <article className="content-card" key={r.type + (r.subTest || '') + r.id}>
+              <p className="eyebrow">{r.type}</p>
+              <h2>{r.title}</h2>
+              <p>Score / estimate: {r.score}</p>
+              <p>{r.submittedAt}</p>
+              <div className="toolbar">
+                <a className="button" href={`/reports/view/${r.id}${query}`}>
+                  View report
+                </a>
+                <a className="button button-secondary" href={`/reports/download/${r.id}${query}`}>
+                  Download JSON
+                </a>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+      {rows.data && !rows.data.items.length && (
+        <Empty>
+          No saved reports yet. Complete an interview or request coding feedback to begin.
+        </Empty>
+      )}
+    </Screen>
+  );
 }
-export function ReportView({ id }: { id: string }) { const row = useResource<Report>(`/api/reports/${id}${location.search}`); return <Screen title={row.data?.title || 'Your private report'} intro="A saved snapshot of your practice and feedback."><LoadState resource={row} />{row.data && <section className="content-card"><p>{row.data.type} · {row.data.submittedAt}</p><p>Score / estimate: {row.data.score}</p>{/* This is server-sanitized allowlisted report HTML; client/user HTML is never rendered. */}<div className="report-html" dangerouslySetInnerHTML={{ __html: row.data.fullReport }} /><a className="button" href={`/reports/download/${id}${location.search}`}>Download JSON</a></section>}<a href="/reports">Back to reports</a></Screen>; }
+export function ReportView({ id }: { id: string }) {
+  const row = useResource<Report>(`/api/reports/${id}${location.search}`);
+  return (
+    <Screen
+      title={row.data?.title || 'Your private report'}
+      intro="A saved snapshot of your practice and feedback."
+    >
+      <LoadState resource={row} />
+      {row.data && (
+        <section className="content-card">
+          <p>
+            {row.data.type} · {row.data.submittedAt}
+          </p>
+          <p>Score / estimate: {row.data.score}</p>
+          {/* This is server-sanitized allowlisted report HTML; client/user HTML is never rendered. */}
+          <div className="report-html" dangerouslySetInnerHTML={{ __html: row.data.fullReport }} />
+          <a className="button" href={`/reports/download/${id}${location.search}`}>
+            Download JSON
+          </a>
+        </section>
+      )}
+      <a href="/reports">Back to reports</a>
+    </Screen>
+  );
+}

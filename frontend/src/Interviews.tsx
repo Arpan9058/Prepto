@@ -2,23 +2,219 @@ import { useState } from 'react';
 import { api } from './api';
 import type { Question, Session } from './domain';
 import type { Interview } from './api';
-import { Action, AsyncForm, Empty, LoadState, More, Screen, json, percent, usePages, useResource, value } from './ui';
+import {
+  Action,
+  AsyncForm,
+  Empty,
+  LoadState,
+  More,
+  Screen,
+  json,
+  percent,
+  usePages,
+  useResource,
+  value,
+} from './ui';
 export function Interviews() {
-  const questions = usePages<Question>('/api/questions'), sessions = usePages<Interview>('/api/interviews');
+  const questions = usePages<Question>('/api/questions'),
+    sessions = usePages<Interview>('/api/interviews');
   const preselected = new URLSearchParams(location.search).get('question');
   const [selected, setSelected] = useState<string[]>(preselected ? [preselected] : []);
   const initial = useResource<Question>(`/api/questions/${preselected || 'sample-01'}`);
-  const choices = questions.items.some(q => q.id === preselected) || !preselected || !initial.data ? questions.items : [initial.data, ...questions.items];
-  return <Screen title="Make space for a good answer." intro="Choose 1–10 questions. Your session, answers and feedback are saved privately."><section className="content-card"><h2>Start a focused interview</h2><LoadState resource={questions} /><AsyncForm label="Start interview" save={async form => { const result = await api<Interview>('/api/interviews', json({ title: value(form, 'title') || 'Focused practice', questionIds: selected })); location.assign(`/interviews/${result.id}`); }}><label>Session title<input name="title" maxLength={100} placeholder="Focused practice" /></label><div className="question-picker">{choices.map(q => <label className="check-label" key={q.id}><input type="checkbox" checked={selected.includes(q.id)} onChange={e => setSelected(old => e.target.checked ? [...old, q.id] : old.filter(id => id !== q.id))} />{q.title} <span>{q.difficulty}</span></label>)}</div></AsyncForm><More run={questions.more} /></section><h2>Your sessions</h2><LoadState resource={sessions} /><div className="cards-grid">{sessions.items.map(s => <article className="content-card" key={s.id}><p className="eyebrow">{s.status}</p><h3>{s.title}</h3><p>{s.answeredCount}/{s.questionCount} answers saved</p><a className="button" href={`/interviews/${s.id}`}>{s.status === 'completed' ? 'Review interview' : 'Open session'}</a></article>)}</div>{!sessions.loading && !sessions.items.length && <Empty>Your first interview belongs here. Choose a question to begin.</Empty>}<More run={sessions.more} /></Screen>;
+  const choices =
+    questions.items.some((q) => q.id === preselected) || !preselected || !initial.data
+      ? questions.items
+      : [initial.data, ...questions.items];
+  return (
+    <Screen
+      title="Make space for a good answer."
+      intro="Choose 1–10 questions. Your session, answers and feedback are saved privately."
+    >
+      <section className="content-card">
+        <h2>Start a focused interview</h2>
+        <LoadState resource={questions} />
+        <AsyncForm
+          label="Start interview"
+          save={async (form) => {
+            const result = await api<Interview>(
+              '/api/interviews',
+              json({ title: value(form, 'title') || 'Focused practice', questionIds: selected }),
+            );
+            location.assign(`/interviews/${result.id}`);
+          }}
+        >
+          <label>
+            Session title
+            <input name="title" maxLength={100} placeholder="Focused practice" />
+          </label>
+          <div className="question-picker">
+            {choices.map((q) => (
+              <label className="check-label" key={q.id}>
+                <input
+                  type="checkbox"
+                  checked={selected.includes(q.id)}
+                  onChange={(e) =>
+                    setSelected((old) =>
+                      e.target.checked ? [...old, q.id] : old.filter((id) => id !== q.id),
+                    )
+                  }
+                />
+                {q.title} <span>{q.difficulty}</span>
+              </label>
+            ))}
+          </div>
+        </AsyncForm>
+        <More run={questions.more} />
+      </section>
+      <h2>Your sessions</h2>
+      <LoadState resource={sessions} />
+      <div className="cards-grid">
+        {sessions.items.map((s) => (
+          <article className="content-card" key={s.id}>
+            <p className="eyebrow">{s.status}</p>
+            <h3>{s.title}</h3>
+            <p>
+              {s.answeredCount}/{s.questionCount} answers saved
+            </p>
+            <a className="button" href={`/interviews/${s.id}`}>
+              {s.status === 'completed' ? 'Review interview' : 'Open session'}
+            </a>
+          </article>
+        ))}
+      </div>
+      {!sessions.loading && !sessions.items.length && (
+        <Empty>Your first interview belongs here. Choose a question to begin.</Empty>
+      )}
+      <More run={sessions.more} />
+    </Screen>
+  );
 }
 export function InterviewSession({ id }: { id: string }) {
-  const row = useResource<Session>(`/api/interviews/${id}`), review = useResource<Session>(`/api/interviews/${id}${row.data?.status === 'completed' ? '/review' : ''}`);
+  const row = useResource<Session>(`/api/interviews/${id}`),
+    review = useResource<Session>(
+      `/api/interviews/${id}${row.data?.status === 'completed' ? '/review' : ''}`,
+    );
   const session = row.data?.status === 'completed' ? review.data : row.data;
   const [answer, setAnswer] = useState('');
-  if (!session) return <Screen title="Your interview" intro="Your answers stay private."><LoadState resource={row.error ? row : review} /></Screen>;
-  const question = session.questions.find(q => q.id === session.currentQuestionId);
-  const refresh = () => { row.reload(); review.reload(); };
-  return <Screen title={session.title} intro={`${session.status} · ${session.answeredCount}/${session.questionCount} answers saved${session.score == null ? '' : ' · ' + percent(session.score)}`}><div className="toolbar"><button className="button button-secondary" onClick={refresh}>Refresh session</button>{(session.status === 'active' || session.status === 'paused') && <Action run={async () => { await api(`/api/interviews/${id}/${session.status === 'active' ? 'pause' : 'resume'}`, json({ version: session.version })); refresh(); }}>{session.status === 'active' ? 'Pause interview' : 'Resume interview'}</Action>}{session.status === 'active' && session.answeredCount === session.questionCount && <Action run={async () => { await api(`/api/interviews/${id}/complete`, json({ version: session.version })); refresh(); }}>Complete interview</Action>}</div>{session.busy && <p role="status">Feedback is in progress. Refresh shortly to see the saved result.</p>}{session.status === 'paused' && <p className="notice">Paused. Your work is saved; resume when you are ready.</p>}
-  {question && session.status === 'active' && <section className="content-card"><p className="eyebrow">Question {session.answeredCount + 1} of {session.questionCount}</p><h2>{question.title}</h2><p>{question.prompt}</p><AsyncForm key={question.id} label="Save answer and feedback" save={async (form, requestId) => { await api(`/api/interviews/${id}/answers`, json({ text: question.type === 'multipleChoice' ? value(form, 'choice') : answer, questionId: question.id, requestId, version: session.version })); setAnswer(''); refresh(); }}>{question.type === 'multipleChoice' ? <label>Your answer<select name="choice">{question.options.map(o => <option key={o}>{o}</option>)}</select></label> : <label>Your answer<textarea name="answer" value={answer} onChange={e => setAnswer(e.target.value)} maxLength={12000} required /></label>}</AsyncForm></section>}
-  <h2>Saved answer review</h2>{session.answers.map(a => <article className="content-card" key={a.questionId}><h3>{session.questions.find(q => q.id === a.questionId)?.title}</h3><p>Your answer: {a.text}</p><p className="score-label">Score {percent(a.score)}</p><p>{a.feedback}</p><p>Next step: {a.nextStep}</p>{session.status === 'completed' && <details><summary>Reference answer and explanation</summary><p>{session.questions.find(q => q.id === a.questionId)?.explanation}</p><p>{session.questions.find(q => q.id === a.questionId)?.correctAnswer}</p></details>}</article>)}{!session.answers.length && <Empty>Your saved feedback will appear after the first answer.</Empty>}<a href="/interviews">Back to interviews</a></Screen>;
+  if (!session)
+    return (
+      <Screen title="Your interview" intro="Your answers stay private.">
+        <LoadState resource={row.error ? row : review} />
+      </Screen>
+    );
+  const question = session.questions.find((q) => q.id === session.currentQuestionId);
+  const refresh = () => {
+    row.reload();
+    review.reload();
+  };
+  return (
+    <Screen
+      title={session.title}
+      intro={`${session.status} · ${session.answeredCount}/${session.questionCount} answers saved${session.score == null ? '' : ' · ' + percent(session.score)}`}
+    >
+      <div className="toolbar">
+        <button className="button button-secondary" onClick={refresh}>
+          Refresh session
+        </button>
+        {(session.status === 'active' || session.status === 'paused') && (
+          <Action
+            run={async () => {
+              await api(
+                `/api/interviews/${id}/${session.status === 'active' ? 'pause' : 'resume'}`,
+                json({ version: session.version }),
+              );
+              refresh();
+            }}
+          >
+            {session.status === 'active' ? 'Pause interview' : 'Resume interview'}
+          </Action>
+        )}
+        {session.status === 'active' && session.answeredCount === session.questionCount && (
+          <Action
+            run={async () => {
+              await api(`/api/interviews/${id}/complete`, json({ version: session.version }));
+              refresh();
+            }}
+          >
+            Complete interview
+          </Action>
+        )}
+      </div>
+      {session.busy && (
+        <p role="status">Feedback is in progress. Refresh shortly to see the saved result.</p>
+      )}
+      {session.status === 'paused' && (
+        <p className="notice">Paused. Your work is saved; resume when you are ready.</p>
+      )}
+      {question && session.status === 'active' && (
+        <section className="content-card">
+          <p className="eyebrow">
+            Question {session.answeredCount + 1} of {session.questionCount}
+          </p>
+          <h2>{question.title}</h2>
+          <p>{question.prompt}</p>
+          <AsyncForm
+            key={question.id}
+            label="Save answer and feedback"
+            save={async (form, requestId) => {
+              await api(
+                `/api/interviews/${id}/answers`,
+                json({
+                  text: question.type === 'multipleChoice' ? value(form, 'choice') : answer,
+                  questionId: question.id,
+                  requestId,
+                  version: session.version,
+                }),
+              );
+              setAnswer('');
+              refresh();
+            }}
+          >
+            {question.type === 'multipleChoice' ? (
+              <label>
+                Your answer
+                <select name="choice">
+                  {question.options.map((o) => (
+                    <option key={o}>{o}</option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <label>
+                Your answer
+                <textarea
+                  name="answer"
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  maxLength={12000}
+                  required
+                />
+              </label>
+            )}
+          </AsyncForm>
+        </section>
+      )}
+      <h2>Saved answer review</h2>
+      {session.answers.map((a) => (
+        <article className="content-card" key={a.questionId}>
+          <h3>{session.questions.find((q) => q.id === a.questionId)?.title}</h3>
+          <p>Your answer: {a.text}</p>
+          <p className="score-label">Score {percent(a.score)}</p>
+          <p>{a.feedback}</p>
+          <p>Next step: {a.nextStep}</p>
+          {session.status === 'completed' && (
+            <details>
+              <summary>Reference answer and explanation</summary>
+              <p>{session.questions.find((q) => q.id === a.questionId)?.explanation}</p>
+              <p>{session.questions.find((q) => q.id === a.questionId)?.correctAnswer}</p>
+            </details>
+          )}
+        </article>
+      ))}
+      {!session.answers.length && (
+        <Empty>Your saved feedback will appear after the first answer.</Empty>
+      )}
+      <a href="/interviews">Back to interviews</a>
+    </Screen>
+  );
 }
