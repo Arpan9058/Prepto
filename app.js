@@ -31,6 +31,7 @@ function createApp({ env = process.env, firebase = firebaseDefault, gemini = cre
   app.locals.logger = logger;
   app.set('views', path.join(__dirname, 'views'));
   app.set('view engine', 'ejs');
+  app.use((req, res, next) => { res.locals.currentPath = req.path; res.locals.demoMode = app.locals.demoMode === true; next(); });
   app.use(pinoHttp({ logger, serializers: { req: req => ({ id: req.id, method: req.method, url: req.url?.split('?')[0] }), res: res => ({ statusCode: res.statusCode }) } }));
   app.use((_req, res, next) => { res.set('X-Content-Type-Options', 'nosniff'); res.set('Referrer-Policy', 'same-origin'); next(); });
   app.use(cookieParser());

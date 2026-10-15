@@ -1,1 +1,6 @@
-<nav class="product-nav" aria-label="Preparation"><a class="brand" href="/dashboard">Prepto<span>Practice with purpose.</span></a><div><a href="/resumes">Resume versions</a><a href="/resume-matches">Matching history</a><a href="/coding-practice">Coding practice</a><a href="/question-bank">Question bank</a><a href="/interviews">Practice interviews</a><a href="/progress">Progress</a><a href="/reports">Reports</a><a href="/dashboard">Dashboard</a></div></nav>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<nav class="product-nav" aria-label="Preparation">
+  <a class="brand" href="/dashboard">Prepto<span>Practice with purpose.</span></a>
+  <div class="product-links"><% const links = [['/dashboard','Dashboard'],['/question-bank','Question bank'],['/interviews','Interviews'],['/resumes','Resumes'],['/resume-matches','Job matches'],['/coding-practice','Coding'],['/progress','Progress'],['/reports','Reports']]; links.forEach(([href, label]) => { const active = typeof currentPath === 'string' && (currentPath === href || currentPath.startsWith(href + '/')); %><a href="<%= href %>"<% if(active) { %> aria-current="page"<% } %>><%= label %></a><% }); %></div>
+</nav>
+<% if(typeof demoMode !== 'undefined' && demoMode) { %><aside class="demo-banner" aria-label="Offline demo">OFFLINE DEMO · Synthetic data · Simulated AI feedback · No Firebase connection · Resets on restart. <a href="/demo">Demo guide</a> · <a href="/demo/exit">Exit demo</a></aside><% } %>

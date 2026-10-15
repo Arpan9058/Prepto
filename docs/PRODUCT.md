@@ -1,0 +1,7 @@
+# Product navigation and accessibility
+
+Dashboard, question bank, persistent interviews, resume library/versions, job matching, coding, reports and progress use one shared navigation partial with a server-selected current page. The dashboard links to the same destinations and explains the preparation loop. Older guided rounds, one-off ATS/resume tools and the original progress screen remain under labeled tool groups; their URLs and backend authorization remain unchanged.
+
+A keyboard-visible skip link moves focus to the main landmark. Links/buttons have visible focus and minimum 44px targets; mobile navigation wraps without hiding workflows behind pointer-only controls. Forms keep visible labels. Shared request handling announces loading through aria-busy, uses role=alert for recoverable failures, and handles non-JSON gateway errors. Report tables retain view/JSON download actions without nested interactive controls and use labeled, keyboard-scrollable overflow regions. Empty screens explain how to start; retries retain entered form data.
+
+`tests/navigation.test.js` checks shared links, active page and legacy entry points with authentication intact. Real Chromium checks keyboard skip behavior, each core mobile destination, overflow, non-JSON failure recovery and loading/empty announcements. These are targeted accessibility checks, not a full assistive-technology conformance audit.

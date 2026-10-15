@@ -240,3 +240,26 @@ test('expanded coding browser filters topics and displays examples and edge case
   expect(await page.$eval('#workspace', n => n.textContent)).toContain('Illustrative examples (not executed)');
   page.once('dialog', d => d.accept()); await page.select('#code-language', 'python'); await page.waitForFunction(() => document.getElementById('code-editor').value.includes('def workshop_order'));
 });
+test('shared navigation supports keyboard skip, active pages and mobile dashboard links', async () => {
+  await page.setViewport({ width: 390, height: 844 }); await page.goto(base + '/dashboard');
+  await page.keyboard.press('Tab'); expect(await page.evaluate(() => document.activeElement.textContent)).toBe('Skip to main content');
+  await page.keyboard.press('Enter'); expect(await page.evaluate(() => document.activeElement.id)).toBe('main-content');
+  expect(await page.$eval('.product-nav [aria-current=page]', n => n.textContent)).toBe('Dashboard');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  for (const path of ['/question-bank', '/interviews', '/resumes', '/coding-practice', '/progress']) {
+    await Promise.all([page.waitForNavigation(), page.click(`.product-nav a[href="${path}"]`)]); await settled();
+    expect(await page.$eval('.product-nav [aria-current=page]', n => n.getAttribute('href'))).toBe(path);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+});
+test('resume browser recovers from non-JSON errors and announces loading and empty states', async () => {
+  await page.setRequestInterception(true); let held, signal; const intercepted = new Promise(r => { signal = r; });
+  const intercept = r => { if (r.url().includes('/api/resumes?')) { held = r; signal(); } else r.continue(); };
+  page.on('request', intercept); await page.goto(base + '/resumes'); await intercepted;
+  expect(await page.$eval('main', n => n.getAttribute('aria-busy'))).toBe('true');
+  await held.respond({ status: 502, contentType: 'text/html', body: '<p>Gateway offline</p>' });
+  await page.waitForFunction(() => document.getElementById('status').getAttribute('role') === 'alert');
+  expect(await page.$eval('#status', n => n.textContent)).toContain('unreadable response');
+  page.off('request', intercept); page.on('request', r => r.continue()); await page.click('#refresh-resumes'); await settled();
+  expect(await page.$eval('#status', n => n.textContent)).toContain('No saved resumes'); expect(await page.$eval('main', n => n.getAttribute('aria-busy'))).toBe('false');
+});
