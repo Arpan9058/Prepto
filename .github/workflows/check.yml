@@ -6,7 +6,19 @@ on:
 permissions:
   contents: read
 jobs:
+  offline:
+    name: Node-only offline backend and React tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - run: npm test
+      - run: npm run test:frontend
   check:
+    name: Build, browser, emulator and security
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,23 +30,16 @@ jobs:
       - name: Configure Chromium
         run: echo "CHROMIUM_EXECUTABLE_PATH=${{ steps.chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
       - run: npm ci
-      - name: Build, lint and regression tests
-        shell: bash
-        run: |
-          set +e
-          npm run check > check-output.log 2>&1
-          result=$?
-          cat check-output.log
-          if [ "$result" -ne 0 ]; then
-            {
-              echo '### Regression failure details (offline tests)'
-              echo '```text'
-              tail -240 check-output.log
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
-            node -e 'const fs = require("node:fs"); const lines = fs.readFileSync("check-output.log", "utf8").split("\n"); const selected = lines.filter(line => /FAIL|Error:|Expected:|Received:|●|Test Suites:|Tests:|[0-9]+:[0-9]+.*error/.test(line)).slice(0, 25); for (const line of selected) console.log("::error title=Offline regression::" + line.replaceAll("%", "%25").replaceAll("\r", "%0D"));' 
-          fi
-          exit "$result"
+      - run: npm run build
+      - run: npm run frontend:typecheck
+      - run: npm run backend:typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run test:backend
+      - run: npm run test:frontend
+      - run: npm run test:production
+        env:
+          CHROMIUM_NO_SANDBOX: 'true'
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -43,12 +48,19 @@ jobs:
         with:
           path: .cache/firebase-emulators
           key: firestore-emulator-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-      - name: Firestore rules and backend emulator tests
-        run: npm run test:emulator
-      - name: Production dependency audit
-        run: npm audit --omit=dev --audit-level=high
+      - run: npm run test:emulator
+      - run: npm audit --omit=dev --audit-level=high
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage
           path: coverage
+  docker:
+    name: Docker production smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm run test:docker

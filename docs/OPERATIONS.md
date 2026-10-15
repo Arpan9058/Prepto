@@ -41,7 +41,7 @@ Use HTTPS, Secure/HttpOnly cookies, a single explicitly trusted TLS proxy when `
 
 ## Live validation (deferred)
 
-Live checks are blocked/deferred for this milestone by user direction. Before running them later, repair/reuse the existing secure Firebase binding and supply the existing Gemini binding. Set the non-secret `LIVE_FIREBASE_PROJECT_ID` safety pin to the authorized project. Run `npm run verify:live` from a trusted terminal; never paste keys into chat.
+Live checks are blocked/deferred for this milestone by user direction. Before running them later, repair/reuse the existing secure Firebase binding and supply the existing Gemini binding. Set the non-secret `LIVE_FIREBASE_PROJECT_ID` safety pin to the authorized project. Run `npm run verify:live -- --run` from a trusted terminal; never paste keys into chat.
 
 The runner verifies the credential project before creating `prepto-live-*` test users/data, uses actual Firebase Admin Auth/Firestore and Gemini, checks owner boundaries, then recursively removes test-user records, session snapshots, questions/audit events, private resume versions/matches and temporary Auth users in `finally`. It reports status metadata only. Exit 0 means executed checks and cleanup passed; 2 means blocked prerequisites; 1 means failure. No data is created when prerequisites are blocked. Review a cleanup failure before retrying. Authenticated live browser login/ID-token exchange is a separate staging check; offline browser checks do not establish it.
 
@@ -76,3 +76,5 @@ Use `npm run demo` only as the documented loopback development entry point, neve
 ## React build and deployment
 
 Run `npm ci && npm run build` before `npm start`. Production Express serves `frontend/dist`; Vite is a build/development dependency. `npm run dev` mounts Vite on the same Express server, retaining identical auth/origin guards. Docker now uses a frontend build stage; local build checks do not prove Docker execution. New public runtime configuration includes only publishable Firebase web metadata; no server binding belongs in VITE variables. Existing .env/bindings must be preserved. See FRONTEND_MIGRATION.md for the full checklist, legacy negotiation, screenshots and explicitly pending live/deployment checks.
+
+For the current production/Docker smoke, default-vs-browser test split, scoped backend typecheck, separate React coverage and exact VS Code live steps, see [VERIFICATION.md](VERIFICATION.md). No live or deployment claim is implied by an offline smoke.

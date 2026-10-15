@@ -39,6 +39,7 @@ function createApp({ env = process.env, firebase = firebaseDefault, gemini = cre
   app.use(cookieParser());
   app.use(express.json({ limit: '256kb' }));
   app.use(express.urlencoded({ extended: false, limit: '256kb' }));
+  app.use(require('./utils/validation').validateObjectBody);
   app.use(session({ name: sessionName, secret: env.SESSION_SECRET, resave: false, saveUninitialized: false,
     store: sessionStore || (env.NODE_ENV === 'production' ? new FirestoreSessionStore(firebase) : undefined),
     cookie: { httpOnly: true, secure: env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 3600000 } }));

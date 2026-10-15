@@ -6,7 +6,7 @@ See [frontend architecture, completed migration checklist, screenshots and valid
 
 ## Local development
 
-Use Node **24.12+ in the 24.x line** (`.nvmrc` pins 24.19.0), npm and Chromium. On Debian/Ubuntu, install Chromium with `sudo apt-get update && sudo apt-get install -y chromium`. On other platforms install Chrome/Chromium and set `CHROMIUM_EXECUTABLE_PATH` to its executable.
+For the default offline tests, Node/npm are sufficient. Full browser/PDF checks additionally need Chromium and emulator checks need Java 21. Use Node **24.12+ in the 24.x line** (`.nvmrc` pins 24.19.0), npm and Chromium. On Debian/Ubuntu, install Chromium with `sudo apt-get update && sudo apt-get install -y chromium`. On other platforms install Chrome/Chromium and set `CHROMIUM_EXECUTABLE_PATH` to its executable.
 
 ```sh
 npm ci
@@ -24,12 +24,14 @@ npm start
 | `npm run dev` | Same-origin Vite middleware + Express development |
 | `npm run build` | Backend/document checks, strict TypeScript check and Vite production build |
 | `npm run lint` | ESLint |
-| `npm test` | Offline Jest/Supertest suite with coverage and real PDF/DOCX extraction/Chromium export |
-| `npm run check` | Build, lint and tests |
+| `npm test` | Node-only offline Jest/Supertest tests, PDF/DOCX extraction and enforced backend coverage; no Chromium/Java |
+| `npm run test:frontend` | React integration tests with separate source coverage |
+| `npm run test:all` | Full backend/browser, React and Firestore emulator suites |
+| `npm run check` | Build, frontend/scoped backend typechecks, lint, scoped formatting, backend/browser and React tests |
 | `npm audit` | Full dependency advisory report |
 | `npm run audit` | Production dependency advisory report |
 
-Tests need Chromium but do not need Firebase, Gemini or a session secret from your environment. Test setup clears injected credentials; tests use explicit offline doubles. The test command enables Node's VM module support for ESM dependencies. Tests verify session ownership, answer hiding, saved-question grading and concurrent duplicate submission rejection. Coverage output is in `coverage/`.
+Default tests need no Chromium/Java; the explicit browser/full suites need Chromium. Tests do not need Firebase, Gemini or a session secret from your environment. Test setup clears injected credentials; tests use explicit offline doubles. The test command enables Node's VM module support for ESM dependencies. Tests verify session ownership, answer hiding, saved-question grading and concurrent duplicate submission rejection. Coverage output is in `coverage/`.
 
 ## Application and adapters
 
@@ -108,3 +110,7 @@ NODE_ENV=development HOST=127.0.0.1 PORT=8080 npm run demo
 ```
 
 Use your local loopback browser on port 8080, path `/demo`. This separate entry point uses synthetic in-memory data and fixed simulated feedback, keeps backend authorization active, never reads live bindings and cannot grant production access. Execution stays disabled. See the [complete walkthrough, architecture, screenshots and validation commands](docs/DEMO.md). Live API and deployment validation remain pending.
+
+## Verification and contributing
+
+See [verification commands, live-validation safety, coverage, mobile checks and LOC definitions](docs/VERIFICATION.md), [contribution guide](CONTRIBUTING.md) and [changelog](CHANGELOG.md). Run `npm run test:production` and `npm run test:docker` for built-app/image smoke checks. Live provider checks are opt-in: `npm run verify:live -- --run`; they remain unrun until existing secure bindings and the authorized project pin are available.

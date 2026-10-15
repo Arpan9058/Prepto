@@ -93,3 +93,7 @@ Backend Jest coverage is reported separately from React source coverage. These b
 ## Recorded final validation
 
 Clean `npm ci`, frontend typecheck/production build, ESLint and full check passed. Final suite: **175 Jest regression/integration/browser tests**, **11 real Firestore emulator tests**, zero skipped. Backend coverage: **92.40% lines/statements, 94.97% functions, 91.24% branches**. React source coverage is not measured; real browser journeys are reported as integration checks. Production dependency audit: **3 moderate, 0 high/critical**; full audit including tooling: **3 high, 24 moderate, 0 critical**, the existing documented upstream tooling chain. No blind force fix was applied. Live API, real microphone, Docker execution and deployment checks remain pending as listed above.
+
+## Subsequent hardening
+
+React source coverage, mobile page-content scans, shared validation, default Node-only tests and actual Docker smoke have since been added. Historical test counts above describe the migration commit; use [VERIFICATION.md](VERIFICATION.md) and the latest CI artifacts for current results.

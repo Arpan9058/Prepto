@@ -1,5 +1,5 @@
 const { createGemini } = require('../adapters/gemini');
-const { exportPdf, chromiumPath } = require('../resumeGenerator');
+const { exportPdf } = require('../resumeGenerator');
 const { extractTextFromFile } = require('../ats');
 const { FirestoreSessionStore } = require('../adapters/sessionStore');
 const { Writable } = require('node:stream');
@@ -71,14 +71,6 @@ test('PDF export is portable, blocks external requests and always closes Chromiu
   await expect(exportPdf('x', { launcher: failure.launcher, env: { CHROMIUM_EXECUTABLE_PATH: '/portable/chrome', CHROMIUM_NO_SANDBOX: 'true' } })).rejects.toThrow('PDF failed');
   expect(failure.browser.close).toHaveBeenCalledTimes(1);
 });
-test('real Chromium creates a PDF that real PDF extraction can read', async () => {
-  expect(chromiumPath(process.env)).toBeTruthy();
-  const buffer = await exportPdf('<html><body><h1>Alice Node.js Engineer</h1><p>PostgreSQL experience</p></body></html>', { env: { CHROMIUM_EXECUTABLE_PATH: chromiumPath(process.env), CHROMIUM_NO_SANDBOX: 'true' } });
-  expect(buffer.subarray(0, 5).toString()).toBe('%PDF-');
-  const text = await extractTextFromFile({ originalname: 'resume.pdf', buffer });
-  expect(text).toContain('Alice Node.js Engineer');
-  expect(text).toContain('PostgreSQL experience');
-}, 30000);
 test('invalid DOCX and incomplete PDF files fail cleanly', async () => {
   await expect(extractTextFromFile({ originalname: 'a.docx', buffer: Buffer.from('not zip') })).rejects.toMatchObject({ status: 400 });
   await expect(extractTextFromFile({ originalname: 'a.pdf', buffer: Buffer.from('%PDF-invalid') })).rejects.toMatchObject({ status: 400 });

@@ -1,3 +1,4 @@
+const { schemas, validateBody } = require('../utils/validation');
 const express = require('express');
 const { randomUUID, randomInt } = require('node:crypto');
 const { ensureAuthenticated } = require('../middleware/auth');
@@ -7,7 +8,7 @@ function createMockRouter() {
   const router = express.Router();
   router.use(ensureAuthenticated);
   router.get('/mockTest', (_req, res) => res.render('mockInterview'));
-  router.post('/sessions', asyncHandler(async (req, res) => {
+  router.post('/sessions', validateBody(schemas.mockStart), asyncHandler(async (req, res) => {
     const { category } = req.body;
     if (!mockSubTests.includes(category)) throw httpError(400, 'Invalid category');
     const db = req.app.locals.firebase.firestore();
@@ -21,7 +22,7 @@ function createMockRouter() {
     await db.collection('sessions').doc(sessionId).set({ sessionId, ownerUid: req.user.uid, category, questions: selected, createdAt: new Date(), completed: false });
     res.json({ success: true, sessionId, questions: selected.map(q => ({ _id: q._id, question: q.question, options: q.options })) });
   }));
-  router.post('/sessions/submit', asyncHandler(async (req, res) => {
+  router.post('/sessions/submit', validateBody(schemas.mockSubmit), asyncHandler(async (req, res) => {
     const { sessionId, answers } = req.body;
     if (typeof sessionId !== 'string' || !/^[\w-]{1,100}$/.test(sessionId) || !answers || typeof answers !== 'object' || Array.isArray(answers)) throw httpError(400, 'sessionId and answers required');
     const db = req.app.locals.firebase.firestore();

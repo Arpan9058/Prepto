@@ -179,3 +179,71 @@ test('React legacy coding retains its per-question countdown and automatic submi
   await page.waitForFunction(() => location.pathname === '/coding-test/question/2'); await page.waitForSelector('.code-editor');
   expect(await page.$eval('.screen-intro', n => n.textContent)).toContain('Code is never executed');
 }, 15000);
+
+test.each([
+  ['/', '.landing-hero', 'alice'], ['/login', 'input[name=email]', 'alice'],
+  ['/register', 'input[name=confirm]', 'alice'], ['/forgot-password', 'input[name=email]', 'alice'],
+  ['/dashboard', '.empty-state', 'alice'], ['/question-bank', '.cards-grid', 'alice'],
+  ['/question-bank', '.cards-grid', 'admin'], ['/interviews', '.question-picker', 'alice'],
+  ['/resumes', 'input[name=title]', 'alice'], ['/resume-matches', '.empty-state', 'alice'],
+  ['/coding-practice', '.cards-grid button', 'alice'], ['/progress', 'input[name=skill]', 'alice'],
+  ['/reports', '.empty-state', 'alice']
+])('mobile content accessibility and deep-link refresh: %s (%s, %s)', async (route, ready, uid) => {
+  await require('../scripts/seed-question-bank').seed(store.db);
+  await page.setCookie({ name: 'session_token', value: uid, url: base, httpOnly: true });
+  await page.setViewport({ width: 360, height: 800 });
+  await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+  for (let visit = 0; visit < 2; visit++) {
+    if (visit) await page.reload(); else await page.goto(base + route);
+    await page.waitForSelector(ready);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  await page.evaluate(require('node:fs').readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8'));
+  const violations = await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] } })).violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.map(n => n.target) })));
+  expect(violations).toEqual([]);
+  if (process.env.CAPTURE_HARDENING_SCREENSHOTS && ['/question-bank', '/progress', '/login'].includes(route)) {
+    await page.screenshot({ path: `docs/design/mobile-${route.slice(1)}-${uid}.png`, fullPage: true });
+  }
+}, 20000);
+
+test('mobile editor, populated review and resume screens retain labels and contain long user content', async () => {
+  await page.setViewport({ width: 360, height: 800 });
+  await page.goto(base + '/coding-practice'); await page.waitForSelector('.cards-grid button'); await page.click('.cards-grid button'); await page.waitForSelector('.code-editor');
+  await page.$eval('.code-editor', n => { const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set; setter.call(n, 'const ' + 'longIdentifier'.repeat(40) + ' = 1;'); n.dispatchEvent(new Event('input', { bubbles: true })); });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.evaluate(require('node:fs').readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8'));
+  expect(await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] } })).violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) })))).toEqual([]);
+  await page.goto(base + '/resumes'); await page.waitForSelector('input[name=title]'); await page.type('input[name=title]', 'Synthetic mobile resume'); await page.type('textarea[name=text]', 'Synthetic SQL experience');
+  await Promise.all([page.waitForNavigation(), page.click('form button[type=submit]')]); await page.waitForSelector('input[name=label]');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.evaluate(require('node:fs').readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8'));
+  expect(await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] } })).violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) })))).toEqual([]);
+}, 20000);
+
+test('populated mobile demo pages and saved interview/report/match content pass accessibility checks', async () => {
+  const { app: demo } = await require('../demo/app').createDemoApp({ env: {} });
+  const local = demo.listen(0, '127.0.0.1'); await new Promise(r => local.once('listening', r)); const origin = `http://127.0.0.1:${local.address().port}`;
+  try {
+    await page.setViewport({ width: 360, height: 800 });
+    await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'reduce' }]);
+    await page.goto(origin + '/demo'); await page.waitForSelector('form[action="/demo/start"]');
+    await Promise.all([page.waitForNavigation(), page.click('form[action="/demo/start"] button')]);
+    for (const route of ['/dashboard', '/interviews', '/resumes', '/resume-matches', '/progress', '/reports']) {
+      await page.goto(origin + route); await page.waitForSelector('main');
+      await page.waitForFunction(() => !document.querySelector('[aria-busy="true"]'));
+      if (route === '/resume-matches') {
+        await page.evaluate(() => [...document.querySelectorAll('button')].find(b => b.textContent === 'Review match').click()); await page.waitForSelector('#match-review');
+      }
+      if (route === '/reports') {
+        await Promise.all([page.waitForNavigation(), page.click('a[href^="/reports/view/"]')]); await page.waitForSelector('.report-html');
+      }
+      if (route === '/interviews') {
+        await Promise.all([page.waitForNavigation(), page.click('a[href^="/interviews/"]')]); await page.waitForSelector('.screen-intro');
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      await page.evaluate(require('node:fs').readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8'));
+      expect(await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] } })).violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.target) })))).toEqual([]);
+      if (process.env.CAPTURE_HARDENING_SCREENSHOTS && ['/dashboard', '/progress'].includes(route)) await page.screenshot({ path: `docs/design/mobile-populated-${route.slice(1)}.png`, fullPage: true });
+    }
+  } finally { await new Promise(r => { local.close(r); local.closeAllConnections(); }); }
+}, 30000);

@@ -7,11 +7,11 @@
     "dev": "node --use-env-proxy scripts/dev-server.js",
     "build": "node scripts/build.js && npm run frontend:typecheck && npm run frontend:build",
     "lint": "eslint .",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --coverage",
-    "check": "npm run build && npm run lint && npm test",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --coverage --testPathIgnorePatterns=\"tests/(browser|react|reactApi|pdfBrowser)\\.test\\.js|tests/emulator|frontend/tests\"",
+    "check": "npm run build && npm run lint && npm run backend:typecheck && npm run format:check && npm run test:backend && npm run test:frontend",
     "audit": "npm audit --omit=dev",
     "seed:bank": "node --use-env-proxy scripts/seed-question-bank.js",
-    "test:browser": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/browser.test.js",
+    "test:browser": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/browser.test.js tests/react.test.js tests/reactApi.test.js tests/pdfBrowser.test.js",
     "test:emulator": "node scripts/test-emulator.js",
     "verify:live": "node --use-env-proxy scripts/verify-live.js",
     "demo": "node scripts/demo-server.js",
@@ -20,7 +20,14 @@
     "frontend:build": "vite build --config frontend/vite.config.mjs",
     "demo:dev": "node scripts/dev-server.js --demo",
     "frontend:screenshots": "node scripts/react-screenshots.js",
-    "test:react": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/react.test.js"
+    "test:react": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/react.test.js",
+    "test:frontend": "vitest run --config frontend/vitest.config.mjs --coverage",
+    "test:production": "node scripts/smoke-production.js",
+    "test:docker": "node scripts/smoke-docker.js",
+    "test:backend": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand --coverage",
+    "test:all": "npm run test:backend && npm run test:frontend && npm run test:emulator",
+    "backend:typecheck": "tsc -p tsconfig.backend.json",
+    "format:check": "prettier --check utils/validation.js middleware/errors.js frontend/tests scripts/smoke-*.js CONTRIBUTING.md CHANGELOG.md"
   },
   "keywords": [],
   "author": "",
@@ -45,7 +52,8 @@
     "puppeteer-core": "^25.13.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "sanitize-html": "^2.17.0"
+    "sanitize-html": "^2.17.0",
+    "zod": "^4.6.7"
   },
   "engines": {
     "node": ">=24.12.0 <25"
@@ -53,18 +61,28 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@firebase/rules-unit-testing": "^6.0.0",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.8",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.5",
+    "@types/pino-http": "^5.8.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "@vitest/coverage-v8": "^5.0.4",
+    "axe-core": "^4.14.0",
     "eslint": "^10.12.0",
     "firebase": "^13.0.0",
     "firebase-tools": "^15.33.0",
     "globals": "^16.5.0",
     "jest": "^30.2.0",
+    "jsdom": "^30.1.2",
     "jszip": "^3.10.1",
+    "prettier": "^3.9.10",
     "supertest": "^7.1.4",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.2",
-    "vite": "^8.3.4"
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
   },
   "jest": {
     "testEnvironment": "node",
@@ -93,8 +111,17 @@
     "coverageProvider": "v8",
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "/tests/emulator/"
-    ]
+      "/tests/emulator/",
+      "/frontend/tests/"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "statements": 85,
+        "branches": 80,
+        "functions": 85,
+        "lines": 85
+      }
+    }
   },
   "overrides": {
     "@grpc/grpc-js": "^1.14.6",

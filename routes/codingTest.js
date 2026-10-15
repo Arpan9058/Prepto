@@ -1,3 +1,4 @@
+const { schemas, validateBody } = require('../utils/validation');
 const codingQuestions = {
     1: {
         id: 1,
@@ -136,7 +137,7 @@ function createCodingRouter() {
   const router = express.Router();
   router.use(ensureAuthenticated);
   router.get('/', (req, res) => renderResponse(req, res, 'CodingTestFront', { languages: ['Java', 'C', 'C++', 'Python'] }));
-  router.post('/start-test', (req, res, next) => {
+  router.post('/start-test', validateBody(schemas.codingStart), (req, res, next) => {
     const { language } = req.body;
     if (!['Java', 'C', 'C++', 'Python'].includes(language)) return next(httpError(400, 'Invalid language'));
     req.session.coding = { language, answers: {}, startTime: Date.now() };
@@ -160,7 +161,7 @@ function createCodingRouter() {
     if (!Number.isFinite(evaluation.score) || evaluation.score < 0 || evaluation.score > 100) throw new Error('Invalid coding score');
     state.answers[id] = { code: req.body.code, question: q, evaluation, timeTaken: (Date.now() - state.startTime) / 1000 };
   }
-  router.post('/submit-answer/:questionNumber', asyncHandler(async (req, res) => {
+  router.post('/submit-answer/:questionNumber', validateBody(schemas.codingAnswer), asyncHandler(async (req, res) => {
     const id = Number(req.params.questionNumber);
     await submit(req, id);
     redirectResponse(req, res, req.body.earlySubmit === 'true' || id === 3 ? '/coding-test/results' : `/coding-test/question/${id + 1}`);
