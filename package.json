@@ -13,7 +13,9 @@
     "seed:bank": "node --use-env-proxy scripts/seed-question-bank.js",
     "test:browser": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/browser.test.js",
     "test:emulator": "node scripts/test-emulator.js",
-    "verify:live": "node --use-env-proxy scripts/verify-live.js"
+    "verify:live": "node --use-env-proxy scripts/verify-live.js",
+    "demo": "node scripts/demo-server.js",
+    "demo:screenshots": "node scripts/demo-screenshots.js"
   },
   "keywords": [],
   "author": "",
@@ -67,7 +69,8 @@
       "ats.js",
       "resumeGenerator.js",
       "careerGuidance.js",
-      "utils/**/*.js"
+      "utils/**/*.js",
+      "demo/**/*.js"
     ],
     "coverageDirectory": "coverage",
     "coverageReporters": [

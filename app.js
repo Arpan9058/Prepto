@@ -20,11 +20,12 @@ const { createTechnicalRouter } = require('./routes/Technical');
 const { createCodingRouter } = require('./routes/codingTest');
 const { FirestoreSessionStore } = require('./adapters/sessionStore');
 function createApp({ env = process.env, firebase = firebaseDefault, gemini = createGemini({ env }),
-  pdf = exportPdf, sessionStore, logger = pino({ level: env.LOG_LEVEL || 'info' }) } = {}) {
+  pdf = exportPdf, sessionStore, sessionName = 'prepto.sid', authCookieName = 'session_token', logger = pino({ level: env.LOG_LEVEL || 'info' }) } = {}) {
   if (!env.SESSION_SECRET || env.SESSION_SECRET.length < 32) throw new Error('SESSION_SECRET must contain at least 32 characters');
   const app = express();
   app.disable('x-powered-by');
   if (env.TRUST_PROXY === 'true') app.set('trust proxy', 1);
+  app.locals.authCookieName = authCookieName;
   app.locals.firebase = firebase;
   app.locals.gemini = gemini;
   app.locals.pdf = html => pdf(html, { env });
@@ -37,7 +38,7 @@ function createApp({ env = process.env, firebase = firebaseDefault, gemini = cre
   app.use(cookieParser());
   app.use(express.json({ limit: '256kb' }));
   app.use(express.urlencoded({ extended: false, limit: '256kb' }));
-  app.use(session({ name: 'prepto.sid', secret: env.SESSION_SECRET, resave: false, saveUninitialized: false,
+  app.use(session({ name: sessionName, secret: env.SESSION_SECRET, resave: false, saveUninitialized: false,
     store: sessionStore || (env.NODE_ENV === 'production' ? new FirestoreSessionStore(firebase) : undefined),
     cookie: { httpOnly: true, secure: env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 3600000 } }));
   // Reject cross-origin cookie-authenticated mutations. Bearer clients do not rely on cookies.
@@ -58,7 +59,7 @@ function createApp({ env = process.env, firebase = firebaseDefault, gemini = cre
   app.post('/api/set-token', (req, res, next) => req.headers.authorization?.match(/^Bearer (.+)$/) ? next() : res.status(401).json({ error: 'Bearer token required' }), ensureAuthenticated, asyncHandler(async (req, res) => {
     await new Promise((resolve, reject) => req.session.regenerate(err => err ? reject(err) : resolve()));
     req.session.ownerUid = req.user.uid;
-    res.cookie('session_token', req.headers.authorization.match(/^Bearer (.+)$/)[1], { httpOnly: true, secure: env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 3600000 });
+    res.cookie(authCookieName, req.headers.authorization.match(/^Bearer (.+)$/)[1], { httpOnly: true, secure: env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 3600000 });
     res.json({ success: true });
   }));
   app.post('/api/store-user', ensureAuthenticated, asyncHandler(async (req, res) => {
@@ -72,7 +73,7 @@ function createApp({ env = process.env, firebase = firebaseDefault, gemini = cre
   }));
   app.get('/logout', (req, res, next) => req.session.destroy(err => {
     if (err) return next(err);
-    res.clearCookie('session_token', { path: '/' }); res.clearCookie('prepto.sid', { path: '/' }); res.redirect('/');
+    res.clearCookie(authCookieName, { path: '/' }); res.clearCookie(sessionName, { path: '/' }); res.redirect('/');
   }));
   app.post('/analyze', ensureAuthenticated, ats.upload.single('resume'), asyncHandler(async (req, res) => {
     if (typeof req.body.jobDescription !== 'string' || !req.body.jobDescription.trim()) throw httpError(400, 'Job description is required');

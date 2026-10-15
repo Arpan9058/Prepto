@@ -101,3 +101,7 @@ Storage: `users/{uid}/resumeMatches/{id}`; indexes and default-deny client rules
 - `POST /api/coding/execute`: **501 disabled**, `{execution:{status:"disabled",executed:false,passedTestCases:null}}`. This milestone has no runner integration.
 
 Submission status is pending/failed/reviewed. Reviewed means **AI feedback saved**, never tests passed. `execution` and `feedback.kind=ai-estimate` make provenance explicit. Reports use type CodingPractice; progress provides a separate `codingPractice` panel and `aiScore` in history. AI estimates do not enter normalized averages/interview goals. Source sample data is `fixtures/coding-problems.json`; update it through reviewed commits.
+
+## Offline demo boundary
+
+The separate `npm run demo` loopback process provides `GET /demo` (labelled guide), `POST /demo/start` (new synthetic learner with an opaque one-hour HttpOnly cookie), and `POST /demo/exit` (revoke token and clear that learner). Cross-origin mutations/public hosts are rejected. Product APIs keep their usual owner/admin enforcement and return `X-Prepto-Mode: offline-demo`; results use model `synthetic-offline-demo` and fixed illustrative scores. API token exchange/profile endpoints are unavailable. These demo routes do not exist in normal `npm start`, even with `DEMO_MODE=true`. See [DEMO.md](DEMO.md); no executable results or live validation are implied.

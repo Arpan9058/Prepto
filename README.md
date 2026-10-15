@@ -96,3 +96,12 @@ Open `/coding-practice` for searchable problems, JavaScript/Python editing, owne
 The coding library contains 18 original problems with explicit contracts, topics, difficulty, illustrative examples, edge cases and JavaScript/Python starters. Trusted test oracles check authored scenarios; these content checks never execute user submissions.
 
 See the [coding content review](docs/CODING_LIBRARY.md) for the complete 18-problem catalogue and example/edge-case validation approach.
+
+### Isolated offline product demo
+
+```sh
+npm ci
+NODE_ENV=development HOST=127.0.0.1 PORT=8080 npm run demo
+```
+
+Use your local loopback browser on port 8080, path `/demo`. This separate entry point uses synthetic in-memory data and fixed simulated feedback, keeps backend authorization active, never reads live bindings and cannot grant production access. Execution stays disabled. See the [complete walkthrough, architecture, screenshots and validation commands](docs/DEMO.md). Live API and deployment validation remain pending.
