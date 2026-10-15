@@ -1,16 +1,21 @@
-const net = require('node:net');
+const fs = require('node:fs/promises');
+const os = require('node:os');
 const path = require('node:path');
-test('patched FTP transport still authenticates against an isolated local protocol fixture', async () => {
-  const cliRoot = path.dirname(require.resolve('firebase-tools/package.json'));
-  const uriRoot = path.dirname(require.resolve('get-uri', { paths: [cliRoot] }));
-  const { Client } = require(require.resolve('basic-ftp', { paths: [uriRoot] }));
-  const sockets = new Set(), commands = [];
-  const server = net.createServer(socket => {
-    sockets.add(socket); socket.on('close', () => sockets.delete(socket)); socket.write('220 Local offline fixture\r\n');
-    let buffer = '';
-    socket.on('data', data => { buffer += data; let end; while ((end = buffer.indexOf('\r\n')) >= 0) { const command = buffer.slice(0, end).split(' ')[0]; commands.push(command); buffer = buffer.slice(end + 2); socket.write(command === 'USER' ? '331 Password required\r\n' : command === 'PASS' ? '230 Logged in\r\n' : command === 'FEAT' ? '211 No features\r\n' : '200 OK\r\n'); } });
-  });
-  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve)); const client = new Client(2000);
-  try { expect((await client.access({ host: '127.0.0.1', port: server.address().port, user: 'offline', password: 'fixture-only' })).code).toBe(220); expect(commands).toEqual(expect.arrayContaining(['USER', 'PASS'])); expect((await client.send('NOOP')).code).toBe(200); }
-  finally { client.close(); for (const socket of sockets) socket.destroy(); await new Promise(resolve => server.close(resolve)); }
+const { createHash } = require('node:crypto');
+const { isolatedEnv, verifyArtifact, jar } = require('../scripts/test-emulator');
+test('emulator subprocess strips live bindings and pins a loopback demo project', () => {
+  const env = isolatedEnv({ GEMINI_API_KEY: 'synthetic', FIREBASE_SERVICE_ACCOUNT_JSON: 'synthetic', GOOGLE_APPLICATION_CREDENTIALS: 'synthetic', FIRESTORE_EMULATOR_HOST: 'remote:123', PATH: '/bin' });
+  expect(env.GEMINI_API_KEY).toBeUndefined(); expect(env.GOOGLE_APPLICATION_CREDENTIALS).toBeUndefined(); expect(env.FIREBASE_SERVICE_ACCOUNT_JSON).toBeUndefined();
+  expect(env.FIRESTORE_EMULATOR_HOST).toBe('127.0.0.1:8089'); expect(env.GCLOUD_PROJECT).toBe('demo-prepto'); expect(env.PATH).toBe('/bin');
+});
+test('emulator verification rejects tampered and truncated cached artifacts before executing them', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'prepto-integrity-')); const file = path.join(root, 'artifact');
+  const bytes = Buffer.from('synthetic emulator fixture'); const expected = { size: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') };
+  try { await fs.writeFile(file, bytes); await expect(verifyArtifact(file, expected)).resolves.toBeUndefined(); await fs.writeFile(file, Buffer.from('tampered')); await expect(verifyArtifact(file, expected)).rejects.toThrow('integrity'); }
+  finally { await fs.rm(root, { recursive: true, force: true }); }
+});
+test('failed official download never publishes an executable cache entry and removes temporary files', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'prepto-download-'));
+  try { await expect(jar(root, async () => new Response('not a jar'))).rejects.toThrow('integrity'); expect(await fs.readdir(root)).toEqual([]); }
+  finally { await fs.rm(root, { recursive: true, force: true }); }
 });

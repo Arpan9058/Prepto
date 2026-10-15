@@ -27,7 +27,7 @@ npm start
 | `npm test` | Node-only offline Jest/Supertest tests, PDF/DOCX extraction and enforced backend coverage; no Chromium/Java |
 | `npm run test:frontend` | React integration tests with separate source coverage |
 | `npm run test:all` | Full backend/browser, React and Firestore emulator suites |
-| `npm run check` | Build, frontend/scoped backend typechecks, lint, scoped formatting, backend/browser and React tests |
+| `npm run check` | Build, frontend and backend/runtime-tooling typechecks, lint, source formatting, backend/browser and React tests |
 | `npm audit` | Full dependency advisory report |
 | `npm run audit` | Production dependency advisory report |
 
@@ -67,7 +67,7 @@ Behind a TLS-inspecting build proxy, pass its trusted public CA without retainin
 
 Create a private `.env` first. Compose binds only to localhost for use behind a trusted TLS reverse proxy. Production requires HTTPS for Secure cookies; use local development mode for plain HTTP. Production sessions persist in Firestore `webSessions` (enable TTL on `expiresAt`). Chromium sandbox bypass is explicit in the isolated container configuration. See [SECURITY.md](SECURITY.md) for deployment and key-rotation requirements.
 
-GitHub Actions runs clean `npm ci`, build/lint/offline tests and a production audit; Dependabot checks npm, actions and Docker updates weekly. No publication of a Codex environment is needed to commit or push to GitHub.
+GitHub Actions runs clean `npm ci`, build/lint/offline tests and both full/production audits; Dependabot checks npm, actions and Docker updates weekly. No publication of a Codex environment is needed to commit or push to GitHub.
 
 ## Product question bank
 
@@ -114,3 +114,5 @@ Use your local loopback browser on port 8080, path `/demo`. This separate entry 
 ## Verification and contributing
 
 See [verification commands, live-validation safety, coverage, mobile checks and LOC definitions](docs/VERIFICATION.md), [contribution guide](CONTRIBUTING.md) and [changelog](CHANGELOG.md). Run `npm run test:production` and `npm run test:docker` for built-app/image smoke checks. Live provider checks are opt-in: `npm run verify:live -- --run`; they remain unrun until existing secure bindings and the authorized project pin are available.
+
+The current hardening removes the unused Firebase CLI dependency: real Firestore tests run the same SHA-256-pinned official emulator directly. `npm run backend:typecheck` covers all backend modules and scripts; frontend integration tests are also strictly checked. [Current remaining-issue evidence](docs/REMAINING_ISSUES.md) distinguishes completed code fixes from external validation.

@@ -11,7 +11,7 @@ npm run test:emulator
 npm audit --omit=dev --audit-level=high
 ```
 
-`check` runs offline unit/integration and real Chromium browser/PDF checks. `test:emulator` starts only a loopback Firestore emulator under `demo-prepto`, strips live credential bindings from its children, exercises client rules and actual Admin SDK transactions/queries, and shuts the emulator down. Emulator downloads retain the Firebase CLI's size/SHA256 verification. No live project is seeded or contacted. Firebase/Gemini authentication in emulator backend tests is deliberately mocked; Firestore storage/transactions/rules are real emulator behavior.
+`check` runs offline unit/integration and real Chromium browser/PDF checks. `test:emulator` starts only a loopback Firestore emulator under `demo-prepto`, strips live credential bindings from its children, exercises client rules and actual Admin SDK transactions/queries, and shuts the emulator down. The direct official emulator download/cache is pinned by size and SHA-256; Firebase CLI is no longer a project dependency. No live project is seeded or contacted. Firebase/Gemini authentication in emulator backend tests is deliberately mocked; Firestore storage/transactions/rules are real emulator behavior.
 
 The emulator does not enforce production composite indexes. `firestore.indexes.json` is schema/query-shape checked and combined queries run against the emulator; actual index build/query readiness must be verified in staging after deployment. A green emulator run alone is not a production-index readiness claim.
 
@@ -43,7 +43,7 @@ Use HTTPS, Secure/HttpOnly cookies, a single explicitly trusted TLS proxy when `
 
 Live checks are blocked/deferred for this milestone by user direction. Before running them later, repair/reuse the existing secure Firebase binding and supply the existing Gemini binding. Set the non-secret `LIVE_FIREBASE_PROJECT_ID` safety pin to the authorized project. Run `npm run verify:live -- --run` from a trusted terminal; never paste keys into chat.
 
-The runner verifies the credential project before creating `prepto-live-*` test users/data, uses actual Firebase Admin Auth/Firestore and Gemini, checks owner boundaries, then recursively removes test-user records, session snapshots, questions/audit events, private resume versions/matches and temporary Auth users in `finally`. It reports status metadata only. Exit 0 means executed checks and cleanup passed; 2 means blocked prerequisites; 1 means failure. No data is created when prerequisites are blocked. Review a cleanup failure before retrying. Authenticated live browser login/ID-token exchange is a separate staging check; offline browser checks do not establish it.
+The runner verifies the credential project before creating `prepto-live-*` test users/data, uses actual Firebase Admin Auth/Firestore and Gemini, checks owner boundaries, then recursively removes test-user records, session snapshots, questions/audit events, private resume versions/matches and temporary Auth users in `finally`. It reports status metadata only. Exit 0 means executed checks and cleanup passed; 2 means blocked prerequisites; 1 means failure. No data is created when prerequisites are blocked. Review a cleanup failure before retrying. The opt-in validator includes real password login and local HTTP ID-token/cookie exchange; deployed browser behavior remains a separate staging check. Offline tests do not establish live success.
 
 ## Operations and incidents
 
@@ -59,7 +59,7 @@ Every resume/version/match endpoint checks the authenticated owner; admin claims
 
 ## Dependency audit baseline
 
-Before dev-tooling remediation, `npm audit --omit=dev` reports 3 moderate findings (Mammoth → argparse → sprintf-js), with zero high/critical production findings. The full audit initially reported 12 high and 24 moderate findings; supported transport fixes reduced it to 3 high and 24 moderate. See [DEPENDENCIES.md](DEPENDENCIES.md) for the remaining upstream watcher advisory and override compatibility checks. Development tools are not shipped in the production Docker dependency installation, but must remain isolated from live credentials. Suggested automated fixes include major downgrades of Firebase/CLI tooling; do not apply `npm audit fix --force` without evaluating API compatibility and rerunning emulator gates. Track advisory updates and retest supported upgrades. These counts are the observed audit baseline, not a guarantee about future registry advisories.
+The original audit had 12 high/24 moderate findings; transport fixes first reduced it to 3 high. The current follow-up removes the unused Firebase CLI dependency and now reports **0 high/critical and 20 moderate** across the full tree, with 3 moderate production findings. The same official Firestore emulator is SHA-256-pinned and directly tested. Both full and production high-severity gates run in CI. See [DEPENDENCIES.md](DEPENDENCIES.md) for the unsupported remaining upstream fixes; no advisories are suppressed and no forced major downgrade is applied.
 
 ## Coding practice
 
@@ -77,4 +77,6 @@ Use `npm run demo` only as the documented loopback development entry point, neve
 
 Run `npm ci && npm run build` before `npm start`. Production Express serves `frontend/dist`; Vite is a build/development dependency. `npm run dev` mounts Vite on the same Express server, retaining identical auth/origin guards. Docker now uses a frontend build stage; local build checks do not prove Docker execution. New public runtime configuration includes only publishable Firebase web metadata; no server binding belongs in VITE variables. Existing .env/bindings must be preserved. See FRONTEND_MIGRATION.md for the full checklist, legacy negotiation, screenshots and explicitly pending live/deployment checks.
 
-For the current production/Docker smoke, default-vs-browser test split, scoped backend typecheck, separate React coverage and exact VS Code live steps, see [VERIFICATION.md](VERIFICATION.md). No live or deployment claim is implied by an offline smoke.
+For the current production/Docker smoke, default-vs-browser test split, backend-wide checked-JavaScript/type-contract gate, separate React coverage and exact VS Code live steps, see [VERIFICATION.md](VERIFICATION.md). No live or deployment claim is implied by an offline smoke.
+
+The Firestore-only test runner uses Java 21 directly with the verified official JAR, port 8089 and `demo-prepto`. It does not provide Firebase CLI deployment commands or other emulator services. Install/review the official Firebase CLI separately in the authorized deployment terminal; deployment remains unrun.

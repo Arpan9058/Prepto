@@ -1,5 +1,7 @@
 # Verification and hardening
 
+For the latest follow-up results, audit and typecheck scope, see [REMAINING_ISSUES.md](REMAINING_ISSUES.md). Historical counts below are explicitly labelled by commit.
+
 ## Reproducible local setup
 
 Use Node 24.19 (`.nvmrc`). Preserve existing `.env`/secure bindings. No Publish step is
@@ -116,8 +118,7 @@ Backend coverage lives in `coverage/coverage-summary.json`; React component sour
 coverage lives in `coverage/react/coverage-summary.json`. React includes every executable
 TS/TSX module (including unvisited legacy/bootstrap modules), excludes only type-only
 `domain.ts`, and does not inherit browser-test coverage. Report both figures separately.
-Backend global floors are 85% statements/lines/functions and 80% branches. React floors
-reflect the measured initial integration baseline, with stronger API/shared-form gates;
+Backend global floors are 85% statements/lines/functions and 80% branches. React global floors are 80% statements/functions/lines and 70% branches, with stronger API/shared-form gates;
 legacy/bootstrap gaps remain visible and are not excluded to inflate the percentage.
 
 Chromium browser tests cover development/production routing and mobile content at 360px:
@@ -147,12 +148,9 @@ is used. Sustained genuine maintenance cannot be created retroactively.
 Backend request boundaries reject non-object JSON/form payloads; typed shared schemas
 cover mock sessions, legacy coding submission/start, interview creation/transitions and
 study goals. Existing service validation, ownership/admin checks, upload limits and
-report query allowlists remain enforced. Strict backend JSDoc checking currently covers
-validation/error boundaries only; the backend has not been fully migrated to TypeScript.
-Formatting enforcement is scoped to the new shared/tooling/test files, avoiding unrelated
-repository-wide churn.
+report query allowlists remain enforced. All backend modules and runtime scripts are now checked with shared JSDoc/Express/session contracts; strict validation/error-boundary checking remains enforced separately. This is checked JavaScript, not a claim of a completed strict TypeScript migration. Formatting covers backend/client source and scripts while preserving EJS templates.
 
-## Recorded milestone results
+## Historical milestone results (52414b0)
 
 On Node 24.19, the completed local verification recorded:
 
@@ -200,3 +198,7 @@ backend/tooling/other 3,850, retained EJS templates 7,158. Blank lines/comments 
 these are not the external platform's 4,871 Source LOC and do not imply any resale value.
 
 PDF renderer hardening uses a per-export temporary Chromium profile/config/cache, removes it after launch/render/close failures, and matches Compose shared-memory/init settings in Docker smoke. Earlier GitHub Docker smoke runs failed with an HTTP 500; subsequent CI validates this hardening separately from the already-passing backend/browser/emulator jobs.
+
+## Current follow-up
+
+The numbers in the historical section above belong to commit 52414b0. The current follow-up removes the vulnerable unused CLI chain, expands React behavior tests/thresholds, checks the complete backend/script surface and formats source consistently. See [REMAINING_ISSUES.md](REMAINING_ISSUES.md) for current results and external-only limitations. Formatting changes physical line counts without representing new product features or buyer Source LOC.

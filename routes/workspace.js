@@ -8,44 +8,138 @@ function createWorkspaceRouter({ env }) {
     let firebase = null;
     if (!req.app.locals.demoMode) {
       try {
-        const raw = env.FIREBASE_WEB_CONFIG_JSON ? JSON.parse(env.FIREBASE_WEB_CONFIG_JSON) : require('../config/firebase-web.json');
-        const keys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
-        if (Object.keys(raw).every(k => keys.includes(k)) && ['apiKey', 'authDomain', 'projectId', 'appId'].every(k => typeof raw[k] === 'string' && raw[k])) firebase = Object.fromEntries(keys.filter(k => typeof raw[k] === 'string').map(k => [k, raw[k]]));
-      } catch { /* Invalid client configuration is never reflected into the response. */ }
+        const raw = env.FIREBASE_WEB_CONFIG_JSON
+          ? JSON.parse(env.FIREBASE_WEB_CONFIG_JSON)
+          : require('../config/firebase-web.json');
+        const keys = [
+          'apiKey',
+          'authDomain',
+          'projectId',
+          'storageBucket',
+          'messagingSenderId',
+          'appId',
+        ];
+        if (
+          Object.keys(raw).every((k) => keys.includes(k)) &&
+          ['apiKey', 'authDomain', 'projectId', 'appId'].every(
+            (k) => typeof raw[k] === 'string' && raw[k],
+          )
+        )
+          firebase = Object.fromEntries(
+            keys.filter((k) => typeof raw[k] === 'string').map((k) => [k, raw[k]]),
+          );
+      } catch {
+        /* Invalid client configuration is never reflected into the response. */
+      }
     }
     res.set('Cache-Control', 'no-store').json({ demo: req.app.locals.demoMode === true, firebase });
   });
-  r.use(ensureAuthenticated); const db = req => req.app.locals.firebase.firestore();
+  r.use(ensureAuthenticated);
+  const db = (req) => req.app.locals.firebase.firestore();
   r.get('/legacy/rounds/:kind', (req, res) => {
-    const kind = req.params.kind; if (!['hr', 'technical'].includes(kind)) throw httpError(400, 'Invalid round');
+    const kind = req.params.kind;
+    if (!['hr', 'technical'].includes(kind)) throw httpError(400, 'Invalid round');
     const state = kind === 'hr' ? req.session.hrInterview : req.session.technicalInterview;
-    res.json({ started: !!state, completed: !!state?.completed, counter: state?.answers.length || 0, question: kind === 'hr' ? require('../HRQuestions.json')[state?.answers.length || 0] || '' : state?.question || require('../controller/interviewController').initialQuestion });
+    res.json({
+      started: !!state,
+      completed: !!state?.completed,
+      counter: state?.answers.length || 0,
+      question:
+        kind === 'hr'
+          ? require('../HRQuestions.json')[state?.answers.length || 0] || ''
+          : req.session.technicalInterview?.question ||
+            require('../controller/interviewController').initialQuestion,
+    });
   });
   r.post('/legacy/rounds/:kind/start', (req, res) => {
     if (req.params.kind === 'hr') req.session.hrInterview = { answers: [] };
     else if (req.params.kind === 'technical') delete req.session.technicalInterview;
     else throw httpError(400, 'Invalid round');
-    res.json({ question: req.params.kind === 'hr' ? require('../HRQuestions.json')[0] : require('../controller/interviewController').initialQuestion });
+    res.json({
+      question:
+        req.params.kind === 'hr'
+          ? require('../HRQuestions.json')[0]
+          : require('../controller/interviewController').initialQuestion,
+    });
   });
-  r.get('/session', (req, res) => res.set('Cache-Control', 'no-store').json({ uid: req.user.uid, admin: req.user.admin === true, demo: req.app.locals.demoMode === true }));
-  r.get('/profile', asyncHandler(async (req, res) => { const d = await db(req).collection('users').doc(req.user.uid).get(); const raw = d.exists ? d.data() : {}; res.set('Cache-Control', 'no-store').json({ fullName: typeof raw.fullName === 'string' ? raw.fullName : '', mobile: typeof raw.mobile === 'string' ? raw.mobile : '' }); }));
-  r.put('/profile', asyncHandler(async (req, res) => {
-    const { fullName, mobile = '' } = req.body;
-    if (typeof fullName !== 'string' || !fullName.trim() || fullName.length > 200 || typeof mobile !== 'string' || mobile.length > 40) throw httpError(400, 'Provide a name up to 200 characters and a phone up to 40 characters');
-    const ref = db(req).collection('users').doc(req.user.uid);
-    await db(req).runTransaction(async tx => { const old = await tx.get(ref); tx.set(ref, { ...(old.exists ? old.data() : { email: req.user.email || '', createdAt: new Date() }), fullName: fullName.trim(), mobile, updatedAt: new Date() }); });
-    res.json({ saved: true });
-  }));
-  r.get('/reports', asyncHandler(async (req, res) => {
-    const rows = await listReports(db(req), req.user.uid);
-    res.json({ items: rows.map(({ raw, ...row }) => ({ ...row, title: raw.title || row.type })) });
-  }));
-  r.get('/reports/:id', asyncHandler(async (req, res) => {
-    const { type, sub } = req.query;
-    if (!validReport(type, sub) || !/^[\w-]{1,128}$/.test(req.params.id)) throw httpError(400, 'Invalid report');
-    const d = await attempts(db(req), req.user.uid, type, sub).doc(req.params.id).get(); if (!d.exists) throw httpError(404, 'Report not found');
-    const raw = d.data(); res.json({ id: d.id, type, title: raw.title || type, score: type === 'CodingPractice' ? `AI estimate ${raw.aiScore}% (not executed)` : raw.score ?? raw.totalScore ?? 0, submittedAt: formatDate(raw.submittedAt), fullReport: safeHtml(raw.fullReport || raw.reportText || '') });
-  }));
+  r.get('/session', (req, res) =>
+    res.set('Cache-Control', 'no-store').json({
+      uid: req.user.uid,
+      admin: req.user.admin === true,
+      demo: req.app.locals.demoMode === true,
+    }),
+  );
+  r.get(
+    '/profile',
+    asyncHandler(async (req, res) => {
+      const d = await db(req).collection('users').doc(req.user.uid).get();
+      const raw = d.exists ? d.data() : {};
+      res.set('Cache-Control', 'no-store').json({
+        fullName: typeof raw.fullName === 'string' ? raw.fullName : '',
+        mobile: typeof raw.mobile === 'string' ? raw.mobile : '',
+      });
+    }),
+  );
+  r.put(
+    '/profile',
+    asyncHandler(async (req, res) => {
+      const { fullName, mobile = '' } = req.body;
+      if (
+        typeof fullName !== 'string' ||
+        !fullName.trim() ||
+        fullName.length > 200 ||
+        typeof mobile !== 'string' ||
+        mobile.length > 40
+      )
+        throw httpError(400, 'Provide a name up to 200 characters and a phone up to 40 characters');
+      const ref = db(req).collection('users').doc(req.user.uid);
+      await db(req).runTransaction(async (tx) => {
+        const old = await tx.get(ref);
+        tx.set(ref, {
+          ...(old.exists ? old.data() : { email: req.user.email || '', createdAt: new Date() }),
+          fullName: fullName.trim(),
+          mobile,
+          updatedAt: new Date(),
+        });
+      });
+      res.json({ saved: true });
+    }),
+  );
+  r.get(
+    '/reports',
+    asyncHandler(async (req, res) => {
+      const rows = await listReports(db(req), req.user.uid);
+      res.json({
+        items: rows.map(({ raw, ...row }) => ({ ...row, title: raw.title || row.type })),
+      });
+    }),
+  );
+  r.get(
+    '/reports/:id',
+    asyncHandler(async (req, res) => {
+      const { type, sub } = req.query;
+      if (
+        !validReport(type, sub) ||
+        typeof req.params.id !== 'string' ||
+        !/^[\w-]{1,128}$/.test(req.params.id)
+      )
+        throw httpError(400, 'Invalid report');
+      const d = await attempts(db(req), req.user.uid, type, sub).doc(req.params.id).get();
+      if (!d.exists) throw httpError(404, 'Report not found');
+      const raw = d.data();
+      res.json({
+        id: d.id,
+        type,
+        title: raw.title || type,
+        score:
+          type === 'CodingPractice'
+            ? `AI estimate ${raw.aiScore}% (not executed)`
+            : (raw.score ?? raw.totalScore ?? 0),
+        submittedAt: formatDate(raw.submittedAt),
+        fullReport: safeHtml(raw.fullReport || raw.reportText || ''),
+      });
+    }),
+  );
   return r;
 }
 module.exports = { createWorkspaceRouter };

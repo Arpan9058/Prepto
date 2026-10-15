@@ -1,3 +1,4 @@
+const { boundPort } = require('../utils/boundPort');
 // Runs the built production frontend, isolated demo APIs and real Chromium PDF.
 // No live Firebase/Gemini bindings or user data are used.
 const assert = require('node:assert/strict');
@@ -20,8 +21,8 @@ async function smoke() {
   const servers = [publicApp.listen(0, '127.0.0.1'), demo.app.listen(0, '127.0.0.1')];
   try {
     await Promise.all(servers.map((s) => new Promise((r) => s.once('listening', r))));
-    const base = `http://127.0.0.1:${servers[0].address().port}`,
-      isolated = `http://127.0.0.1:${servers[1].address().port}`;
+    const base = `http://127.0.0.1:${boundPort(servers[0])}`,
+      isolated = `http://127.0.0.1:${boundPort(servers[1])}`;
     assert.equal((await fetch(base + '/health')).status, 200);
     const html = await (await fetch(base)).text();
     const asset = html.match(/src="(\/assets\/[^"]+\.js)"/)[1];

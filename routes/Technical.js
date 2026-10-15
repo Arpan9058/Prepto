@@ -5,7 +5,10 @@ const { analyzeText, initialQuestion } = require('../controller/interviewControl
 function createTechnicalRouter() {
   const router = express.Router();
   router.use(ensureAuthenticated);
-  router.get(['/', /^\/technical/ ], (req, res) => { delete req.session.technicalInterview; res.render('TechnicalInterview', { question: initialQuestion }); });
+  router.get(['/', /^\/technical/], (req, res) => {
+    delete req.session.technicalInterview;
+    res.render('TechnicalInterview', { question: initialQuestion });
+  });
   router.post('/analyze-text', asyncHandler(analyzeText));
   return router;
 }

@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
+    "types": [
+      "node",
+      "express-session",
+      "multer"
+    ],
+    "useUnknownInCatchVariables": true,
+    "strict": false,
+    "noImplicitAny": false
+  },
+  "include": [
+    "types/**/*.d.ts",
+    "*.js",
+    "middleware/**/*.js",
+    "adapters/**/*.js",
+    "routes/**/*.js",
+    "controller/**/*.js",
+    "services/**/*.js",
+    "utils/**/*.js",
+    "demo/**/*.js",
+    "scripts/**/*.js"
+  ]
+}

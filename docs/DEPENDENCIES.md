@@ -1,7 +1,43 @@
 # Dependency advisories
 
-The full baseline audit had 12 high and 24 moderate dependency findings. Compatible gRPC 1.x is overridden to >=1.14.6, fixing certificate authorization/message leakage advisories in the emulator client chain. `get-uri`'s FTP transport is overridden to basic-ftp >=6.2.3, fixing directory-listing backtracking. Its Client access/close interface is retained and tested against a loopback protocol fixture; the Firebase CLI/emulator and browser regression suites also pass. Overrides are recorded in the lockfile and reproduced by npm ci. No automated major downgrade is applied.
+The original baseline had 12 high and 24 moderate findings. The current lockfile removes
+the Firebase CLI from the development dependency tree. The application did not use that
+CLI at runtime; its only automated use was starting Firestore for the rules/backend tests.
 
-After remediation the full audit has **3 high, 24 moderate, 0 critical** findings. The remaining high chain is braces → chokidar → firebase-tools (GHSA-vfj7-8cjw-p6xm). The registry's latest braces is 3.0.3 and affected; Firebase CLI 15.33.0 is current and requires chokidar 3. Replacing it with chokidar 5 removes glob support and violates the CLI's supported dependency contract. Do not force that override or suppress the advisory. Use the CLI only for trusted repository/configuration files and loopback emulator tests; keep live secrets stripped from test children. Revisit when upstream publishes a compatible patched release.
+`npm run test:emulator` now starts the **same official Firestore emulator 1.22.0** directly
+with Java 21, loopback binding, `demo-prepto`, existing rules and the unchanged real-store
+suite. `config/firestore-emulator.json` pins the official Google URL, byte length and SHA-256
+published in Firebase CLI 15.33.0's `downloadableEmulatorInfo.json`. Downloads and cached
+JARs are verified before execution. Corrupt downloads never become runnable cache entries.
+The runner rejects an occupied port, strips live bindings from test children and stops only
+its own processes. The emulator is not bundled into the production image.
 
-Production-only audit remains 3 moderate, zero high/critical (Mammoth/argparse/sprintf-js). Other moderate findings include Jest tooling, OpenTelemetry and uuid. Registry advisories can change; rerun both full and production audits. Offline tests never establish live API or staging readiness.
+This removes the unsupported braces → chokidar → firebase-tools chain rather than forcing
+a major chokidar override, downgrading the CLI, disabling the advisory, or replacing real
+emulator tests with mocks. The obsolete CLI-only FTP override/test has been removed.
+The compatible gRPC 1.x override remains because the Firebase client/Admin dependency
+tree still needs that fix.
+
+The full audit after this removal has **zero high/critical** findings and **20 moderate**
+findings (production: 3 moderate, zero high/critical). The remaining chains are Jest/
+js-yaml and Mammoth/argparse/sprintf-js. A compatible `npm audit fix --dry-run` offered no
+changes; proposed fixes require major downgrades of Jest or Mammoth. `sprintf-js` 1.1.3
+is still the latest release and affected. These findings are documented, not suppressed.
+Avoid treating CLI installation for an operator deployment as part of the audited app tree:
+review the separately installed official Firebase CLI's own advisories before deployment.
+
+CI audits **both the full and production dependency trees** at the high severity boundary.
+For reproduction:
+
+```sh
+npm ci
+npm audit --audit-level=high
+npm audit --omit=dev --audit-level=high
+npm run test:emulator
+```
+
+To update the emulator, review official Firebase release metadata, replace all pinned
+version/size/SHA-256/URL fields together, and rerun integrity, browser and real emulator
+tests. Do not disable checksum/TLS verification or accept an arbitrary environment URL.
+Deployment commands using the official Firebase CLI remain documented in OPERATIONS.md;
+they are separate operator actions and were not executed by this milestone.
