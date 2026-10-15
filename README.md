@@ -92,3 +92,7 @@ On a saved resume version, add a job description for private, replay-safe matchi
 ### Coding practice
 
 Open `/coding-practice` for searchable problems, JavaScript/Python editing, owner-only saved drafts/submissions and answer review. `/progress` displays a separate AI estimate panel and saved attempt history. Code execution is disabled; AI feedback never establishes passing executable tests. See [API documentation](docs/API.md), [operations](docs/OPERATIONS.md) and [dependency advisories](docs/DEPENDENCIES.md). Live API and staging validation remain pending.
+
+The coding library contains 18 original problems with explicit contracts, topics, difficulty, illustrative examples, edge cases and JavaScript/Python starters. Trusted test oracles check authored scenarios; these content checks never execute user submissions.
+
+See the [coding content review](docs/CODING_LIBRARY.md) for the complete 18-problem catalogue and example/edge-case validation approach.

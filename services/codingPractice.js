@@ -4,17 +4,19 @@ const { id, text, pageSize, iso, date } = require('../utils/product');
 const { hash } = require('./resumes');
 const { attempts, escapeHtml } = require('../utils/reports');
 const problems = require('../fixtures/coding-problems.json');
+const categories = [...new Set(problems.map(p => p.category))];
+const topics = [...new Set(problems.flatMap(p => p.topics))].sort();
 const refs = (db, uid, kind) => db.collection('users').doc(uid).collection(kind);
 const execution = { status: 'disabled', executed: false, passedTestCases: null, reason: 'No isolated runner is configured. Code is never executed by this application.' };
 function problem(problemId) { const p = problems.find(p => p.id === id(problemId)); if (!p) throw httpError(404, 'Problem not found'); return p; }
 function publicProblem(p) { const value = { ...p }; delete value.solution; return value; }
 function library(params = {}) {
-  for (const [key, choices] of [['category', ['arrays', 'strings', 'sorting']], ['difficulty', ['easy', 'medium', 'hard']]]) if (params[key] && !choices.includes(params[key])) throw httpError(400, `Invalid ${key}`);
+  for (const [key, choices] of [['category', categories], ['topic', topics], ['difficulty', ['easy', 'medium', 'hard']]]) if (params[key] && !choices.includes(params[key])) throw httpError(400, `Invalid ${key}`);
   if (params.q && (typeof params.q !== 'string' || params.q.length > 100)) throw httpError(400, 'Invalid search');
-  const size = pageSize(params.pageSize), rows = problems.filter(p => (!params.category || p.category === params.category) && (!params.difficulty || p.difficulty === params.difficulty) && (!params.q || `${p.title} ${p.prompt} ${p.skills.join(' ')}`.toLowerCase().includes(params.q.toLowerCase())));
+  const size = pageSize(params.pageSize), rows = problems.filter(p => (!params.category || p.category === params.category) && (!params.topic || p.topics.includes(params.topic)) && (!params.difficulty || p.difficulty === params.difficulty) && (!params.q || `${p.title} ${p.prompt} ${p.skills.join(' ')}`.toLowerCase().includes(params.q.toLowerCase())));
   let start = 0; if (params.after) { const i = rows.findIndex(p => p.id === params.after); if (i < 0) throw httpError(400, 'Invalid cursor'); start = i + 1; }
   const items = rows.slice(start, start + size).map(publicProblem);
-  return { items, nextCursor: start + size < rows.length ? items.at(-1).id : null, execution };
+  return { items, nextCursor: start + size < rows.length ? items.at(-1).id : null, filters: { categories, topics }, total: rows.length, execution };
 }
 function input(body) { const p = problem(body.problemId); if (!['javascript', 'python'].includes(body.language)) throw httpError(400, 'Unsupported language'); return { p, language: body.language, code: (text(body.code, 'code', 30000), body.code) }; }
 function owned(doc, uid) { if (!doc.exists || doc.data().ownerUid !== uid) throw httpError(404, 'Coding record not found'); return doc.data(); }

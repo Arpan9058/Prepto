@@ -94,7 +94,7 @@ Storage: `users/{uid}/resumeMatches/{id}`; indexes and default-deny client rules
 
 ## Coding practice (authenticated owner)
 
-- `GET /api/coding/problems`: `q` (<=100), `category` arrays/strings/sorting, `difficulty` easy/medium/hard, `pageSize` 1–50, `after` cursor. Results exclude reference approaches. `GET /api/coding/problems/:id` returns public details/starters.
+- `GET /api/coding/problems`: `q` (<=100), `category` arrays/strings/sorting/search/stacks/graphs/dynamic-programming, `topic` exact topic from response filters, `difficulty` easy/medium/hard, `pageSize` 1–50, `after` cursor. Results exclude reference approaches and include topic/category filter metadata, illustrative examples and edge cases. `GET /api/coding/problems/:id` returns public details/starters.
 - `GET /api/coding/drafts/:problemId?language=javascript|python`: current owner's draft, or `{code:"",revision:0}`. `PUT` accepts `{language,code,revision}`; code is bounded to 30,000 characters and stored exactly. Stale revisions return 409. Owner IDs in payloads grant no access.
 - `POST /api/coding/submissions`: `{problemId,language,code,requestId?}`. Prefer a stable request ID. Returns 201 for saved review and 200 for exact completed replay; changed payload or active evaluation lease returns 409. Failed/expired leases permit retry with the same payload/ID. Only validated AI feedback is saved; provider-supplied execution fields are discarded.
 - `GET /api/coding/submissions`: owner-only cursor pages, optional `problemId`. Lists omit code/reference approach. `GET /api/coding/submissions/:id` returns private code and saved feedback; reference approach appears only after AI review completes. Cross-user/admin access returns 404.

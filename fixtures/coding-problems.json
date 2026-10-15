@@ -1,5 +1,543 @@
 [
- {"id":"two-sum","title":"Pair sum","category":"arrays","difficulty":"easy","skills":["Arrays","Hash maps"],"prompt":"Return the indices of two distinct values whose sum equals target. Return null when no pair exists.","examples":["[2,7,11], target 9 → [0,1]"],"starter":{"javascript":"function pairSum(values, target) {\n  // Write your solution\n}","python":"def pair_sum(values, target):\n    pass"},"solution":"Track each value's index in a map. Before inserting a value, check whether target minus that value exists. This avoids reusing an index and takes O(n) time."},
- {"id":"balanced-brackets","title":"Balanced brackets","category":"strings","difficulty":"medium","skills":["Stacks","Strings"],"prompt":"Check whether a string containing ()[]{} has correctly nested matching brackets. The empty string is balanced.","examples":["([]) → true","([)] → false"],"starter":{"javascript":"function balanced(text) {\n  // Write your solution\n}","python":"def balanced(text):\n    pass"},"solution":"Push opening brackets onto a stack. For each closing bracket, pop and compare its matching opener. Reject mismatches or an empty stack. At the end the stack must be empty."},
- {"id":"merge-intervals","title":"Merge intervals","category":"sorting","difficulty":"hard","skills":["Sorting","Intervals"],"prompt":"Merge overlapping inclusive intervals. Input may be unsorted. Return sorted disjoint intervals without mutating the input.","examples":["[[5,8],[1,3],[2,6]] → [[1,8]]"],"starter":{"javascript":"function mergeIntervals(intervals) {\n  // Write your solution\n}","python":"def merge_intervals(intervals):\n    pass"},"solution":"Copy and sort intervals by start. Extend the most recent merged interval when its end reaches the next start; otherwise append a new interval. Time is O(n log n)."}
+  {
+    "id": "two-sum",
+    "title": "Pair sum",
+    "category": "arrays",
+    "difficulty": "easy",
+    "skills": [
+      "Arrays",
+      "Hash maps"
+    ],
+    "prompt": "Given an array of safe integers and a safe-integer target, return indices [i,j] with i < j whose values sum to target. Scan j left to right and choose the earliest stored i for that complement. Return null (Python None) if no pair exists. Do not mutate input.",
+    "examples": [
+      "[2,7,11], target 9 \u2192 [0,1]"
+    ],
+    "starter": {
+      "javascript": "function pairSum(values, target) {\n  // Write your solution\n}",
+      "python": "def pair_sum(values, target):\n    pass"
+    },
+    "solution": "Store the first index of each value in a map; do not overwrite it on duplicates. Before inserting, check for target minus the current value and return the first match. This avoids index reuse and preserves the specified tie rule. Expected O(n) time, O(n) space.",
+    "edgeCases": [
+      "Empty and single-item arrays return null.",
+      "Duplicate values may form a pair, but an index cannot be reused.",
+      "Negative values and zero are allowed."
+    ],
+    "topics": [
+      "Arrays",
+      "Hash maps"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "balanced-brackets",
+    "title": "Balanced brackets",
+    "category": "strings",
+    "difficulty": "medium",
+    "skills": [
+      "Stacks",
+      "Strings"
+    ],
+    "prompt": "Given a string containing only ()[]{}, return whether brackets match and nest correctly. The empty string is balanced.",
+    "examples": [
+      "([]) \u2192 true",
+      "([)] \u2192 false"
+    ],
+    "starter": {
+      "javascript": "function balanced(text) {\n  // Write your solution\n}",
+      "python": "def balanced(text):\n    pass"
+    },
+    "solution": "Push opening brackets onto a stack. For each closing bracket, pop and compare its matching opener. Reject mismatches or an empty stack. At the end the stack must be empty. O(n) time and O(n) auxiliary space.",
+    "edgeCases": [
+      "Empty input is true.",
+      "A closing bracket without an opener is false.",
+      "Leftover openers and crossed nesting are false."
+    ],
+    "topics": [
+      "Stacks",
+      "Strings"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "merge-intervals",
+    "title": "Merge intervals",
+    "category": "sorting",
+    "difficulty": "hard",
+    "skills": [
+      "Sorting",
+      "Intervals"
+    ],
+    "prompt": "Given unsorted inclusive integer intervals [start,end] where start <= end, merge overlapping intervals, including touching endpoints. Return intervals sorted by start without mutating the input.",
+    "examples": [
+      "[[5,8],[1,3],[2,6]] \u2192 [[1,8]]"
+    ],
+    "starter": {
+      "javascript": "function mergeIntervals(intervals) {\n  // Write your solution\n}",
+      "python": "def merge_intervals(intervals):\n    pass"
+    },
+    "solution": "Copy and sort intervals by start. Extend the most recent merged interval when its end reaches the next start; otherwise append a new interval. Time is O(n log n).",
+    "edgeCases": [
+      "Empty input returns an empty list.",
+      "Nested and identical intervals collapse.",
+      "[1,2] and [2,3] merge; [1,2] and [3,4] do not."
+    ],
+    "topics": [
+      "Sorting",
+      "Intervals"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "queue-batches",
+    "title": "Delivery batches",
+    "category": "arrays",
+    "difficulty": "easy",
+    "skills": [
+      "Arrays",
+      "Simulation"
+    ],
+    "prompt": "Given non-negative integer item counts and a positive integer capacity, return the number of separate batches required. Each count belongs to one customer; never mix customers in one batch. Sum the ceiling of count/capacity.",
+    "examples": [
+      "[5,0,3], capacity 3 \u2192 3",
+      "[], capacity 2 \u2192 0"
+    ],
+    "edgeCases": [
+      "Zero items require zero batches.",
+      "An exact multiple needs no partial batch."
+    ],
+    "starter": {
+      "javascript": "function deliveryBatches(counts, capacity) {\n  // Write your solution\n}",
+      "python": "def delivery_batches(counts, capacity):\n    pass"
+    },
+    "solution": "For each count, add floor(count/capacity) and one when there is a nonzero remainder. Sum independently. O(n) time and O(1) extra space.",
+    "topics": [
+      "Arrays",
+      "Simulation"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "stable-dedup",
+    "title": "First seen IDs",
+    "category": "arrays",
+    "difficulty": "easy",
+    "skills": [
+      "Arrays",
+      "Hash sets"
+    ],
+    "prompt": "Given case-sensitive ASCII ID strings, return each distinct ID once in first-seen order. Preserve empty strings and do not mutate input.",
+    "examples": [
+      "[\"a\",\"b\",\"a\",\"\"] \u2192 [\"a\",\"b\",\"\"]",
+      "[] \u2192 []"
+    ],
+    "edgeCases": [
+      "All duplicates produce one ID.",
+      "\"A\" and \"a\" are distinct."
+    ],
+    "starter": {
+      "javascript": "function firstSeen(ids) {\n  // Write your solution\n}",
+      "python": "def first_seen(ids):\n    pass"
+    },
+    "solution": "Maintain a set of seen IDs and an output list. Append and mark only unseen IDs. Expected O(n) time; O(k) space for k distinct IDs.",
+    "topics": [
+      "Arrays",
+      "Hash sets"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "run-labels",
+    "title": "Run labels",
+    "category": "strings",
+    "difficulty": "easy",
+    "skills": [
+      "Strings",
+      "Counting"
+    ],
+    "prompt": "For a string of ASCII letters, return contiguous runs as [character,count] pairs. Uppercase and lowercase differ; do not merge separated runs.",
+    "examples": [
+      "\"aaBBa\" \u2192 [[\"a\",2],[\"B\",2],[\"a\",1]]",
+      "\"\" \u2192 []"
+    ],
+    "edgeCases": [
+      "A single letter has count 1.",
+      "Repeated runs of the same letter remain separate."
+    ],
+    "starter": {
+      "javascript": "function runLabels(text) {\n  // Write your solution\n}",
+      "python": "def run_labels(text):\n    pass"
+    },
+    "solution": "Walk once, extending the current run when the next character matches, otherwise start a new run. O(n) time, O(r) output space.",
+    "topics": [
+      "Strings",
+      "Counting"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "last-unique",
+    "title": "Last unique character",
+    "category": "strings",
+    "difficulty": "easy",
+    "skills": [
+      "Strings",
+      "Hash maps"
+    ],
+    "prompt": "Given an ASCII string, return the greatest zero-based index of a character occurring exactly once, or -1 when no such character exists. Spaces and letter case matter.",
+    "examples": [
+      "\"abac\" \u2192 3",
+      "\"aabb\" \u2192 -1"
+    ],
+    "edgeCases": [
+      "Empty input returns -1.",
+      "A single space is a unique character."
+    ],
+    "starter": {
+      "javascript": "function lastUnique(text) {\n  // Write your solution\n}",
+      "python": "def last_unique(text):\n    pass"
+    },
+    "solution": "Count all characters, then scan indices from right to left and return the first with frequency one. O(n) time; O(alphabet) space.",
+    "topics": [
+      "Strings",
+      "Hash maps"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "rotate-window",
+    "title": "Window maxima sum",
+    "category": "arrays",
+    "difficulty": "medium",
+    "skills": [
+      "Sliding window",
+      "Arrays"
+    ],
+    "prompt": "Given safe integers and an integer k with 1 <= k <= array length, return the greatest sum of a contiguous window of length k. The array is nonempty; do not mutate it.",
+    "examples": [
+      "[4,-2,5,1], k 2 \u2192 6",
+      "[-4,-2,-7], k 1 \u2192 -2"
+    ],
+    "edgeCases": [
+      "All-negative inputs must not default to zero.",
+      "k equal to array length has exactly one window."
+    ],
+    "starter": {
+      "javascript": "function bestWindow(values, k) {\n  // Write your solution\n}",
+      "python": "def best_window(values, k):\n    pass"
+    },
+    "solution": "Sum the first k values; slide by subtracting the departing value and adding the entering value. Initialize the maximum with the first window, not zero. O(n) time, O(1) space.",
+    "topics": [
+      "Sliding window",
+      "Arrays"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "gap-days",
+    "title": "Missing attendance day",
+    "category": "search",
+    "difficulty": "easy",
+    "skills": [
+      "Binary search",
+      "Sorted arrays"
+    ],
+    "prompt": "Given strictly increasing positive integer days and a positive limit, return the smallest missing day in 1..limit, or limit+1 if all days occur. Every provided day is <= limit.",
+    "examples": [
+      "[1,2,4,7], limit 7 \u2192 3",
+      "[], limit 3 \u2192 1"
+    ],
+    "edgeCases": [
+      "A missing first day returns 1.",
+      "Fully present days return limit+1."
+    ],
+    "starter": {
+      "javascript": "function missingDay(days, limit) {\n  // Write your solution\n}",
+      "python": "def missing_day(days, limit):\n    pass"
+    },
+    "solution": "Binary-search the first index i with days[i] != i+1. If none exists, the answer is length+1. Strict increase makes the mismatch predicate monotone. O(log n) time, O(1) space.",
+    "topics": [
+      "Binary search",
+      "Sorted arrays"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "booking-peaks",
+    "title": "Peak room demand",
+    "category": "sorting",
+    "difficulty": "medium",
+    "skills": [
+      "Sweep line",
+      "Intervals"
+    ],
+    "prompt": "Given half-open time bookings [start,end) with integer start < end, return the maximum simultaneous room demand. A booking ending at time t frees its room before a booking starting at t.",
+    "examples": [
+      "[[1,4],[2,3],[4,6]] \u2192 2",
+      "[[1,2],[2,3]] \u2192 1"
+    ],
+    "edgeCases": [
+      "Empty input returns zero.",
+      "Simultaneous arrivals all count; departures at that time happen first."
+    ],
+    "starter": {
+      "javascript": "function peakRooms(bookings) {\n  // Write your solution\n}",
+      "python": "def peak_rooms(bookings):\n    pass"
+    },
+    "solution": "Create +1 arrival and -1 departure events, sort by time then delta (departures first), and track the maximum running count. O(n log n) time; O(n) space.",
+    "topics": [
+      "Sweep line",
+      "Intervals"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "smallest-budget",
+    "title": "Smallest budget prefix",
+    "category": "search",
+    "difficulty": "medium",
+    "skills": [
+      "Binary search",
+      "Prefix sums"
+    ],
+    "prompt": "Given non-negative integer daily costs and a non-negative budget, return the longest prefix length with sum <= budget. A zero-cost day can extend the prefix. Do not mutate input.",
+    "examples": [
+      "[2,0,3,4], budget 5 \u2192 3",
+      "[0,0], budget 0 \u2192 2"
+    ],
+    "edgeCases": [
+      "Empty input returns zero.",
+      "The first cost exceeding budget returns zero."
+    ],
+    "starter": {
+      "javascript": "function budgetPrefix(costs, budget) {\n  // Write your solution\n}",
+      "python": "def budget_prefix(costs, budget):\n    pass"
+    },
+    "solution": "Accumulate non-negative costs until adding the next would exceed budget; return that index, or the full length. O(n) time, O(1) space. With precomputed prefix sums and many budgets, binary search gives O(log n) per query.",
+    "topics": [
+      "Binary search",
+      "Prefix sums"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "parent-path",
+    "title": "Folder depth",
+    "category": "stacks",
+    "difficulty": "medium",
+    "skills": [
+      "Stacks",
+      "Paths"
+    ],
+    "prompt": "Given an absolute slash-separated path containing ASCII folder names, . and .., return its canonical absolute path. Ignore empty and . components; .. removes a folder if one exists and never climbs above root. Folder names other than . and .. are literal.",
+    "examples": [
+      "\"/a//b/../c/.\" \u2192 \"/a/c\"",
+      "\"/../../\" \u2192 \"/\""
+    ],
+    "edgeCases": [
+      "Repeated slashes collapse.",
+      "A folder named ... is a literal folder."
+    ],
+    "starter": {
+      "javascript": "function canonicalPath(path) {\n  // Write your solution\n}",
+      "python": "def canonical_path(path):\n    pass"
+    },
+    "solution": "Split by slash and maintain a stack. Ignore empty/dot components, pop on dot-dot when possible, and push other names. Join under one leading slash. O(n) time and space.",
+    "topics": [
+      "Stacks",
+      "Paths"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "nearest-warmer",
+    "title": "Next warmer reading",
+    "category": "stacks",
+    "difficulty": "medium",
+    "skills": [
+      "Monotonic stack",
+      "Arrays"
+    ],
+    "prompt": "For integer daily temperatures, return for each day the number of days until a strictly warmer reading, or 0 if none exists. Equal temperatures are not warmer.",
+    "examples": [
+      "[30,30,32,31] \u2192 [2,1,0,0]",
+      "[] \u2192 []"
+    ],
+    "edgeCases": [
+      "Descending and constant readings produce zeros.",
+      "Negative temperatures are valid."
+    ],
+    "starter": {
+      "javascript": "function warmerWait(temperatures) {\n  // Write your solution\n}",
+      "python": "def warmer_wait(temperatures):\n    pass"
+    },
+    "solution": "Keep indices of unresolved days in a decreasing-temperature stack. When a warmer day arrives, pop cooler indices and fill their distances. Each index enters and exits once: O(n) time and space.",
+    "topics": [
+      "Monotonic stack",
+      "Arrays"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "island-sizes",
+    "title": "Largest garden patch",
+    "category": "graphs",
+    "difficulty": "medium",
+    "skills": [
+      "Breadth-first search",
+      "Grids"
+    ],
+    "prompt": "Given a rectangular grid of 0 and 1, return the size of the largest four-directionally connected group of 1 cells without mutating input. The grid may have no rows or no columns.",
+    "examples": [
+      "[[1,0,1],[1,0,1],[0,0,1]] \u2192 3",
+      "[[1,0],[0,1]] \u2192 1"
+    ],
+    "edgeCases": [
+      "Diagonal neighbors are not connected.",
+      "An empty or all-zero grid returns zero."
+    ],
+    "starter": {
+      "javascript": "function largestPatch(grid) {\n  // Write your solution\n}",
+      "python": "def largest_patch(grid):\n    pass"
+    },
+    "solution": "Use a visited set and BFS or DFS from each unvisited 1. Count only up/down/left/right neighbors in bounds. O(rows*columns) time and space; keep visited separate to preserve input.",
+    "topics": [
+      "Breadth-first search",
+      "Grids"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "dependency-order",
+    "title": "Workshop ordering",
+    "category": "graphs",
+    "difficulty": "hard",
+    "skills": [
+      "Topological sort",
+      "Graphs"
+    ],
+    "prompt": "Given n workshops numbered 0..n-1 and unique dependency pairs [before,after], return the lexicographically smallest valid ordering, or [] if a cycle exists. Each pair uses valid workshop IDs; n may be zero.",
+    "examples": [
+      "n 3, [[0,2],[1,2]] \u2192 [0,1,2]",
+      "n 2, [[0,1],[1,0]] \u2192 []"
+    ],
+    "edgeCases": [
+      "Disconnected workshops still appear.",
+      "Self-dependencies are cycles."
+    ],
+    "starter": {
+      "javascript": "function workshopOrder(n, dependencies) {\n  // Write your solution\n}",
+      "python": "def workshop_order(n, dependencies):\n    pass"
+    },
+    "solution": "Build indegrees and outgoing edges. Repeatedly take the smallest zero-indegree ID from a min-heap, emitting it and decrementing neighbors. Fewer than n emitted IDs signals a cycle. O((n+edges) log n) time, O(n+edges) space.",
+    "topics": [
+      "Topological sort",
+      "Graphs"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "coin-stamps",
+    "title": "Fewest stamps",
+    "category": "dynamic-programming",
+    "difficulty": "medium",
+    "skills": [
+      "Dynamic programming",
+      "Unbounded choices"
+    ],
+    "prompt": "Given distinct positive integer stamp values and a non-negative integer target, return the fewest stamps summing exactly to target, with unlimited copies of each value. Return -1 if impossible.",
+    "examples": [
+      "[1,4,6], target 8 \u2192 2",
+      "[4,6], target 5 \u2192 -1"
+    ],
+    "edgeCases": [
+      "Target zero requires zero stamps, even with no values.",
+      "An empty value list cannot reach a positive target."
+    ],
+    "starter": {
+      "javascript": "function fewestStamps(values, target) {\n  // Write your solution\n}",
+      "python": "def fewest_stamps(values, target):\n    pass"
+    },
+    "solution": "Let dp[0]=0 and all other sums be unreachable. For each sum, try every value no greater than it and minimize dp[sum-value]+1. O(target*number of values) time, O(target) space. Greedy choice is not sufficient.",
+    "topics": [
+      "Dynamic programming",
+      "Unbounded choices"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "weighted-shifts",
+    "title": "Nonadjacent shifts",
+    "category": "dynamic-programming",
+    "difficulty": "medium",
+    "skills": [
+      "Dynamic programming",
+      "Arrays"
+    ],
+    "prompt": "Given non-negative integer rewards for ordered shifts, choose any subset with no adjacent indices and return the greatest total reward. Choosing no shifts is allowed; input is not mutated.",
+    "examples": [
+      "[5,1,2,7] \u2192 12",
+      "[2,9,2] \u2192 9"
+    ],
+    "edgeCases": [
+      "Empty input returns zero.",
+      "One shift returns its reward."
+    ],
+    "starter": {
+      "javascript": "function bestShifts(rewards) {\n  // Write your solution\n}",
+      "python": "def best_shifts(rewards):\n    pass"
+    },
+    "solution": "Maintain the best totals through the previous one and two shifts. For each reward choose max(previous, two-back+reward). O(n) time, O(1) extra space.",
+    "topics": [
+      "Dynamic programming",
+      "Arrays"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  },
+  {
+    "id": "cover-tags",
+    "title": "Shortest tag cover",
+    "category": "strings",
+    "difficulty": "hard",
+    "skills": [
+      "Sliding window",
+      "Hash maps"
+    ],
+    "prompt": "Given an ASCII text and a required ASCII string, return the shortest substring containing every required character with its required multiplicity. Ties choose the earliest start. Return an empty string if required is empty or no cover exists. Comparisons are case-sensitive.",
+    "examples": [
+      "text \"cabbaa\", required \"aba\" \u2192 \"baa\"",
+      "text \"ABC\", required \"aa\" \u2192 \"\""
+    ],
+    "edgeCases": [
+      "Repeated required characters need enough copies.",
+      "Extra text characters may be inside a cover."
+    ],
+    "starter": {
+      "javascript": "function shortestCover(text, required) {\n  // Write your solution\n}",
+      "python": "def shortest_cover(text, required):\n    pass"
+    },
+    "solution": "Count required multiplicities. Expand a right boundary until requirements are met, then shrink left while preserving coverage, recording only strictly shorter windows to keep earliest ties. O(text length+required length) time, O(alphabet) space.",
+    "topics": [
+      "Sliding window",
+      "Hash maps"
+    ],
+    "contentVersion": 1,
+    "reviewNotes": "Authored for Prepto; contract, examples, edge cases and reference complexity checked together. Examples are illustrative, not execution results."
+  }
 ]

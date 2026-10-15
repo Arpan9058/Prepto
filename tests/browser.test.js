@@ -196,7 +196,7 @@ test('browser compares saved version matches for the same job and recovers histo
 }, 20000);
 test('coding browser filters problems, preserves private drafts and reviews AI-only feedback and progress', async () => {
   await page.goto(base + '/coding-practice'); await settled();
-  await page.type('#problem-filters [name=q]', 'pair'); await page.click('#problem-filters button'); await settled();
+  await page.type('#problem-filters [name=q]', 'Pair sum'); await page.click('#problem-filters button'); await settled();
   expect(await page.$$eval('#problems article', n => n.length)).toBe(1);
   await page.click('#problems button'); await page.waitForFunction(() => !document.getElementById('workspace').hidden && document.getElementById('code-editor').value.includes('pairSum'));
   await page.$eval('#code-editor', n => { n.value = 'function pairSum(v,t) { return null; } // <img src=x onerror=alert(1)>';  n.dispatchEvent(new Event('input')); });
@@ -229,4 +229,14 @@ test('coding library browser exposes loading, empty and recoverable error states
   expect(await page.$$eval('#problems article', n => n.length)).toBe(2);
   await page.type('#problem-filters [name=q]', 'absent problem'); await page.click('#problem-filters button'); await settled();
   expect(await page.$eval('#status', n => n.textContent)).toContain('No problems match');
+});
+test('expanded coding browser filters topics and displays examples and edge cases without execution claims', async () => {
+  await page.goto(base + '/coding-practice'); await settled();
+  await page.select('#problem-filters [name=category]', 'graphs'); await page.select('#problem-filters [name=topic]', 'Topological sort'); await page.select('#problem-filters [name=difficulty]', 'hard');
+  await page.click('#problem-filters button'); await settled();
+  expect(await page.$$eval('#problems h2', n => n.map(x => x.textContent))).toEqual(['Workshop ordering']);
+  await page.click('#problems button'); await page.waitForFunction(() => document.getElementById('code-editor').value.includes('workshopOrder'));
+  expect(await page.$eval('#problem-edge-cases', n => n.textContent)).toContain('Self-dependencies');
+  expect(await page.$eval('#workspace', n => n.textContent)).toContain('Illustrative examples (not executed)');
+  page.once('dialog', d => d.accept()); await page.select('#code-language', 'python'); await page.waitForFunction(() => document.getElementById('code-editor').value.includes('def workshop_order'));
 });

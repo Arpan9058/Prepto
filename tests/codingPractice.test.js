@@ -14,7 +14,7 @@ test('library search, filters, cursor validation and reference answer hiding', a
   expect(first.items[0].solution).toBeUndefined(); expect(first.nextCursor).toBe('two-sum');
   expect((await auth(request(app).get('/api/coding/problems?pageSize=1&after=two-sum'))).body.items[0].id).toBe('balanced-brackets');
   expect((await auth(request(app).get('/api/coding/problems?q=stack&category=strings&difficulty=medium'))).body.items).toHaveLength(1);
-  expect((await auth(request(app).get('/api/coding/problems?q=missing'))).body.items).toEqual([]);
+  expect((await auth(request(app).get('/api/coding/problems?q=no-such-problem-zz'))).body.items).toEqual([]);
   await auth(request(app).get('/api/coding/problems?difficulty=impossible')).expect(400);
   await auth(request(app).get('/api/coding/problems?category=strings&after=two-sum')).expect(400);
   await request(app).get('/api/coding/problems').expect(401);
