@@ -63,4 +63,25 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-      - run: npm run test:docker
+      - name: Build and smoke Docker with failure diagnostics
+        shell: bash
+        run: |
+          set +e
+          npm run test:docker > docker-output.log 2>&1
+          result=$?
+          cat docker-output.log
+          if [ "$result" -ne 0 ]; then
+            node <<'JS'
+          const fs = require('node:fs');
+          const lines = fs.readFileSync('docker-output.log', 'utf8').split('\n');
+          for (const line of lines.filter(s => /ERROR|Error|error|failed|FAIL|Assertion|E:/.test(s)).slice(-25)) {
+            console.log('::error title=Docker smoke::' + line.replaceAll('%', '%25').replaceAll('\r', '%0D'));
+          }
+          JS
+          fi
+          exit "$result"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: docker-smoke-diagnostics
+          path: docker-output.log
