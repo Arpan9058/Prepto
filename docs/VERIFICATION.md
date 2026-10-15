@@ -159,8 +159,8 @@ On Node 24.19, the completed local verification recorded:
 | Check | Result |
 | --- | --- |
 | Clean `npm ci` | Passed |
-| Default Node-only `npm test` with an intentionally invalid Chromium path | 152 passed, zero skipped |
-| Full Jest/Supertest/Chromium regression suites | 205 passed across 19 suites, zero skipped |
+| Default Node-only `npm test` with an intentionally invalid Chromium path | 153 passed, zero skipped |
+| Full Jest/Supertest/Chromium regression suites | 206 passed across 19 suites, zero skipped |
 | Separate React component/integration suite | 21 passed, zero skipped |
 | Firestore rules/backend emulator suite | 11 passed, zero skipped |
 | Build, frontend typecheck, scoped backend typecheck, lint, scoped formatting | Passed |
@@ -168,7 +168,7 @@ On Node 24.19, the completed local verification recorded:
 | Built Docker default `npm start` plus isolated real PDF smoke | Passed |
 | Live Firebase/Gemini | Unrun: existing Gemini binding and authorized project pin unavailable |
 
-Backend source coverage: 92.66% lines/statements, 91.11% branches, 95.05% functions.
+Backend source coverage: 92.71% lines/statements, 91.13% branches, 95.05% functions.
 Separate React source coverage: 43.93% lines, 40.82% statements, 40.61% branches,
 43.90% functions. Browser coverage is not merged into those React percentages.
 
@@ -195,6 +195,8 @@ Screenshots captured from actual Chromium-rendered code (signed-in data is synth
 [admin question bank](design/mobile-question-bank-admin.png).
 
 Using the same tracked physical-source definition, this milestone started at **12,894**
-and ended at **13,765** lines (+871). Ending breakdown: frontend 427, tests 2,349,
-backend/tooling/other 3,831, retained EJS templates 7,158. Blank lines/comments are included;
+and ended at **13,795** lines (+901). Ending breakdown: frontend 427, tests 2,360,
+backend/tooling/other 3,850, retained EJS templates 7,158. Blank lines/comments are included;
 these are not the external platform's 4,871 Source LOC and do not imply any resale value.
+
+PDF renderer hardening uses a per-export temporary Chromium profile/config/cache, removes it after launch/render/close failures, and matches Compose shared-memory/init settings in Docker smoke. Earlier GitHub Docker smoke runs failed with an HTTP 500; subsequent CI validates this hardening separately from the already-passing backend/browser/emulator jobs.

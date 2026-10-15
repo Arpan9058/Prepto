@@ -66,18 +66,18 @@ async function smoke() {
       await fetch(isolated + `/api/resumes/${id}`, { headers: { cookie } })
     ).json();
     const version = detail.currentVersionId;
-    const pdf = await fetch(isolated + `/api/resumes/${id}/versions/${version}/pdf`, {
-      headers: { cookie },
-    });
-    assert.equal(pdf.status, 200);
-    assert.match(pdf.headers.get('content-type'), /application\/pdf/);
-    assert.ok((await pdf.arrayBuffer()).byteLength > 100);
-    // Also independently exercise the production PDF renderer.
+    // Run the renderer directly before HTTP export so launch failures remain diagnosable.
     const real = await exportPdf(
       '<!doctype html><html><body><h1>Synthetic production PDF smoke</h1></body></html>',
     );
     assert.equal(real.subarray(0, 4).toString(), '%PDF');
     assert.ok(real.length > 1000);
+    const pdf = await fetch(isolated + `/api/resumes/${id}/versions/${version}/pdf`, {
+      headers: { cookie },
+    });
+    assert.equal(pdf.status, 200, 'Private resume PDF HTTP export failed');
+    assert.match(pdf.headers.get('content-type'), /application\/pdf/);
+    assert.ok((await pdf.arrayBuffer()).byteLength > 100);
     console.log(
       'PASS production HTTP/static/deep-link/auth/demo-isolation/download checks and real Chromium PDF export',
     );

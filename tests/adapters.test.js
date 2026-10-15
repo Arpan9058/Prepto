@@ -119,3 +119,14 @@ test('real Firebase Admin modular SDK can construct adapters without a credentia
   const output = execFileSync(process.execPath, ['-e', code], { cwd: require('node:path').join(__dirname, '..'), timeout: 10000, env: process.env, encoding: 'utf8' });
   expect(output.trim()).toBe('modular-sdk-ok');
 });
+test('PDF export uses disposable writable Chromium state and removes it when launch/close fails', async () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const launch = jest.fn(async () => { throw new Error('Launch failed'); });
+  await expect(exportPdf('synthetic', { launcher: { launch }, env: { CHROMIUM_EXECUTABLE_PATH: '/synthetic/chrome' } })).rejects.toThrow('Launch failed');
+  const options = launch.mock.calls[0][0], root = path.dirname(options.userDataDir);
+  expect(options.env.XDG_CONFIG_HOME).toBe(path.join(root, 'config')); expect(options.env.XDG_CACHE_HOME).toBe(path.join(root, 'cache'));
+  expect(fs.existsSync(root)).toBe(false);
+  const double = browserDouble(); double.browser.close.mockRejectedValueOnce(new Error('Close failed'));
+  await expect(exportPdf('synthetic', { launcher: double.launcher, env: { CHROMIUM_EXECUTABLE_PATH: '/synthetic/chrome' } })).rejects.toThrow('Close failed');
+  expect(fs.existsSync(path.dirname(double.launcher.launch.mock.calls[0][0].userDataDir))).toBe(false);
+});
