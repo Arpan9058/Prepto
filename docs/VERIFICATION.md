@@ -193,3 +193,8 @@ Screenshots captured from actual Chromium-rendered code (signed-in data is synth
 [mobile login](design/mobile-login-alice.png),
 [mobile progress](design/mobile-populated-progress.png),
 [admin question bank](design/mobile-question-bank-admin.png).
+
+Using the same tracked physical-source definition, this milestone started at **12,894**
+and ended at **13,765** lines (+871). Ending breakdown: frontend 427, tests 2,349,
+backend/tooling/other 3,831, retained EJS templates 7,158. Blank lines/comments are included;
+these are not the external platform's 4,871 Source LOC and do not imply any resale value.
