@@ -128,3 +128,28 @@ This optional check is separate from the enforced Chromium CI suites. It does no
 claim live provider validation, Safari support verification or a human accessibility
 audit. Firefox's content sandbox is disabled only in the launched test subprocess;
 the test container retains the isolation flags above. The production image is unchanged.
+
+## Fresh external assessment (66.9)
+
+The supplied follow-up scan reports **12,463 Source LOC** (its own definition),
+22 test files and explicit multi-stage CI, while also saying no runnable suite or
+coverage gate was detected. Those claims conflict with the scan's own evidence.
+The configurations and successful CI run are the reproducible evidence; we do not
+claim knowledge of the scanner's private heuristics or promise a higher score.
+
+- `.env.example` now includes the three optional CA/Docker build variables named
+  in the report. They are commented examples, not global environment changes.
+- Compose already exists as the standard `compose.yaml`; `docker compose config`
+  validates it. Creating a duplicate `docker-compose.yml` would risk drift.
+- The large journey test has been split into six files under 300 lines with shared
+  setup. All 51 React cases and the measured coverage are preserved.
+- Numeric coverage floors already exist in package.json and
+  frontend/vitest.config.mjs. An intentional React 100% line-floor probe failed
+  at the measured 85.79%, confirming enforcement rather than a coverage-only flag.
+- Audits and dependency provenance above remain applicable. Adding a badge does
+  not repair an upstream advisory or reduce the dependency graph.
+- Hosted exception tracking is an optional operational decision. Existing Pino
+  failures avoid provider messages, credentials and request bodies; adding a new
+  external telemetry destination requires deliberate data-retention configuration.
+- Genuine author history, release cadence and future maintenance cannot be
+  repaired by fake commits, cosmetic releases or invented contributors.
