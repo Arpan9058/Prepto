@@ -52,7 +52,7 @@ No `@ts-nocheck` or blanket diagnostics suppression is used.
   the user's existing deferral. Existing bindings are not deleted or replaced. The safe
   opt-in terminal command remains `npm run verify:live -- --run` after project pin/setup.
 - Automated Chromium/axe checks and screenshot inspection are not a human accessibility
-  audit. Screen-reader/assistive-technology and Safari/Firefox validation remain pending.
+  audit. Screen-reader/assistive-technology and Safari validation remain pending. The targeted Firefox smoke below is not a full browser audit.
 - Real sustained maintenance/team history cannot be manufactured in one task.
 - Docker/browser/emulator results do not prove deployed TLS, Firestore index readiness,
   production TTL/permissions or live session persistence.
@@ -97,3 +97,34 @@ The tracked physical-line counter changed from **13,795 to 22,126**, largely bec
 Prettier expanded existing minified source into readable formatting. This increase is
 not a measure of new product behavior. Use `node scripts/loc.js` for the defined local
 metric; the buyer's proprietary Source LOC still requires its own fresh scan.
+
+
+## Targeted Firefox follow-up
+
+`node scripts/smoke-firefox.js` passed against Firefox ESR 153.5.0 in an isolated,
+read-only Docker container with no network. It checks eight populated mobile pages
+and deep-link refreshes, horizontal overflow, drawer keyboard focus/Escape, a unique
+owner-only resume (404 for a second isolated user), and a saved coding draft revision.
+All data/providers are synthetic. Sample resumes intentionally have matching IDs in
+separate owner paths; the authorization probe creates a unique record instead of
+mistaking another user's own sample record for leaked data.
+
+Reproduce after `npm ci` and `npm run frontend:build` with installed Firefox ESR:
+
+```sh
+FIREFOX_EXECUTABLE_PATH=/usr/bin/firefox-esr node scripts/smoke-firefox.js
+```
+
+Or reuse the production image produced by `npm run test:docker`:
+
+```sh
+docker build -f Dockerfile.firefox -t prepto:firefox-check .
+docker run --rm --network=none --read-only --init --shm-size=256m \
+  --tmpfs /tmp:rw,noexec,nosuid,size=512m --cap-drop=ALL \
+  --security-opt=no-new-privileges prepto:firefox-check node scripts/smoke-firefox.js
+```
+
+This optional check is separate from the enforced Chromium CI suites. It does not
+claim live provider validation, Safari support verification or a human accessibility
+audit. Firefox's content sandbox is disabled only in the launched test subprocess;
+the test container retains the isolation flags above. The production image is unchanged.

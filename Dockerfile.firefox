@@ -1,0 +1,6 @@
+# Optional test-only browser image; build prepto:smoke with npm run test:docker first.
+FROM prepto:smoke
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends firefox-esr && rm -rf /var/lib/apt/lists/*
+COPY --chown=node:node --chmod=644 scripts/smoke-firefox.js /app/scripts/smoke-firefox.js
+USER node

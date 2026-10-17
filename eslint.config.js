@@ -11,6 +11,7 @@ module.exports = [
       'tests/react.test.js',
       'scripts/demo-screenshots.js',
       'scripts/react-screenshots.js',
+      'scripts/smoke-firefox.js',
     ],
     languageOptions: { globals: globals.browser },
   },
