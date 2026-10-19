@@ -247,3 +247,71 @@ test('populated mobile demo pages and saved interview/report/match content pass 
     }
   } finally { await new Promise(r => { local.close(r); local.closeAllConnections(); }); }
 }, 30000);
+
+test.each([
+  ['/', '.landing-hero', 'alice'],
+  ['/login', 'input[name=email]', 'alice'],
+  ['/register', 'input[name=confirm]', 'alice'],
+  ['/onboarding', 'input[name=fullName]', 'alice'],
+  ['/dashboard', '.empty-state', 'alice'],
+  ['/question-bank', '.cards-grid', 'admin'],
+  ['/interviews', '.question-picker', 'alice'],
+  ['/resumes', 'input[name=title]', 'alice'],
+  ['/resume-matches', '.empty-state', 'alice'],
+  ['/coding-practice', '.cards-grid button', 'alice'],
+  ['/progress', 'input[name=skill]', 'alice'],
+  ['/reports', '.empty-state', 'alice'],
+])('320 CSS-pixel reflow and computed 200 percent text resize preserve named controls: %s', async (route, ready, uid) => {
+  await require('../scripts/seed-question-bank').seed(store.db);
+  await page.setCookie({ name: 'session_token', value: uid, url: base, httpOnly: true });
+  await page.setViewport({ width: 320, height: 800 });
+  await page.goto(base + route);
+  await page.waitForSelector(ready);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.setViewport({ width: 640, height: 800 });
+  // Independent text-resize stress, not a claim of native browser zoom or AT review.
+  await page.evaluate(async () => {
+    const sizes = [...document.querySelectorAll('body, body *')]
+      .filter(node => node instanceof HTMLElement)
+      .map(node => ({ node, size: parseFloat(getComputedStyle(node).fontSize), line: parseFloat(getComputedStyle(node).lineHeight) }));
+    for (const { node, size, line } of sizes) {
+      node.style.fontSize = `${size * 2}px`;
+      if (Number.isFinite(line)) node.style.lineHeight = `${line * 2}px`;
+    }
+    await document.fonts.ready;
+    await new Promise(resolve => requestAnimationFrame(resolve));
+  });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  if (process.env.CAPTURE_HARDENING_SCREENSHOTS && ['/login', '/progress'].includes(route)) {
+    await page.screenshot({ path: `docs/design/text-resize-${route.slice(1)}-640-200.png`, fullPage: true });
+  }
+  const client = await page.createCDPSession();
+  try {
+    const { nodes } = await client.send('Accessibility.getFullAXTree');
+    const unnamed = nodes.filter(node => !node.ignored && ['button', 'link', 'textbox', 'combobox', 'checkbox', 'radio'].includes(node.role?.value) && !node.name?.value);
+    expect(unnamed.map(node => ({ role: node.role?.value, id: node.backendDOMNodeId }))).toEqual([]);
+  } finally { await client.detach(); }
+  await page.keyboard.press('Tab');
+  expect(await page.evaluate(() => document.activeElement !== document.body)).toBe(true);
+  expect(await page.evaluate(() => {
+    const style = getComputedStyle(document.activeElement);
+    return (style.outlineStyle !== 'none' && parseFloat(style.outlineWidth) > 0) || style.boxShadow !== 'none';
+  })).toBe(true);
+}, 20000);
+
+test('narrow mobile navigation keeps forward/backward keyboard focus inside its controls', async () => {
+  await page.setViewport({ width: 320, height: 800 });
+  await page.goto(base + '/dashboard'); await page.waitForSelector('.empty-state');
+  await page.click('[aria-label="Open navigation"]');
+  await page.waitForFunction(() => document.activeElement.getAttribute('href') === '/dashboard');
+  await page.keyboard.down('Shift'); await page.keyboard.press('Tab'); await page.keyboard.up('Shift');
+  expect(await page.evaluate(() => document.activeElement.getAttribute('aria-label'))).toBe('Close navigation');
+  await page.keyboard.down('Shift'); await page.keyboard.press('Tab'); await page.keyboard.up('Shift');
+  expect(await page.evaluate(() => document.activeElement.getAttribute('href'))).toBe('/logout');
+  await page.keyboard.press('Tab');
+  expect(await page.evaluate(() => document.activeElement.getAttribute('aria-label'))).toBe('Close navigation');
+  await page.keyboard.press('Tab');
+  expect(await page.evaluate(() => document.activeElement.getAttribute('href'))).toBe('/dashboard');
+  await page.keyboard.press('Escape');
+  expect(await page.evaluate(() => document.activeElement.getAttribute('aria-label'))).toBe('Open navigation');
+});

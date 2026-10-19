@@ -180,3 +180,9 @@ HTTP/auth boundaries. That is 282 distinct regression cases; the Compose smoke i
 reported separately. Backend coverage is 95.71% lines, 91.01% branches and 94.53%
 functions; React remains 85.79% lines, 75.23% branches and 86.47% functions.
 CI verifies a clean installation and freshly built Docker image after push.
+
+
+The subsequent [credential-free verification pass](KEYLESS_VERIFICATION.md) records
+295 regression cases, additional reflow/text-size/accessibility-tree/keyboard checks,
+actual screenshots, and the precise WebKit/platform blockers. These checks do not
+claim live services or a human accessibility audit.
