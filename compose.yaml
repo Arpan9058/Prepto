@@ -5,6 +5,7 @@ services:
     env_file: .env
     environment:
       NODE_ENV: production
+      PORT: "8080"
       TRUST_PROXY: "true"
       CHROMIUM_EXECUTABLE_PATH: /usr/bin/chromium
       CHROMIUM_NO_SANDBOX: "true"
@@ -17,3 +18,9 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/health').then(async r=>{if(!r.ok || (await r.json()).status!=='ok')process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3

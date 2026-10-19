@@ -130,3 +130,10 @@ credentials/retention in your deployment adapter; the stock server does not cons
 an invented `SENTRY_DSN` or claim hosted monitoring is active. Never embed a DSN or
 secret in frontend `VITE_*` config.
 
+
+`npm run test:docker && npm run test:compose` builds/smokes the production image,
+then validates the real `compose.yaml` healthcheck, published loopback HTTP and
+authentication boundaries using a temporary generated env file and isolated project.
+The Compose check never reads/replaces your `.env` and removes only its own resources.
+The file is named `compose.yaml`, a standard filename supported by Docker Compose;
+a second `docker-compose.yml` is unnecessary.

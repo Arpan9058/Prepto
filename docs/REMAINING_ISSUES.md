@@ -153,3 +153,30 @@ claim knowledge of the scanner's private heuristics or promise a higher score.
   external telemetry destination requires deliberate data-retention configuration.
 - Genuine author history, release cadence and future maintenance cannot be
   repaired by fake commits, cosmetic releases or invented contributors.
+
+
+## October 19 assessment follow-up (69.7)
+
+The new external scan reports 12,618 Source LOC. Its null threshold/no-suite and
+missing-Compose claims still conflict with the committed configs and green CI.
+The optional Firefox executable is now documented in `.env.example`; the other
+three named variables were already present as commented, optional examples.
+
+The actual Compose service now explicitly verifies `/health` JSON, fixes its
+internal port at 8080, and has an isolated startup/HTTP/auth smoke enforced after
+Docker smoke in CI. No duplicate Compose manifest is added. The generated test env
+never loads existing secrets and its project/resources are cleaned up.
+
+A deployment-owned `reportError` injection now receives sanitized 5xx metadata;
+tests cover exactly-once reporting, 4xx exclusion, sensitive-data omission,
+reporter exceptions/rejections and a slow sink. No hosted telemetry provider is
+configured or claimed live. The sink/retention policy remains a deployment choice.
+Live validation remains deferred. A stable release tag is not manufactured merely
+to satisfy an assessment; the current limitations remain documented.
+
+Local follow-up validation passed: `npm run check` (220 backend/browser cases and
+51 React cases), 11 real emulator cases and isolated Compose healthy startup plus
+HTTP/auth boundaries. That is 282 distinct regression cases; the Compose smoke is
+reported separately. Backend coverage is 95.71% lines, 91.01% branches and 94.53%
+functions; React remains 85.79% lines, 75.23% branches and 86.47% functions.
+CI verifies a clean installation and freshly built Docker image after push.

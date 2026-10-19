@@ -28,7 +28,8 @@
     "test:all": "npm run test:backend && npm run test:frontend && npm run test:emulator",
     "backend:typecheck": "tsc -p tsconfig.backend.json && tsc -p tsconfig.backend.all.json",
     "format:check": "prettier --check \"*.js\" \"{adapters,controller,demo,middleware,routes,services,utils,scripts}/**/*.js\" \"frontend/**/*.{ts,tsx,mjs,css}\" \"types/**/*.d.ts\" CONTRIBUTING.md CHANGELOG.md",
-    "format": "prettier --write \"*.js\" \"{adapters,controller,demo,middleware,routes,services,utils,scripts}/**/*.js\" \"frontend/**/*.{ts,tsx,mjs,css}\" \"types/**/*.d.ts\" CONTRIBUTING.md CHANGELOG.md"
+    "format": "prettier --write \"*.js\" \"{adapters,controller,demo,middleware,routes,services,utils,scripts}/**/*.js\" \"frontend/**/*.{ts,tsx,mjs,css}\" \"types/**/*.d.ts\" CONTRIBUTING.md CHANGELOG.md",
+    "test:compose": "node scripts/smoke-compose.js"
   },
   "keywords": [],
   "author": "",
