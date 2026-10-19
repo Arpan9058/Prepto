@@ -35,7 +35,29 @@ jobs:
       - run: npm run backend:typecheck
       - run: npm run lint
       - run: npm run format:check
-      - run: npm run test:backend
+      - name: Backend and browser regression with structured diagnostics
+        shell: bash
+        run: |
+          set +e
+          npm run test:backend -- --json --outputFile=backend-results.json
+          result=$?
+          if [ "$result" -ne 0 ]; then
+            node <<'JS'
+          const fs = require('node:fs');
+          if (fs.existsSync('backend-results.json')) {
+            const results = JSON.parse(fs.readFileSync('backend-results.json', 'utf8'));
+            const failures = results.testResults.flatMap(test => {
+              const failed = test.assertionResults.filter(assertion => assertion.status === 'failed');
+              return failed.length ? failed.map(assertion => assertion.fullName + '\n' + assertion.failureMessages.join('\n')) : test.status === 'failed' ? [test.message] : [];
+            });
+            for (const failure of failures.slice(0, 8)) {
+              const message = failure.slice(0, 3000).replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A');
+              console.log('::error title=Backend/browser regression::' + message);
+            }
+          }
+          JS
+          fi
+          exit "$result"
       - run: npm run test:frontend
       - run: npm run test:production
         env:
@@ -55,7 +77,9 @@ jobs:
         if: always()
         with:
           name: coverage
-          path: coverage
+          path: |
+            coverage
+            backend-results.json
   docker:
     name: Docker production smoke
     runs-on: ubuntu-24.04
