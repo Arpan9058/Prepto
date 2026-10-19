@@ -81,7 +81,15 @@ CAPTURE_HARDENING_SCREENSHOTS=1 node --experimental-vm-modules \
   --testNamePattern='320 CSS-pixel|narrow mobile navigation'
 ```
 
-These checks found no product regression requiring a visual redesign.
+CI exposed a dashboard grid overflow with different fallback font metrics. A wide
+monospace fallback reproduced it locally: 663 CSS pixels of content at a 640-pixel
+viewport after computed text resizing. Activity cards now use font-relative adaptive
+columns, can shrink, and wrap long words without hiding content. The same regression
+fails before the fix and passes after it. This is a targeted responsive fix, not a
+visual rebrand. Structured CI annotations preserve failure details when the raw-log
+host cannot be downloaded from this environment.
+
+- [Fixed dashboard under doubled text and wide fallback font](design/text-resize-dashboard-640-200.png)
 
 ## Blocked and unrun checks
 

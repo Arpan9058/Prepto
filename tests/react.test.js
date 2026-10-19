@@ -269,6 +269,10 @@ test.each([
   await page.waitForSelector(ready);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.setViewport({ width: 640, height: 800 });
+  if (route === '/dashboard') {
+    // Exercise a wide generic fallback as well as the host's default font metrics.
+    await page.addStyleTag({ content: ':root { --font-body: monospace; --font-display: monospace; }' });
+  }
   // Independent text-resize stress, not a claim of native browser zoom or AT review.
   await page.evaluate(async () => {
     const sizes = [...document.querySelectorAll('body, body *')]
@@ -281,8 +285,14 @@ test.each([
     await document.fonts.ready;
     await new Promise(resolve => requestAnimationFrame(resolve));
   });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  if (process.env.CAPTURE_HARDENING_SCREENSHOTS && ['/login', '/progress'].includes(route)) {
+  const overflow = await page.evaluate(() => {
+    if (document.documentElement.scrollWidth <= innerWidth) return [];
+    return [{ viewport: innerWidth, scrollWidth: document.documentElement.scrollWidth },
+      ...[...document.querySelectorAll('main *')].filter(node => node.getBoundingClientRect().right > innerWidth + 1)
+        .slice(0, 12).map(node => ({ tag: node.tagName, className: node.className, right: Math.round(node.getBoundingClientRect().right) }))];
+  });
+  expect(overflow).toEqual([]);
+  if (process.env.CAPTURE_HARDENING_SCREENSHOTS && ['/login', '/progress', '/dashboard'].includes(route)) {
     await page.screenshot({ path: `docs/design/text-resize-${route.slice(1)}-640-200.png`, fullPage: true });
   }
   const client = await page.createCDPSession();

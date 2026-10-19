@@ -707,10 +707,12 @@ main:focus {
 }
 .activity-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16em), 1fr));
   gap: 16px;
 }
 .activity {
+  min-width: 0;
+  overflow-wrap: anywhere;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--line);
