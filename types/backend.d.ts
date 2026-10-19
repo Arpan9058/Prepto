@@ -83,5 +83,14 @@ export interface AppOptions {
   sessionStore?: import('express-session').Store;
   sessionName?: string;
   authCookieName?: string;
+  /** Optional deployment-owned sink; receives sanitized metadata, never raw errors. */
+  reportError?: (
+    event: Readonly<{
+      kind: 'http.server_error';
+      status: number;
+      method: string;
+      requestId?: string;
+    }>,
+  ) => void | Promise<void>;
   logger?: Logger;
 }

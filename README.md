@@ -116,3 +116,17 @@ Use your local loopback browser on port 8080, path `/demo`. This separate entry 
 See [verification commands, live-validation safety, coverage, mobile checks and LOC definitions](docs/VERIFICATION.md), [contribution guide](CONTRIBUTING.md) and [changelog](CHANGELOG.md). Run `npm run test:production` and `npm run test:docker` for built-app/image smoke checks. Live provider checks are opt-in: `npm run verify:live -- --run`; they remain unrun until existing secure bindings and the authorized project pin are available.
 
 The current hardening removes the unused Firebase CLI dependency: real Firestore tests run the same SHA-256-pinned official emulator directly. `npm run backend:typecheck` covers all backend modules and scripts; frontend integration tests are also strictly checked. [Current remaining-issue evidence](docs/REMAINING_ISSUES.md) distinguishes completed code fixes from external validation.
+
+
+### Optional production error reporting
+
+`createApp({ reportError: event => monitoring.captureEvent(event) })` accepts a
+deployment-owned aggregation/alerting sink. Only sanitized 5xx metadata is sent:
+`kind`, HTTP status, allowlisted method and a bounded request ID. Raw exceptions,
+provider messages/stacks, URLs, headers, bodies and user identities are excluded.
+Expected 4xx responses are not reported; a rejected, throwing or slow sink cannot
+change the HTTP response. With no injected sink, no telemetry is sent. Configure
+credentials/retention in your deployment adapter; the stock server does not consume
+an invented `SENTRY_DSN` or claim hosted monitoring is active. Never embed a DSN or
+secret in frontend `VITE_*` config.
+

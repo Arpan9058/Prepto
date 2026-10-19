@@ -28,6 +28,7 @@ function createApp({
   frontend = true,
   pdf = exportPdf,
   sessionStore,
+  reportError,
   sessionName = 'prepto.sid',
   authCookieName = 'session_token',
   logger = pino({ level: env.LOG_LEVEL || 'info' }),
@@ -42,6 +43,7 @@ function createApp({
   app.locals.gemini = gemini;
   app.locals.pdf = (html) => pdf(html, { env });
   app.locals.logger = logger;
+  app.locals.reportError = reportError;
   app.set('views', path.join(__dirname, 'views'));
   app.set('view engine', 'ejs');
   app.use((req, res, next) => {
