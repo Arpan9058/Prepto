@@ -7,6 +7,8 @@ not imply that a deployment or GitHub release has occurred.
 
 ### Added
 
+- Isolated full test image/Compose command with Node, Chromium and verified Java/Firestore emulator; fresh container CI gate.
+
 - Backend-wide/runtime-script checked JavaScript with shared request/session contracts and strict frontend test checking.
 - Expanded React integration coverage and enforced 80% statement/function/line floors.
 - Verified direct official Firestore emulator launcher, removing the unused vulnerable Firebase CLI chain.

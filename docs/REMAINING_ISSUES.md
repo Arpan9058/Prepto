@@ -186,3 +186,8 @@ The subsequent [credential-free verification pass](KEYLESS_VERIFICATION.md) reco
 295 regression cases, additional reflow/text-size/accessibility-tree/keyboard checks,
 actual screenshots, and the precise WebKit/platform blockers. These checks do not
 claim live services or a human accessibility audit.
+
+
+A subsequent [full container test path](CONTAINER_TESTS.md) bundles Node, Chromium,
+Java 21 and the verified Firestore emulator. It addresses the portability gap
+without weakening the existing Node-only baseline or numeric coverage gates.

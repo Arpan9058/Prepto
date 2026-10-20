@@ -1,0 +1,20 @@
+# Separate development/test image; the production Dockerfile stays minimal.
+FROM eclipse-temurin:21-jre-jammy@sha256:affcab5356e1270ac35d2361ee83135af2f03e8d580eca78a6d5d6fdbf048db0 AS java
+FROM node:24.19.0-bookworm-slim
+COPY --from=java /opt/java/openjdk /opt/java/openjdk
+ENV JAVA_HOME=/opt/java/openjdk PATH=/opt/java/openjdk/bin:$PATH \
+    CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium CHROMIUM_NO_SANDBOX=true
+RUN apt-get update && apt-get install -y --no-install-recommends chromium ca-certificates fonts-liberation \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir /app && chown node:node /app
+WORKDIR /app
+# Keep few filesystem layers for VFS-based cloud Docker hosts. No host artifacts copied.
+COPY --chown=node:node . .
+USER node
+# Use the existing official emulator size/SHA-256 verifier before offline execution.
+RUN --mount=type=secret,id=build_ca,uid=1000,mode=0400 \
+    if [ -f /run/secrets/build_ca ]; then export NODE_EXTRA_CA_CERTS=/run/secrets/build_ca; fi; \
+    npm ci && rm -rf .cache/npm && \
+    node --use-env-proxy -e "require('./scripts/test-emulator').jar().catch(()=>{console.error('Verified emulator preparation failed');process.exitCode=1})"
+ENV CI=true NODE_ENV=test
+CMD ["sh", "-c", "npm run build && npm run lint && npm run backend:typecheck && npm run format:check && npm run test:all && npm run test:production"]

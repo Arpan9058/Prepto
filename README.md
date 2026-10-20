@@ -4,6 +4,24 @@ React + TypeScript + Vite interview-preparation workspace with an Express/Fireba
 
 See [frontend architecture, completed migration checklist, screenshots and validation](docs/FRONTEND_MIGRATION.md).
 
+## Full offline tests with Docker (recommended for contributors)
+
+For the lightweight baseline with Node 24 installed, `npm ci && npm test` needs neither
+Java nor Chromium. For the **complete** suite, only Docker Engine/Desktop with Compose
+v2 is required on the host:
+
+```sh
+docker compose -f docker-compose.test.yml run --build --rm test
+```
+
+The separate test image includes pinned Node 24, Java 21, Chromium, dev dependencies
+and a size/SHA-256-verified official Firestore emulator. It runs build/typecheck/lint/
+format, `npm run test:all` (backend/browser, React and emulator), then real PDF/production
+smoke. Build needs public registry/package/emulator access; execution has **no network**,
+no published ports, no host source/credential mounts and no live API keys. Containers
+are removed on exit. The production image and app Compose service remain separate.
+See [container test architecture, isolation and restricted-proxy setup](docs/CONTAINER_TESTS.md).
+
 ## Local development
 
 For the default offline tests, Node/npm are sufficient. Full browser/PDF checks additionally need Chromium and emulator checks need Java 21. Use Node **24.12+ in the 24.x line** (`.nvmrc` pins 24.19.0), npm and Chromium. On Debian/Ubuntu, install Chromium with `sudo apt-get update && sudo apt-get install -y chromium`. On other platforms install Chrome/Chromium and set `CHROMIUM_EXECUTABLE_PATH` to its executable.

@@ -112,3 +112,37 @@ jobs:
         with:
           name: docker-smoke-diagnostics
           path: docker-output.log
+
+  container-tests:
+    name: Full offline suite in test container
+    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+      - name: Build and run isolated Node Chromium Java emulator suite
+        shell: bash
+        run: |
+          set +e
+          docker compose -f docker-compose.test.yml run --build --rm test > container-output.log 2>&1
+          result=$?
+          cat container-output.log
+          if [ "$result" -ne 0 ]; then
+            node <<'JS'
+          const fs = require('node:fs');
+          const lines = fs.readFileSync('container-output.log', 'utf8').split('\n');
+          const failure = lines.findIndex(line => /^(FAIL|ERROR|Error:|npm error)|error TS/.test(line.trim()));
+          const start = failure < 0 ? Math.max(0, lines.length - 20) : failure;
+          const message = lines.slice(start, start + 25).join('\n').slice(0, 3000)
+            .replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A');
+          console.log('::error title=Full offline test container::' + message);
+          JS
+          fi
+          exit "$result"
+      - uses: actions/upload-artifact@v6
+        if: failure()
+        with:
+          name: full-container-diagnostics
+          path: container-output.log

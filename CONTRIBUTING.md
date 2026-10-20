@@ -32,3 +32,17 @@ EJS compatibility templates retain their existing compiler check.
 
 Maintain genuine authorship and history. Do not pad LOC, generate artificial commits,
 backdate releases or attribute work to fictitious contributors.
+
+For a fresh clone without host Java/Chromium/Node installations, use
+`docker compose -f docker-compose.test.yml run --build --rm test` (Docker/Compose v2).
+The full test image is deliberately separate from the production image and its
+execution is offline. See [container testing](docs/CONTAINER_TESTS.md).
+
+Dependency review follows weekly Dependabot updates for npm, Actions and Docker in
+`.github/dependabot.yml`. Use `npm ls --all`, `npm outdated`, `npm audit` and
+`npm audit --omit=dev` to inspect provenance/freshness. A single npm lockfile is
+intentional: adding unused package-manager lockfiles would create conflicting install
+paths. Mammoth supports real DOCX extraction and PDFKit generates real PDF fixtures/
+exports; removing them merely to lower transitive counts would remove supported
+behavior. Replace dependencies only with demonstrated feature parity and tests.
+Record supported remediation; do not force major downgrades or suppress advisories.

@@ -1,0 +1,21 @@
+# No .env mounts, credential bindings, host source mounts or published ports.
+services:
+  test:
+    image: prepto:test
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+      network: ${PREPTO_DOCKER_BUILD_NETWORK:-default}
+      args:
+        - HTTP_PROXY
+        - HTTPS_PROXY
+        - NO_PROXY
+    init: true
+    network_mode: none
+    shm_size: 256mb
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=512m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

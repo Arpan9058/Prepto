@@ -41,3 +41,23 @@ version/size/SHA-256/URL fields together, and rerun integrity, browser and real 
 tests. Do not disable checksum/TLS verification or accept an arbitrary environment URL.
 Deployment commands using the official Firebase CLI remain documented in OPERATIONS.md;
 they are separate operator actions and were not executed by this milestone.
+
+
+## Direct dependency freshness review — 2026-10-21
+
+`npm outdated --json`, `npm ls --depth=0 --json`, `npm ls --all` and `npm audit`
+were executed for this milestone. Sixteen direct packages had newer versions;
+this is not sixteen vulnerabilities. Audit remained 0 high/critical and 20 moderate.
+
+Examples of major transitions deliberately not bundled into the test-container change:
+EJS 3.1.10 → 7.0.2, TypeScript 6.0.3 → 7.0.2, marked 15.0.12 → 18.1.1,
+https-proxy-agent 7.0.6 → 9.1.0 and globals 16.5.0 → 17.13.0.
+`@types/node` remains on the supported Node 24 line rather than following Node 26.
+Minor/patch candidates (including Vitest/coverage together, ESLint, puppeteer-core,
+jsdom, JSZip and sanitize-html) can be reviewed in focused Dependabot changes with
+browser/PDF/emulator regressions; their presence alone does not justify lockfile churn.
+
+The existing weekly npm/Actions/Docker Dependabot configuration remains the automated
+freshness mechanism. No unused package manager or second dependency-update bot was
+added. Mammoth, PDFKit and browser tooling have exercised DOCX/PDF/test consumers;
+removing those dependencies merely to reduce the transitive count would drop behavior.

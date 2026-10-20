@@ -1,0 +1,17 @@
+.git
+node_modules
+.cache
+coverage
+.env
+.env.*
+!.env.example
+*.pem
+*.csr
+*service-account*.json*
+temp
+pdfs
+data
+utils/analysis.json
+
+frontend/dist
+backend-results.json
